@@ -1,0 +1,56 @@
+(
+    (include *standard-cl-23*)
+    (include condition_codes.clib)
+    (include curry-and-treehash.clib)
+
+    (defconstant OFFER_MOD_HASH 0xcfbfdeed5c4ca2de3d0bf520b9cb4bb7743a359bd2e6a188d19ce7dffc21d3e7)
+
+    (defun calculate-cat-mojos (RATE taken_mojos)
+        (/ (* RATE taken_mojos) 1000000000000)
+    )
+
+    (defun assert-taker-announcement (MAKER_PH CAT_OFFER_MOD_HASH coin_id request_cat_mojos)
+        (let (
+                (msg 
+                    (sha256tree 
+                        (list
+                            coin_id ; use coin_id as nonce
+                            (list MAKER_PH request_cat_mojos (list MAKER_PH))
+                        )
+                    )
+                )
+            )
+            (list ASSERT_PUZZLE_ANNOUNCEMENT (sha256 CAT_OFFER_MOD_HASH msg)) 
+        )
+    )
+
+    (defun create-settlement-coin (taken_mojos)
+        (list CREATE_COIN OFFER_MOD_HASH taken_mojos)
+    )
+
+    (defun create-partial-coin (MOD_HASH MAKER_PH MAKER_PK CAT_OFFER_MOD_HASH RATE new_offer_mojos) 
+        (let 
+            (
+                (new_puzzle_hash
+                    (puzzle-hash-of-curried-function 
+                        MOD_HASH
+                        (sha256 ONE new_offer_mojos)
+                        (sha256 ONE RATE) 
+                        (sha256 ONE CAT_OFFER_MOD_HASH)
+                        (sha256 ONE MAKER_PK)
+                        (sha256 ONE MAKER_PH)
+                        (sha256 ONE MOD_HASH)
+                    )
+                )
+            )
+            (list CREATE_COIN new_puzzle_hash new_offer_mojos)
+        )
+    )
+
+    (defun clawback-offer-mojos (MAKER_PH MAKER_PK OFFER_MOJOS)
+        (list
+            (list CREATE_COIN MAKER_PH OFFER_MOJOS)
+            (list AGG_SIG_ME MAKER_PK (sha256 OFFER_MOJOS))
+        )
+    )
+)
