@@ -4,7 +4,6 @@ import rich_click as click
 from chia.types.blockchain_format.program import Program
 from chia.types.blockchain_format.sized_bytes import bytes32
 from chia.wallet.cat_wallet.cat_utils import CAT_MOD
-import chia.wallet.conditions as conditions_lib
 
 from chia_rs import G1Element
 
@@ -50,19 +49,3 @@ def get_cat_puzzle_hash(asset_id: bytes32, inner_puzzlehash: bytes32):
         CAT_MOD.get_tree_hash(), asset_id, inner_puzzlehash
     ).get_tree_hash_precalc(inner_puzzlehash)
     return outer_puzzlehash
-
-
-def get_partial_info(coin_spends):
-    for cs in coin_spends:
-        p = cs.puzzle_reveal.to_program()
-        s = cs.solution.to_program()
-        conditions = conditions_lib.parse_conditions_non_consensus(
-            conditions=p.run(s).as_iter(), abstractions=False
-        )
-        for c in conditions:
-            if type(c) is conditions_lib.CreateCoin:
-                # check 1st memo
-                if len(c.memos) == 2 and c.memos[0] == "dexie_partial".encode("utf-8"):
-                    partial_info = json.loads(c.memos[1].decode("utf-8"))
-                    return partial_info
-    return None

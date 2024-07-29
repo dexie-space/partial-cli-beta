@@ -1,9 +1,15 @@
+import json
+from dataclasses import dataclass
+from typing import Optional
+
 from chia.types.blockchain_format.program import Program
 from chia.types.blockchain_format.sized_bytes import bytes32
 from chia.util.ints import uint64
+import chia.wallet.conditions as conditions_lib
 from chia.wallet.trading.offer import OFFER_MOD_HASH
 
 from chia_rs import G1Element
+from clvm.casts import int_to_bytes
 
 from partial_cli.utils.shared import get_cat_puzzle_hash
 
@@ -13,21 +19,58 @@ MOD = Program.fromhex(
 MOD_HASH = MOD.get_tree_hash()
 
 
+@dataclass
+class PartialInfo:
+    maker_puzzle_hash: bytes32
+    public_key: G1Element
+    tail_hash: bytes32
+    rate: uint64
+    offer_mojos: uint64
+
+    def to_json_dict(self):
+        return {
+            "maker_puzzle_hash": self.maker_puzzle_hash.hex(),
+            "public_key": str(self.public_key),
+            "tail_hash": self.tail_hash.hex(),
+            "rate": self.rate,
+            "offer_mojos": self.offer_mojos,
+        }
+
+    @staticmethod
+    def from_json_dict(data):
+        return PartialInfo(
+            bytes32.from_hexstr(data["maker_puzzle_hash"]),
+            G1Element.from_bytes(bytes.fromhex(data["public_key"])),
+            bytes32.from_hexstr(data["tail_hash"]),
+            uint64(data["rate"]),
+            uint64(data["offer_mojos"]),
+        )
+
+
+def get_partial_info(coin_spends) -> Optional[PartialInfo]:
+    for cs in coin_spends:
+        p = cs.puzzle_reveal.to_program()
+        s = cs.solution.to_program()
+        conditions = conditions_lib.parse_conditions_non_consensus(
+            conditions=p.run(s).as_iter(), abstractions=False
+        )
+        for c in conditions:
+            if type(c) is conditions_lib.CreateCoin:
+                # check 1st memo
+                if len(c.memos) == 2 and c.memos[0] == "dexie_partial".encode("utf-8"):
+                    partial_info = json.loads(c.memos[1].decode("utf-8"))
+                    return PartialInfo.from_json_dict(partial_info)
+    return None
+
+
 def get_puzzle(
     puzzle_hash: bytes32,
     public_key: G1Element,
     tail_hash: bytes32,
     rate: uint64,
-    offer_amount: uint64,
+    offer_mojos: uint64,
 ):
     cat_offer_mod_hash = get_cat_puzzle_hash(tail_hash, OFFER_MOD_HASH)
-
-    # print(cat_offer_mod_hash.hex())
-    # print(puzzle_hash.hex())
-    # print(public_key)
-    # print(tail_hash.hex())
-    # print(rate)
-    # print(offer_amount)
 
     p = MOD.curry(
         MOD_HASH,
@@ -35,6 +78,6 @@ def get_puzzle(
         public_key,
         cat_offer_mod_hash,
         uint64(rate * 1e3),
-        offer_amount,
+        offer_mojos,
     )
     return p

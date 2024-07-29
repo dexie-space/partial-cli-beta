@@ -16,12 +16,8 @@ from chia.wallet.util.tx_config import DEFAULT_COIN_SELECTION_CONFIG, DEFAULT_TX
 from chia_rs import G1Element
 
 from partial_cli.config import wallet_rpc_port
-from partial_cli.puzzles.partial import get_puzzle
-from partial_cli.utils.shared import (
-    Bytes32ParamType,
-    G1ElementParamType,
-    get_partial_info,
-)
+from partial_cli.puzzles.partial import PartialInfo, get_partial_info, get_puzzle
+from partial_cli.utils.shared import Bytes32ParamType, G1ElementParamType
 
 
 @click.command("get", help="get a serialized curried puzzle")
@@ -59,7 +55,7 @@ from partial_cli.utils.shared import (
 )
 @click.option(
     "-a",
-    "--offer-amount",
+    "--offer-mojos",
     required=True,
     default=None,
     help="Offer amount in mojos",
@@ -82,10 +78,10 @@ def get_cmd(
     public_key: G1Element,
     tail_hash: bytes32,
     rate: uint64,
-    offer_amount: uint64,
+    offer_mojos: uint64,
     show_hash: bool,
 ):
-    p = get_puzzle(puzzle_hash, public_key, tail_hash, rate, offer_amount)
+    p = get_puzzle(puzzle_hash, public_key, tail_hash, rate, offer_mojos)
     if show_hash:
         print(p.get_tree_hash())
     else:
@@ -158,8 +154,8 @@ async def create_offer(
 
         request_cat_mojos = uint64(abs(int(Decimal(request_amount) * units["cat"])))
 
-        rate = (request_cat_mojos / offer_mojos) * 1e9
-        # print(rate, request_cat_mojos, offer_mojos)
+        rate = uint64((request_cat_mojos / offer_mojos) * 1e12)
+        print(rate, request_cat_mojos, offer_mojos)
 
         # select coins
         coins = await wallet_rpc_client.select_coins(
@@ -177,20 +173,23 @@ async def create_offer(
         )
         genesis_ph = genesis_puzzle.get_tree_hash()
 
-        memos = {
-            "maker_puzzle_hash": maker_puzzle_hash.hex(),
-            "public_key": str(public_key),
-            "tail_hash": tail_hash.hex(),
-            "rate": rate,
-            "offer_mojos": offer_mojos,
-        }
+        partial_info = PartialInfo(
+            maker_puzzle_hash=maker_puzzle_hash,
+            public_key=public_key,
+            tail_hash=tail_hash,
+            rate=rate,
+            offer_mojos=offer_mojos,
+        )
+        # print(partial_info)
+        # print(partial_info.to_json_dict())
+        # print(json.dumps(partial_info.to_json_dict()))
 
         signed_txn_res = await wallet_rpc_client.create_signed_transaction(
             additions=[
                 {
                     "puzzle_hash": genesis_ph,
                     "amount": 1e12,
-                    "memos": ["dexie_partial", json.dumps(memos)],
+                    "memos": ["dexie_partial", json.dumps(partial_info.to_json_dict())],
                 }
             ],
             coins=coins,
@@ -223,5 +222,14 @@ def take_cmd(ctx, fingerprint, offer_file):
     if partial_info is None:
         print("No partial information found.")
         return
-    else:
-        print(json.dumps(partial_info, indent=2))
+
+    print(json.dumps(partial_info.to_json_dict(), indent=2))
+
+    puzzle = get_puzzle(
+        partial_info.maker_puzzle_hash,
+        partial_info.public_key,
+        partial_info.tail_hash,
+        partial_info.rate,
+        partial_info.offer_mojos,
+    )
+    print(puzzle.get_tree_hash().hex())
