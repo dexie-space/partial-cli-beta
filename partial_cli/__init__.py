@@ -1,6 +1,6 @@
 import rich_click as click
 
-from partial_cli.puzzles import create_cmd, get_cmd
+from partial_cli.puzzles import create_cmd, get_cmd, take_cmd
 from partial_cli.show import show_cmd
 
 
@@ -13,3 +13,4 @@ def partial_cmd(ctx):
 partial_cmd.add_command(get_cmd)
 partial_cmd.add_command(create_cmd)
 partial_cmd.add_command(show_cmd)
+partial_cmd.add_command(take_cmd)

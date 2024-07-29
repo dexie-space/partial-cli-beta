@@ -17,7 +17,11 @@ from chia_rs import G1Element
 
 from partial_cli.config import wallet_rpc_port
 from partial_cli.puzzles.partial import get_puzzle
-from partial_cli.utils.shared import Bytes32ParamType, G1ElementParamType
+from partial_cli.utils.shared import (
+    Bytes32ParamType,
+    G1ElementParamType,
+    get_partial_info,
+)
 
 
 @click.command("get", help="get a serialized curried puzzle")
@@ -198,3 +202,26 @@ async def create_offer(
 
         offer = Offer.from_spend_bundle(maker_sb)
         print(offer.to_bech32())
+
+
+@click.command("take", help="Take the dexie partial offer.")
+@click.option(
+    "-f",
+    "--fingerprint",
+    required=True,
+    help="Set the fingerprint to specify which wallet to use",
+    type=int,
+)
+@click.argument("offer_file", type=click.File("r"))
+@click.pass_context
+def take_cmd(ctx, fingerprint, offer_file):
+    offer_bech32 = offer_file.read()
+    offer: Offer = Offer.from_bech32(offer_bech32)
+    sb = offer.to_spend_bundle()
+
+    partial_info = get_partial_info(sb.coin_spends)
+    if partial_info is None:
+        print("No partial information found.")
+        return
+    else:
+        print(json.dumps(partial_info, indent=2))

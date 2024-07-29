@@ -23,3 +23,6 @@ b0db8f7952a418110c8b0368a59ec6134fe84bc2b043a4ba9c6afc8bf834c0fd
   "offer_mojos": 1000000000000
 }
 ```
+
+## take
+> TBA
