@@ -2,22 +2,18 @@ import asyncio
 from decimal import Decimal
 import json
 import rich_click as click
-from typing import Any, Dict
 
 
 from chia.cmds.cmds_util import get_wallet_client
 from chia.cmds.units import units
 from chia.rpc.wallet_rpc_client import WalletRpcClient
-from chia.wallet.trading.offer import OFFER_MOD, OFFER_MOD_HASH, ZERO_32, Offer
-from chia.types.blockchain_format.coin import Coin
-from chia.types.blockchain_format.program import Program
+from chia.wallet.trading.offer import Offer
 from chia.types.blockchain_format.sized_bytes import bytes32
-from chia.types.coin_spend import CoinSpend, make_spend
 from chia.types.spend_bundle import SpendBundle
 from chia.util.ints import uint64
 from chia.wallet.util.tx_config import DEFAULT_COIN_SELECTION_CONFIG, DEFAULT_TX_CONFIG
 
-from chia_rs import G1Element, G2Element
+from chia_rs import G1Element
 
 from partial_cli.config import wallet_rpc_port
 from partial_cli.puzzles.partial import get_puzzle
@@ -190,7 +186,7 @@ async def create_offer(
                 {
                     "puzzle_hash": genesis_ph,
                     "amount": 1e12,
-                    "memos": [json.dumps(memos)],
+                    "memos": ["dexie_partial", json.dumps(memos)],
                 }
             ],
             coins=coins,

@@ -13,4 +13,13 @@ b0db8f7952a418110c8b0368a59ec6134fe84bc2b043a4ba9c6afc8bf834c0fd
 ```
 
 ## show
-> TBA
+```
+❯ partial show ./test.offer                                                    
+{
+  "maker_puzzle_hash": "d00aa66868bba6e5bdda64eae25116cd42eeb8410b7e328551c7fd6b46ece933",
+  "public_key": "a07f3f0f388f33cb4e2b5494e7be564a7f8cbedeabc453be0c3ed75e36ddf407b8667bf9b84d7045e1c0c16462ad822d",
+  "tail_hash": "657bdae0165c622f635374e539ef7e4632750ecc87541071478c21a7ba67096c",
+  "rate": 128.68,
+  "offer_mojos": 1000000000000
+}
+```
