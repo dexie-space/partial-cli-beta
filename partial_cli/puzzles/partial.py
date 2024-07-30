@@ -52,7 +52,7 @@ class PartialInfo:
         )
 
 
-def get_partial_info(coin_spends) -> Optional[Tuple[bytes32, PartialInfo]]:
+def get_partial_info(coin_spends) -> Optional[Tuple[Coin, PartialInfo]]:
     for cs in coin_spends:
         p = cs.puzzle_reveal.to_program()
         s = cs.solution.to_program()
@@ -71,7 +71,7 @@ def get_partial_info(coin_spends) -> Optional[Tuple[bytes32, PartialInfo]]:
                         c.puzzle_hash,
                         partial_info.offer_mojos,
                     )
-                    return (eph_partial_coin.name(), partial_info)
+                    return (eph_partial_coin, partial_info)
     return None
 
 

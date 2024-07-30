@@ -6,8 +6,10 @@ import rich_click as click
 from chia.cmds.cmds_util import get_wallet_client
 from chia.cmds.units import units
 from chia.rpc.wallet_rpc_client import WalletRpcClient
+from chia.types.blockchain_format.coin import Coin
 from chia.types.blockchain_format.program import Program
 from chia.types.blockchain_format.sized_bytes import bytes32
+from chia.types.coin_spend import CoinSpend, make_spend
 from chia.types.spend_bundle import SpendBundle
 from chia.util.ints import uint64
 import chia.wallet.conditions as conditions_lib
@@ -18,7 +20,11 @@ from chia_rs import G1Element
 
 from partial_cli.config import wallet_rpc_port
 from partial_cli.puzzles.partial import PartialInfo, get_partial_info, get_puzzle
-from partial_cli.utils.shared import Bytes32ParamType, G1ElementParamType
+from partial_cli.utils.shared import (
+    Bytes32ParamType,
+    G1ElementParamType,
+    get_cat_puzzle_hash,
+)
 
 
 @click.command("get", help="get a serialized curried puzzle")
@@ -228,12 +234,12 @@ def take_cmd(ctx, fingerprint, taken_mojos, offer_file):
     offer: Offer = Offer.from_bech32(offer_bech32)
     sb = offer.to_spend_bundle()
 
-    partial_coin_id, partial_info = get_partial_info(sb.coin_spends)
+    partial_coin, partial_info = get_partial_info(sb.coin_spends)
     if partial_info is None:
         print("No partial information found.")
         return
 
-    print(partial_coin_id.hex())
+    print(partial_coin.name().hex())
     print(partial_info)
 
     puzzle = get_puzzle(
@@ -246,16 +252,17 @@ def take_cmd(ctx, fingerprint, taken_mojos, offer_file):
     print(puzzle.get_tree_hash().hex())
 
     asyncio.run(
-        take_partial_offer(partial_coin_id, partial_info, fingerprint, taken_mojos)
+        take_partial_offer(partial_coin, partial_info, fingerprint, taken_mojos)
     )
 
 
 async def take_partial_offer(
-    partial_coin_id: bytes32,
+    partial_coin: Coin,
     partial_info: PartialInfo,
     fingerprint: int,
     taken_mojos: uint64,
 ):
+    partial_coin_id = partial_coin.name()
     async with get_wallet_client(wallet_rpc_port, fingerprint) as (
         wallet_client,
         fingerprint,
@@ -292,3 +299,27 @@ async def take_partial_offer(
             conditions=p.run(s).as_iter(), abstractions=False
         )
         print(partial_result_conditions)
+
+        eph_partial_cs: CoinSpend = make_spend(
+            partial_coin, puzzle_reveal=p, solution=s
+        )
+
+        # request cat mojos 32170
+        maker_cat_ph = get_cat_puzzle_hash(
+            partial_info.tail_hash, partial_info.maker_puzzle_hash
+        )
+
+        maker_request_payments = Program.to(
+            [
+                partial_coin_id,
+                [
+                    partial_info.maker_puzzle_hash,
+                    request_cat_mojos,
+                    [partial_info.maker_puzzle_hash],
+                ],
+            ]
+        )
+
+        print(eph_partial_cs)
+        print(maker_cat_ph.hex())
+        print(maker_request_payments)
