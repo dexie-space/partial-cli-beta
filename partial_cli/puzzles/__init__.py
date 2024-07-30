@@ -1,16 +1,17 @@
 import asyncio
 from decimal import Decimal
-import json
 import rich_click as click
 
 
 from chia.cmds.cmds_util import get_wallet_client
 from chia.cmds.units import units
 from chia.rpc.wallet_rpc_client import WalletRpcClient
-from chia.wallet.trading.offer import Offer
+from chia.types.blockchain_format.program import Program
 from chia.types.blockchain_format.sized_bytes import bytes32
 from chia.types.spend_bundle import SpendBundle
 from chia.util.ints import uint64
+import chia.wallet.conditions as conditions_lib
+from chia.wallet.trading.offer import Offer
 from chia.wallet.util.tx_config import DEFAULT_COIN_SELECTION_CONFIG, DEFAULT_TX_CONFIG
 
 from chia_rs import G1Element
@@ -50,7 +51,7 @@ from partial_cli.utils.shared import Bytes32ParamType, G1ElementParamType
     "--rate",
     required=True,
     default=None,
-    help="Rate (e.g., how many CAT token per XCH)",
+    help="Rate in 1000 (e.g., 1 XCH for 128.68 CAT is 128680)",
     type=float,
 )
 @click.option(
@@ -144,7 +145,7 @@ async def create_offer(
         assert request_wallet != "1"
 
         tail_hash = bytes32.from_hexstr(request_wallet)
-        result = await wallet_client.cat_asset_id_to_name(tail_hash)
+        result = await wallet_rpc_client.cat_asset_id_to_name(tail_hash)
         if result is not None:
             request_wallet = result[1]
         else:
@@ -155,7 +156,7 @@ async def create_offer(
         request_cat_mojos = uint64(abs(int(Decimal(request_amount) * units["cat"])))
 
         rate = uint64((request_cat_mojos / offer_mojos) * 1e12)
-        print(rate, request_cat_mojos, offer_mojos)
+        # print(rate, request_cat_mojos, offer_mojos)
 
         # select coins
         coins = await wallet_rpc_client.select_coins(
@@ -182,14 +183,13 @@ async def create_offer(
         )
         # print(partial_info)
         # print(partial_info.to_json_dict())
-        # print(json.dumps(partial_info.to_json_dict()))
 
         signed_txn_res = await wallet_rpc_client.create_signed_transaction(
             additions=[
                 {
                     "puzzle_hash": genesis_ph,
                     "amount": 1e12,
-                    "memos": ["dexie_partial", json.dumps(partial_info.to_json_dict())],
+                    "memos": partial_info.to_memos(),
                 }
             ],
             coins=coins,
@@ -211,19 +211,30 @@ async def create_offer(
     help="Set the fingerprint to specify which wallet to use",
     type=int,
 )
+@click.option(
+    "-a",
+    "--taken_mojos",
+    required=True,
+    default=None,
+    help="Taken amount in mojos",
+    type=uint64,
+)
 @click.argument("offer_file", type=click.File("r"))
 @click.pass_context
-def take_cmd(ctx, fingerprint, offer_file):
+def take_cmd(ctx, fingerprint, taken_mojos, offer_file):
+    print(fingerprint, taken_mojos)
+
     offer_bech32 = offer_file.read()
     offer: Offer = Offer.from_bech32(offer_bech32)
     sb = offer.to_spend_bundle()
 
-    partial_info = get_partial_info(sb.coin_spends)
+    partial_coin_id, partial_info = get_partial_info(sb.coin_spends)
     if partial_info is None:
         print("No partial information found.")
         return
 
-    print(json.dumps(partial_info.to_json_dict(), indent=2))
+    print(partial_coin_id.hex())
+    print(partial_info)
 
     puzzle = get_puzzle(
         partial_info.maker_puzzle_hash,
@@ -233,3 +244,51 @@ def take_cmd(ctx, fingerprint, offer_file):
         partial_info.offer_mojos,
     )
     print(puzzle.get_tree_hash().hex())
+
+    asyncio.run(
+        take_partial_offer(partial_coin_id, partial_info, fingerprint, taken_mojos)
+    )
+
+
+async def take_partial_offer(
+    partial_coin_id: bytes32,
+    partial_info: PartialInfo,
+    fingerprint: int,
+    taken_mojos: uint64,
+):
+    async with get_wallet_client(wallet_rpc_port, fingerprint) as (
+        wallet_client,
+        fingerprint,
+        config,
+    ):
+        wallet_rpc_client: WalletRpcClient = wallet_client
+
+        tail_hash = partial_info.tail_hash.hex()
+        request_cat_mojos = uint64(taken_mojos * partial_info.rate * 1e-12)
+        offer_dict = {
+            "1": taken_mojos,
+            tail_hash: -1 * request_cat_mojos,
+        }
+
+        import json
+
+        print(json.dumps(offer_dict, indent=2))
+
+        offer, tx_record = await wallet_rpc_client.create_offer_for_ids(
+            offer_dict=offer_dict, tx_config=DEFAULT_TX_CONFIG, validate_only=False
+        )
+        print(offer.summary())
+
+        # create spend bundle
+        p = get_puzzle(
+            partial_info.maker_puzzle_hash,
+            partial_info.public_key,
+            partial_info.tail_hash,
+            partial_info.rate,
+            partial_info.offer_mojos,
+        )
+        s = Program.to([partial_coin_id, taken_mojos])
+        partial_result_conditions = conditions_lib.parse_conditions_non_consensus(
+            conditions=p.run(s).as_iter(), abstractions=False
+        )
+        print(partial_result_conditions)

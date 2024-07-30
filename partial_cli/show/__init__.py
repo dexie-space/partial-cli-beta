@@ -14,10 +14,11 @@ def show_cmd(ctx, offer_file):
     offer: Offer = Offer.from_bech32(offer_bech32)
     sb = offer.to_spend_bundle()
 
-    partial_info: PartialInfo = get_partial_info(sb.coin_spends)
+    partial_coin_id, partial_info = get_partial_info(sb.coin_spends)
 
     if partial_info is None:
         print("No partial information found.")
         return
     else:
+        print(partial_coin_id.hex())
         print(json.dumps(partial_info.to_json_dict(), indent=2))

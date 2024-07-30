@@ -1,9 +1,11 @@
 import json
 from dataclasses import dataclass
-from typing import Optional
+from typing import Optional, Tuple
 
+from chia.types.blockchain_format.coin import Coin
 from chia.types.blockchain_format.program import Program
 from chia.types.blockchain_format.sized_bytes import bytes32
+
 from chia.util.ints import uint64
 import chia.wallet.conditions as conditions_lib
 from chia.wallet.trading.offer import OFFER_MOD_HASH
@@ -27,6 +29,9 @@ class PartialInfo:
     rate: uint64
     offer_mojos: uint64
 
+    def to_memos(self):
+        return ["dexie_partial", json.dumps(self.to_json_dict())]
+
     def to_json_dict(self):
         return {
             "maker_puzzle_hash": self.maker_puzzle_hash.hex(),
@@ -47,7 +52,7 @@ class PartialInfo:
         )
 
 
-def get_partial_info(coin_spends) -> Optional[PartialInfo]:
+def get_partial_info(coin_spends) -> Optional[Tuple[bytes32, PartialInfo]]:
     for cs in coin_spends:
         p = cs.puzzle_reveal.to_program()
         s = cs.solution.to_program()
@@ -58,8 +63,15 @@ def get_partial_info(coin_spends) -> Optional[PartialInfo]:
             if type(c) is conditions_lib.CreateCoin:
                 # check 1st memo
                 if len(c.memos) == 2 and c.memos[0] == "dexie_partial".encode("utf-8"):
-                    partial_info = json.loads(c.memos[1].decode("utf-8"))
-                    return PartialInfo.from_json_dict(partial_info)
+                    partial_info: PartialInfo = PartialInfo.from_json_dict(
+                        json.loads(c.memos[1].decode("utf-8"))
+                    )
+                    eph_partial_coin = Coin(
+                        cs.coin.name(),
+                        c.puzzle_hash,
+                        partial_info.offer_mojos,
+                    )
+                    return (eph_partial_coin.name(), partial_info)
     return None
 
 
