@@ -201,7 +201,7 @@ async def create_offer(
             additions=[
                 {
                     "puzzle_hash": genesis_ph,
-                    "amount": 1e12,
+                    "amount": offer_mojos,
                     "memos": partial_info.to_memos(),
                 }
             ],
