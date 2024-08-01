@@ -99,7 +99,7 @@ def get_puzzle(
         puzzle_hash,
         public_key,
         cat_offer_mod_hash,
-        uint64(rate * 1e3),
+        rate,
         offer_mojos,
     )
     return p

@@ -64,7 +64,7 @@ from partial_cli.utils.shared import (
     required=True,
     default=None,
     help="Rate in 1000 (e.g., 1 XCH for 128.68 CAT is 128680)",
-    type=float,
+    type=uint64,
 )
 @click.option(
     "-a",
@@ -95,6 +95,7 @@ def get_cmd(
     show_hash: bool,
 ):
     p = get_puzzle(puzzle_hash, public_key, tail_hash, rate, offer_mojos)
+    print(rate, offer_mojos)
     if show_hash:
         print(p.get_tree_hash())
     else:
@@ -234,7 +235,7 @@ async def create_offer(
 @click.argument("offer_file", type=click.File("r"))
 @click.pass_context
 def take_cmd(ctx, fingerprint, taken_mojos, offer_file):
-    print(fingerprint, taken_mojos)
+    # print(fingerprint, taken_mojos)
 
     offer_bech32 = offer_file.read()
     offer: Offer = Offer.from_bech32(offer_bech32)
@@ -245,17 +246,17 @@ def take_cmd(ctx, fingerprint, taken_mojos, offer_file):
         print("No partial information found.")
         return
 
-    print(partial_coin.name().hex())
-    print(partial_info)
+    # print(partial_coin.name().hex())
+    # print(partial_info)
 
-    puzzle = get_puzzle(
-        partial_info.maker_puzzle_hash,
-        partial_info.public_key,
-        partial_info.tail_hash,
-        partial_info.rate,
-        partial_info.offer_mojos,
-    )
-    print(puzzle.get_tree_hash().hex())
+    # puzzle = get_puzzle(
+    #     partial_info.maker_puzzle_hash,
+    #     partial_info.public_key,
+    #     partial_info.tail_hash,
+    #     partial_info.rate,
+    #     partial_info.offer_mojos,
+    # )
+    # print(puzzle.get_tree_hash().hex())
 
     asyncio.run(
         take_partial_offer(
@@ -313,17 +314,17 @@ async def take_partial_offer(
         partial_info.offer_mojos,
     )
     s = Program.to([partial_coin_id, taken_mojos])
-    partial_result_conditions = conditions_lib.parse_conditions_non_consensus(
-        conditions=p.run(s).as_iter(), abstractions=False
-    )
+    # partial_result_conditions = conditions_lib.parse_conditions_non_consensus(
+    #     conditions=p.run(s).as_iter(), abstractions=False
+    # )
     # print(partial_result_conditions)
 
     eph_partial_cs: CoinSpend = make_spend(partial_coin, puzzle_reveal=p, solution=s)
 
     # request cat mojos 32170
-    maker_cat_ph = get_cat_puzzle_hash(
-        partial_info.tail_hash, partial_info.maker_puzzle_hash
-    )
+    # maker_cat_ph = get_cat_puzzle_hash(
+    #     partial_info.tail_hash, partial_info.maker_puzzle_hash
+    # )
 
     maker_request_payments = Program.to(
         [
@@ -345,7 +346,7 @@ async def take_partial_offer(
         taker_request_payments,
         taker_offer_sig,
     ) = process_taker_offer(taker_offer, maker_request_payments)
-    print(len(taker_coin_spends))
+    # print(len(taker_coin_spends))
 
     paritial_offer_sb = SpendBundle(
         [
@@ -366,3 +367,12 @@ async def take_partial_offer(
 
     sb = SpendBundle.aggregate([create_offer_coin_sb, paritial_offer_sb])
     print(json.dumps(sb.to_json_dict(), indent=2))
+
+    # async with get_wallet_client(wallet_rpc_port, fingerprint) as (
+    #     wallet_client,
+    #     fingerprint,
+    #     config,
+    # ):
+    #     wallet_rpc_client: WalletRpcClient = wallet_client
+    #     result = await wallet_rpc_client.push_tx(sb)
+    #     print(result)
