@@ -3,10 +3,10 @@ import rich_click as click
 
 from chia.wallet.trading.offer import Offer
 
-from partial_cli.puzzles.partial import PartialInfo, get_partial_info
+from partial_cli.puzzles.partial import get_partial_info
 
 
-@click.command("show", help="Display the dexie partial offer information.")
+@click.command("show", help="display the dexie partial offer information.")
 @click.argument("offer_file", type=click.File("r"))
 @click.pass_context
 def show_cmd(ctx, offer_file):
@@ -20,5 +20,6 @@ def show_cmd(ctx, offer_file):
         print("No partial information found.")
         return
     else:
-        print(partial_coin.name().hex())
-        print(json.dumps(partial_info.to_json_dict(), indent=2))
+        partial_info_dict = partial_info.to_json_dict()
+        partial_info_dict["partial_coin"] = partial_coin.to_json_dict()
+        print(json.dumps(partial_info_dict, indent=2))

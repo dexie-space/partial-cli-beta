@@ -17,7 +17,7 @@ import chia.wallet.conditions as conditions_lib
 from chia.wallet.trading.offer import OFFER_MOD, OFFER_MOD_HASH, Offer
 from chia.wallet.util.tx_config import DEFAULT_COIN_SELECTION_CONFIG, DEFAULT_TX_CONFIG
 
-from chia_rs import G1Element
+from chia_rs import G1Element, G2Element
 
 from partial_cli.config import wallet_rpc_port
 from partial_cli.puzzles.partial import (
@@ -26,14 +26,10 @@ from partial_cli.puzzles.partial import (
     get_puzzle,
     process_taker_offer,
 )
-from partial_cli.utils.shared import (
-    Bytes32ParamType,
-    G1ElementParamType,
-    get_cat_puzzle_hash,
-)
+from partial_cli.utils.shared import Bytes32ParamType, G1ElementParamType
 
 
-@click.command("get", help="get a serialized curried puzzle")
+@click.command("get", help="get a serialized curried puzzle of the partial offer coin")
 @click.option(
     "-ph",
     "--puzzle-hash",
@@ -169,7 +165,6 @@ async def create_offer(
         request_cat_mojos = uint64(abs(int(Decimal(request_amount) * units["cat"])))
 
         rate = uint64((request_cat_mojos / offer_mojos) * 1e12)
-        # print(rate, request_cat_mojos, offer_mojos)
 
         # select coins
         coins = await wallet_rpc_client.select_coins(
@@ -223,7 +218,7 @@ async def create_offer(
         print(offer.to_bech32())
 
 
-@click.command("take", help="Take the dexie partial offer.")
+@click.command("take", help="take the dexie partial offer.")
 @click.option(
     "-f",
     "--fingerprint",
@@ -354,3 +349,25 @@ async def take_partial_offer(
     ):
         wallet_rpc_client: WalletRpcClient = wallet_client
         await wallet_rpc_client.push_tx(sb)
+
+    # print next offer file
+    next_puzzle = get_puzzle(
+        partial_info.maker_puzzle_hash,
+        partial_info.public_key,
+        partial_info.tail_hash,
+        partial_info.rate,
+        partial_info.offer_mojos - taken_mojos,
+    )
+    next_offer_cs = make_spend(
+        coin=Coin(
+            parent_coin_info=partial_coin.name(),
+            puzzle_hash=next_puzzle.get_tree_hash(),
+            amount=partial_info.offer_mojos - taken_mojos,
+        ),
+        puzzle_reveal=next_puzzle,
+        solution=Program.to([]),
+    )
+
+    next_offer_sb = SpendBundle([next_offer_cs], G2Element())
+    next_offer = Offer.from_spend_bundle(next_offer_sb)
+    print(next_offer.to_bech32())
