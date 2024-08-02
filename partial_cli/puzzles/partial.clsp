@@ -2,33 +2,37 @@
     (include *standard-cl-23*)
     (include "fns.clsp")
 
-    (c 
-        (list ASSERT_MY_AMOUNT OFFER_MOJOS)
-        (if (> taken_mojos_or_clawback 0)
-            (let 
-                (
-                    (new_offer_mojos (- OFFER_MOJOS taken_mojos_or_clawback))
-                    (request_cat_mojos (calculate-cat-mojos RATE taken_mojos_or_clawback))
-                )
-                (c
-                    (list ASSERT_MY_COIN_ID coin_id)
+    (c
+        ; CHIP-0025?
+        (list CREATE_COIN_ANNOUNCEMENT MAKER_PH) ; for the maker input coin
+        (c 
+            (list ASSERT_MY_AMOUNT OFFER_MOJOS)
+            (if (> taken_mojos_or_clawback 0)
+                (let 
+                    (
+                        (new_offer_mojos (- OFFER_MOJOS taken_mojos_or_clawback))
+                        (request_cat_mojos (calculate-cat-mojos RATE taken_mojos_or_clawback))
+                    )
                     (c
-                        (assert-taker-announcement MAKER_PH CAT_OFFER_MOD_HASH coin_id request_cat_mojos)
+                        (list ASSERT_MY_COIN_ID coin_id)
                         (c
-                            (create-settlement-coin taken_mojos_or_clawback)
-                            (if (> new_offer_mojos 0)
-                                (list
-                                    ; create a new partial coin if there are any mojos left
-                                    (create-partial-coin MOD_HASH MAKER_PH MAKER_PK CAT_OFFER_MOD_HASH RATE new_offer_mojos)
+                            (assert-taker-announcement MAKER_PH CAT_OFFER_MOD_HASH coin_id request_cat_mojos)
+                            (c
+                                (create-settlement-coin taken_mojos_or_clawback)
+                                (if (> new_offer_mojos 0)
+                                    (list
+                                        ; create a new partial coin if there are any mojos left
+                                        (create-partial-coin MOD_HASH MAKER_PH MAKER_PK CAT_OFFER_MOD_HASH RATE new_offer_mojos)
+                                    )
+                                    ; else
+                                    ()
                                 )
-                                ; else
-                                ()
                             )
                         )
                     )
                 )
+                (clawback-offer-mojos MAKER_PH MAKER_PK OFFER_MOJOS)
             )
-            (clawback-offer-mojos MAKER_PH MAKER_PK OFFER_MOJOS)
         )
     )
 )

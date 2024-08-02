@@ -197,6 +197,14 @@ async def create_offer(
         # print(partial_info)
         # print(partial_info.to_json_dict())
 
+        genesis_coin = Coin(maker_coin.name(), genesis_ph, offer_mojos)
+
+        assert_genesis_coin_spend_announcement = [
+            conditions_lib.AssertCoinAnnouncement(
+                asserted_msg=maker_puzzle_hash, asserted_id=genesis_coin.name()
+            )
+        ]
+
         signed_txn_res = await wallet_rpc_client.create_signed_transaction(
             additions=[
                 {
@@ -208,6 +216,7 @@ async def create_offer(
             coins=coins,
             tx_config=DEFAULT_TX_CONFIG,
             wallet_id=1,
+            extra_conditions=assert_genesis_coin_spend_announcement,
         )
 
         maker_sb: SpendBundle = signed_txn_res.spend_bundle
