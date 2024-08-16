@@ -2,6 +2,7 @@ import asyncio
 from decimal import Decimal
 import json
 import rich_click as click
+from typing import Optional
 
 
 from chia.cmds.cmds_util import get_wallet_client
@@ -239,14 +240,20 @@ def take_cmd(ctx, fingerprint, taken_mojos, offer_file):
     offer_bech32 = offer_file.read()
     offer: Offer = Offer.from_bech32(offer_bech32)
     create_offer_coin_sb: SpendBundle = offer.to_spend_bundle()
-    partial_coin, partial_info = get_partial_info(create_offer_coin_sb.coin_spends)
+    partial_coin, partial_info, is_genesis = get_partial_info(
+        create_offer_coin_sb.coin_spends
+    )
     if partial_info is None:
         print("No partial information found.")
         return
 
     asyncio.run(
         take_partial_offer(
-            create_offer_coin_sb, partial_coin, partial_info, fingerprint, taken_mojos
+            create_offer_coin_sb if is_genesis else None,
+            partial_coin,
+            partial_info,
+            fingerprint,
+            taken_mojos,
         )
     )
 
@@ -280,7 +287,7 @@ async def create_taker_offer(
 
 
 async def take_partial_offer(
-    create_offer_coin_sb: SpendBundle,
+    create_offer_coin_sb: Optional[SpendBundle],
     partial_coin: Coin,
     partial_info: PartialInfo,
     fingerprint: int,
@@ -336,7 +343,11 @@ async def take_partial_offer(
         taker_offer_sig,
     )
 
-    sb = SpendBundle.aggregate([create_offer_coin_sb, paritial_offer_sb])
+    sb = (
+        SpendBundle.aggregate([create_offer_coin_sb, paritial_offer_sb])
+        if create_offer_coin_sb
+        else paritial_offer_sb
+    )
     print(json.dumps(sb.to_json_dict(), indent=2))
 
     async with get_wallet_client(wallet_rpc_port, fingerprint) as (

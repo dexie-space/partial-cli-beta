@@ -111,13 +111,13 @@ def get_partial_info(coin_spends) -> Optional[Tuple[Coin, PartialInfo]]:
     cs = coin_spends[0]
 
     solution = coin_spends[0].solution.to_program()
-    if len(list(solution.as_iter())) == 1:
+    if len(list(solution.as_iter())) == 0:  # empty solution
         # child partial offer coin
         parent_coin_info = cs.coin.parent_coin_info
         partial_info = asyncio.run(
             get_partial_info_from_parent_coin_info(parent_coin_info)
         )
-        return (cs.coin, partial_info)
+        return (cs.coin, partial_info, False)
     else:
         p = cs.puzzle_reveal.to_program()
         s = cs.solution.to_program()
@@ -136,7 +136,7 @@ def get_partial_info(coin_spends) -> Optional[Tuple[Coin, PartialInfo]]:
                         c.puzzle_hash,
                         partial_info.offer_mojos,
                     )
-                    return (eph_partial_coin, partial_info)
+                    return (eph_partial_coin, partial_info, True)
     return None
 
 
