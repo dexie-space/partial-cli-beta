@@ -3,13 +3,14 @@
     (include condition_codes.clib)
     (include curry-and-treehash.clib)
 
+    (defconstant CAT_MOD_HASH 0x37bef360ee858133b69d595a906dc45d01af50379dad515eb9518abb7c1d2a7a)
     (defconstant OFFER_MOD_HASH 0xcfbfdeed5c4ca2de3d0bf520b9cb4bb7743a359bd2e6a188d19ce7dffc21d3e7)
 
     (defun calculate-cat-mojos (RATE taken_mojos)
         (/ (* RATE taken_mojos) 1000000000000)
     )
 
-    (defun assert-taker-announcement (MAKER_PH CAT_OFFER_MOD_HASH coin_id request_cat_mojos)
+    (defun assert-taker-announcement (MAKER_PH TAIL_HASH coin_id request_cat_mojos)
         (let (
                 (msg 
                     (sha256tree 
@@ -19,8 +20,16 @@
                         )
                     )
                 )
+                (cat_offer_mod_hash
+                    (puzzle-hash-of-curried-function 
+                        CAT_MOD_HASH
+                        OFFER_MOD_HASH
+                        (sha256 ONE TAIL_HASH)
+                        (sha256 ONE CAT_MOD_HASH)
+                    )
+                )
             )
-            (list ASSERT_PUZZLE_ANNOUNCEMENT (sha256 CAT_OFFER_MOD_HASH msg)) 
+            (list ASSERT_PUZZLE_ANNOUNCEMENT (sha256 cat_offer_mod_hash msg)) 
         )
     )
 
@@ -28,7 +37,7 @@
         (list CREATE_COIN OFFER_MOD_HASH taken_mojos)
     )
 
-    (defun create-partial-coin (MOD_HASH MAKER_PH MAKER_PK CAT_OFFER_MOD_HASH RATE new_offer_mojos) 
+    (defun create-partial-coin (MOD_HASH MAKER_PH MAKER_PK TAIL_HASH RATE new_offer_mojos) 
         (let 
             (
                 (new_puzzle_hash
@@ -36,7 +45,7 @@
                         MOD_HASH
                         (sha256 ONE new_offer_mojos)
                         (sha256 ONE RATE) 
-                        (sha256 ONE CAT_OFFER_MOD_HASH)
+                        (sha256 ONE TAIL_HASH)
                         (sha256 ONE MAKER_PK)
                         (sha256 ONE MAKER_PH)
                         (sha256 ONE MOD_HASH)

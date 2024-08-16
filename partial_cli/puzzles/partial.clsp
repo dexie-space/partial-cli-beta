@@ -1,4 +1,4 @@
-(mod (MOD_HASH MAKER_PH MAKER_PK CAT_OFFER_MOD_HASH RATE OFFER_MOJOS coin_id taken_mojos_or_clawback)
+(mod (MOD_HASH MAKER_PH MAKER_PK TAIL_HASH RATE OFFER_MOJOS coin_id taken_mojos_or_clawback)
     (include *standard-cl-23*)
     (include "fns.clsp")
 
@@ -16,13 +16,13 @@
                     (c
                         (list ASSERT_MY_COIN_ID coin_id)
                         (c
-                            (assert-taker-announcement MAKER_PH CAT_OFFER_MOD_HASH coin_id request_cat_mojos)
+                            (assert-taker-announcement MAKER_PH TAIL_HASH coin_id request_cat_mojos)
                             (c
                                 (create-settlement-coin taken_mojos_or_clawback)
                                 (if (> new_offer_mojos 0)
                                     (list
                                         ; create a new partial coin if there are any mojos left
-                                        (create-partial-coin MOD_HASH MAKER_PH MAKER_PK CAT_OFFER_MOD_HASH RATE new_offer_mojos)
+                                        (create-partial-coin MOD_HASH MAKER_PH MAKER_PK TAIL_HASH RATE new_offer_mojos)
                                     )
                                     ; else
                                     ()

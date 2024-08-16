@@ -1,7 +1,9 @@
+import asyncio
 import json
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Tuple
 
+from chia.rpc.full_node_rpc_client import FullNodeRpcClient
 from chia.types.blockchain_format.coin import Coin
 from chia.types.blockchain_format.program import Program
 from chia.types.blockchain_format.sized_bytes import bytes32
@@ -21,12 +23,13 @@ from chia.wallet.trading.offer import OFFER_MOD, OFFER_MOD_HASH, ZERO_32, Offer
 from chia.wallet.uncurried_puzzle import uncurry_puzzle
 
 from chia_rs import G1Element
-from clvm.casts import int_to_bytes
 
+from partial_cli.config import self_hostname, full_node_rpc_port, chia_root, chia_config
+from partial_cli.utils.rpc import with_full_node_rpc_client
 from partial_cli.utils.shared import get_cat_puzzle_hash
 
 MOD = Program.fromhex(
-    "0xff02ffff01ff04ffff04ffff013cffff04ff0bff808080ffff04ffff04ffff0149ffff04ff8200bfff808080ffff02ffff03ffff15ff8202ffff8080ffff01ff04ffff04ffff0146ffff04ff82017fff808080ffff04ffff02ff12ffff04ff02ffff04ff0bffff04ff2fffff04ff82017fffff04ffff02ff1cffff04ff02ffff04ff5fffff04ff8202ffff8080808080ff80808080808080ffff04ffff02ff1affff04ff02ffff04ff8202ffff80808080ffff02ffff03ffff15ffff11ff8200bfff8202ff80ff8080ffff01ff04ffff02ff16ffff04ff02ffff04ff05ffff04ff0bffff04ff17ffff04ff2fffff04ff5fffff04ffff11ff8200bfff8202ff80ff808080808080808080ff8080ffff01ff018080ff0180808080ffff01ff02ff1effff04ff02ffff04ff0bffff04ff17ffff04ff8200bfff80808080808080ff01808080ffff04ffff01ffffffff02ffff03ff05ffff01ff02ff10ffff04ff02ffff04ff0dffff04ffff0bffff0102ffff0bffff0101ffff010480ffff0bffff0102ffff0bffff0102ffff0bffff0101ffff010180ff0980ffff0bffff0102ff0bffff0bffff0101ff8080808080ff8080808080ffff010b80ff0180ff0bffff0102ffff0bffff0101ffff010280ffff0bffff0102ffff0bffff0102ffff0bffff0101ffff010180ff0580ffff0bffff0102ffff02ff10ffff04ff02ffff04ff07ffff04ffff0bffff0101ffff010180ff8080808080ffff0bffff0101ff8080808080ffff02ffff03ffff07ff0580ffff01ff0bffff0102ffff02ff14ffff04ff02ffff04ff09ff80808080ffff02ff14ffff04ff02ffff04ff0dff8080808080ffff01ff0bffff0101ff058080ff0180ff05ffff14ffff12ff05ff0b80ffff018600e8d4a510008080ffffff04ffff013fffff04ffff0bff0bffff02ff14ffff04ff02ffff04ffff04ff17ffff04ffff04ff05ffff04ff2fffff04ffff04ff05ff8080ff80808080ff808080ff8080808080ff808080ff04ffff0133ffff04ffff01a0cfbfdeed5c4ca2de3d0bf520b9cb4bb7743a359bd2e6a188d19ce7dffc21d3e7ffff04ff05ff80808080ffff04ffff0133ffff04ffff02ff18ffff04ff02ffff04ff05ffff04ffff0bffff0101ff8200bf80ffff04ffff0bffff0101ff5f80ffff04ffff0bffff0101ff2f80ffff04ffff0bffff0101ff1780ffff04ffff0bffff0101ff0b80ffff04ffff0bffff0101ff0580ff80808080808080808080ffff04ff8200bfff80808080ff04ffff04ffff0133ffff04ff05ffff04ff17ff80808080ffff04ffff04ffff0132ffff04ff0bffff04ffff0bff1780ff80808080ff808080ff018080"
+    "0xff02ffff01ff04ffff04ffff013cffff04ff0bff808080ffff04ffff04ffff0149ffff04ff8200bfff808080ffff02ffff03ffff15ff8202ffff8080ffff01ff04ffff04ffff0146ffff04ff82017fff808080ffff04ffff02ff12ffff04ff02ffff04ff0bffff04ff2fffff04ff82017fffff04ffff02ff1cffff04ff02ffff04ff5fffff04ff8202ffff8080808080ff80808080808080ffff04ffff02ff1affff04ff02ffff04ff8202ffff80808080ffff02ffff03ffff15ffff11ff8200bfff8202ff80ff8080ffff01ff04ffff02ff16ffff04ff02ffff04ff05ffff04ff0bffff04ff17ffff04ff2fffff04ff5fffff04ffff11ff8200bfff8202ff80ff808080808080808080ff8080ffff01ff018080ff0180808080ffff01ff02ff1effff04ff02ffff04ff0bffff04ff17ffff04ff8200bfff80808080808080ff01808080ffff04ffff01ffffffff02ffff03ff05ffff01ff02ff10ffff04ff02ffff04ff0dffff04ffff0bffff0102ffff0bffff0101ffff010480ffff0bffff0102ffff0bffff0102ffff0bffff0101ffff010180ff0980ffff0bffff0102ff0bffff0bffff0101ff8080808080ff8080808080ffff010b80ff0180ff0bffff0102ffff0bffff0101ffff010280ffff0bffff0102ffff0bffff0102ffff0bffff0101ffff010180ff0580ffff0bffff0102ffff02ff10ffff04ff02ffff04ff07ffff04ffff0bffff0101ffff010180ff8080808080ffff0bffff0101ff8080808080ffff02ffff03ffff07ff0580ffff01ff0bffff0102ffff02ff14ffff04ff02ffff04ff09ff80808080ffff02ff14ffff04ff02ffff04ff0dff8080808080ffff01ff0bffff0101ff058080ff0180ff05ffff14ffff12ff05ff0b80ffff018600e8d4a510008080ffffff04ffff013fffff04ffff0bffff02ff18ffff04ff02ffff04ffff01a037bef360ee858133b69d595a906dc45d01af50379dad515eb9518abb7c1d2a7affff04ffff01a0cfbfdeed5c4ca2de3d0bf520b9cb4bb7743a359bd2e6a188d19ce7dffc21d3e7ffff04ffff0bffff0101ff0b80ffff04ffff0bffff0101ffff01a037bef360ee858133b69d595a906dc45d01af50379dad515eb9518abb7c1d2a7a80ff80808080808080ffff02ff14ffff04ff02ffff04ffff04ff17ffff04ffff04ff05ffff04ff2fffff04ffff04ff05ff8080ff80808080ff808080ff8080808080ff808080ff04ffff0133ffff04ffff01a0cfbfdeed5c4ca2de3d0bf520b9cb4bb7743a359bd2e6a188d19ce7dffc21d3e7ffff04ff05ff80808080ffff04ffff0133ffff04ffff02ff18ffff04ff02ffff04ff05ffff04ffff0bffff0101ff8200bf80ffff04ffff0bffff0101ff5f80ffff04ffff0bffff0101ff2f80ffff04ffff0bffff0101ff1780ffff04ffff0bffff0101ff0b80ffff04ffff0bffff0101ff0580ff80808080808080808080ffff04ff8200bfff80808080ff04ffff04ffff0133ffff04ff05ffff04ff17ff80808080ffff04ffff04ffff0132ffff04ff0bffff04ffff0bff1780ff80808080ff808080ff018080"
 )
 MOD_HASH = MOD.get_tree_hash()
 
@@ -39,6 +42,18 @@ class PartialInfo:
     rate: uint64
     offer_mojos: uint64
 
+    def cat_puzzle_hash(self):
+        return get_cat_puzzle_hash(self.tail_hash, OFFER_MOD_HASH)
+
+    def to_partial_puzzle(self):
+        return get_puzzle(
+            self.maker_puzzle_hash,
+            self.public_key,
+            self.tail_hash,
+            self.rate,
+            self.offer_mojos,
+        )
+
     def to_memos(self):
         return ["dexie_partial", json.dumps(self.to_json_dict())]
 
@@ -47,6 +62,7 @@ class PartialInfo:
             "maker_puzzle_hash": self.maker_puzzle_hash.hex(),
             "public_key": str(self.public_key),
             "tail_hash": self.tail_hash.hex(),
+            "cat_offer_mod_hash": self.cat_puzzle_hash().hex(),
             "rate": self.rate,
             "offer_mojos": self.offer_mojos,
         }
@@ -62,8 +78,47 @@ class PartialInfo:
         )
 
 
+@with_full_node_rpc_client(self_hostname, full_node_rpc_port, chia_root, chia_config)
+async def get_partial_info_from_parent_coin_info(
+    full_node_rpc_client: FullNodeRpcClient, parent_coin_info: bytes32
+):
+    coin_record = await full_node_rpc_client.get_coin_record_by_name(parent_coin_info)
+    if coin_record is None:
+        raise Exception(f"Coin {parent_coin_info} not found.")
+
+    coin_spend = await full_node_rpc_client.get_puzzle_and_solution(
+        parent_coin_info, coin_record.spent_block_index
+    )
+
+    if coin_spend is None:
+        raise Exception(f"Coin {parent_coin_info} not spent.")
+
+    solutions = list(coin_spend.solution.to_program().as_iter())
+    uncurried_puzzle = uncurry_puzzle(coin_spend.puzzle_reveal.to_program())
+    curried_args = list(uncurried_puzzle.args.as_iter())
+    partial_info = PartialInfo(
+        maker_puzzle_hash=bytes32.from_bytes(curried_args[1].as_atom()),
+        public_key=G1Element.from_bytes(curried_args[2].as_atom()),
+        tail_hash=bytes32.from_bytes(curried_args[3].as_atom()),
+        rate=uint64(curried_args[4].as_int()),
+        offer_mojos=uint64(curried_args[5].as_int()) - uint64(solutions[1].as_int()),
+    )
+    return partial_info
+
+
 def get_partial_info(coin_spends) -> Optional[Tuple[Coin, PartialInfo]]:
-    for cs in coin_spends:
+    assert len(coin_spends) == 1
+    cs = coin_spends[0]
+
+    solution = coin_spends[0].solution.to_program()
+    if len(list(solution.as_iter())) == 1:
+        # child partial offer coin
+        parent_coin_info = cs.coin.parent_coin_info
+        partial_info = asyncio.run(
+            get_partial_info_from_parent_coin_info(parent_coin_info)
+        )
+        return (cs.coin, partial_info)
+    else:
         p = cs.puzzle_reveal.to_program()
         s = cs.solution.to_program()
         conditions = conditions_lib.parse_conditions_non_consensus(
@@ -92,13 +147,11 @@ def get_puzzle(
     rate: uint64,
     offer_mojos: uint64,
 ):
-    cat_offer_mod_hash = get_cat_puzzle_hash(tail_hash, OFFER_MOD_HASH)
-
     p = MOD.curry(
         MOD_HASH,
         puzzle_hash,
         public_key,
-        cat_offer_mod_hash,
+        tail_hash,
         rate,
         offer_mojos,
     )

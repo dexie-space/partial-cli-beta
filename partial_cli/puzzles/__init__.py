@@ -177,11 +177,6 @@ async def create_offer(
         maker_coin = coins[0]
         maker_puzzle_hash = maker_coin.puzzle_hash
 
-        genesis_puzzle = get_puzzle(
-            maker_puzzle_hash, public_key, tail_hash, rate, offer_mojos
-        )
-        genesis_ph = genesis_puzzle.get_tree_hash()
-
         partial_info = PartialInfo(
             maker_puzzle_hash=maker_puzzle_hash,
             public_key=public_key,
@@ -189,6 +184,9 @@ async def create_offer(
             rate=rate,
             offer_mojos=offer_mojos,
         )
+
+        genesis_puzzle = partial_info.to_partial_puzzle()
+        genesis_ph = genesis_puzzle.get_tree_hash()
 
         genesis_coin = Coin(maker_coin.name(), genesis_ph, offer_mojos)
 
@@ -241,7 +239,6 @@ def take_cmd(ctx, fingerprint, taken_mojos, offer_file):
     offer_bech32 = offer_file.read()
     offer: Offer = Offer.from_bech32(offer_bech32)
     create_offer_coin_sb: SpendBundle = offer.to_spend_bundle()
-
     partial_coin, partial_info = get_partial_info(create_offer_coin_sb.coin_spends)
     if partial_info is None:
         print("No partial information found.")
