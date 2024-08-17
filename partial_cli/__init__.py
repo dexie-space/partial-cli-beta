@@ -1,6 +1,8 @@
 import rich_click as click
 
-from partial_cli.puzzles import create_cmd, get_cmd, take_cmd
+from partial_cli.puzzles import get_cmd
+from partial_cli.puzzles.create import create_cmd
+from partial_cli.puzzles.take import take_cmd
 from partial_cli.show import show_cmd
 
 
