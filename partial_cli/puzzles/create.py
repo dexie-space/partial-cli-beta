@@ -19,7 +19,6 @@ from chia_rs import G1Element
 from partial_cli.config import wallet_rpc_port
 
 from partial_cli.puzzles.partial import PartialInfo
-from partial_cli.utils.shared import G1ElementParamType
 
 
 # create
@@ -43,28 +42,17 @@ from partial_cli.utils.shared import G1ElementParamType
     help="A wallet id of an asset to receive and the amount you wish to receive (formatted like wallet_id:amount). Support CAT only",
     required=True,
 )
-@click.option(
-    "-pk",
-    "--public-key",
-    required=True,
-    default=None,
-    help="public key",
-    type=G1ElementParamType(),
-)
 @click.pass_context
 def create_cmd(
     ctx,
     fingerprint: int,
     offer: str,
     request: str,
-    public_key: G1Element,
 ):
-    asyncio.run(create_offer(fingerprint, offer, request, public_key))
+    asyncio.run(create_offer(fingerprint, offer, request))
 
 
-async def create_offer(
-    fingerprint: int, offer: str, request: str, public_key: G1Element
-):
+async def create_offer(fingerprint: int, offer: str, request: str):
     async with get_wallet_client(wallet_rpc_port, fingerprint) as (
         wallet_client,
         fingerprint,
@@ -102,6 +90,9 @@ async def create_offer(
         maker_coin = coins[0]
         maker_puzzle_hash = maker_coin.puzzle_hash
 
+        # get public key
+        private_key_res = await wallet_rpc_client.get_private_key(fingerprint)
+        public_key = G1Element.from_bytes(bytes.fromhex(private_key_res["pk"]))
         partial_info = PartialInfo(
             maker_puzzle_hash=maker_puzzle_hash,
             public_key=public_key,

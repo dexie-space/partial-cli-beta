@@ -1,4 +1,3 @@
-import json
 import rich_click as click
 
 from chia.types.blockchain_format.program import Program
