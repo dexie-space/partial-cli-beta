@@ -47,7 +47,7 @@ def take_cmd(ctx, fingerprint, taken_mojos, offer_file):
     offer_bech32 = offer_file.read()
     offer: Offer = Offer.from_bech32(offer_bech32)
     create_offer_coin_sb: SpendBundle = offer.to_spend_bundle()
-    partial_coin, partial_info, is_genesis = get_partial_info(
+    partial_coin, partial_info, launcher_coin = get_partial_info(
         create_offer_coin_sb.coin_spends
     )
     if partial_info is None:
@@ -62,7 +62,7 @@ def take_cmd(ctx, fingerprint, taken_mojos, offer_file):
 
     asyncio.run(
         take_partial_offer(
-            create_offer_coin_sb if is_genesis else None,
+            create_offer_coin_sb if launcher_coin is not None else None,
             partial_coin,
             partial_info,
             fingerprint,

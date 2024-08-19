@@ -14,7 +14,7 @@ def show_cmd(ctx, offer_file):
     offer: Offer = Offer.from_bech32(offer_bech32)
     sb = offer.to_spend_bundle()
 
-    partial_coin, partial_info, genesis_coin = get_partial_info(sb.coin_spends)
+    partial_coin, partial_info, launcher_coin = get_partial_info(sb.coin_spends)
 
     if partial_info is None:
         print("No partial information found.")
@@ -24,6 +24,6 @@ def show_cmd(ctx, offer_file):
             "partial_info": partial_info.to_json_dict(),
             "partial_coin": partial_coin.to_json_dict(),
         }
-        if genesis_coin is not None:
-            ret["genesis_coin"] = genesis_coin.to_json_dict()
+        if launcher_coin is not None:
+            ret["launcher_coin"] = launcher_coin.to_json_dict()
         print(json.dumps(ret, indent=2))

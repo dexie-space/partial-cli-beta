@@ -99,33 +99,33 @@ async def create_offer(
         )
 
         assert len(coins) == 1
-        maker_coin = coins[0]
-        maker_puzzle_hash = maker_coin.puzzle_hash
+        launcher_coin = coins[0]
+        launcher_ph = launcher_coin.puzzle_hash
 
         public_key = await get_public_key(fingerprint)
         partial_info = PartialInfo(
-            maker_puzzle_hash=maker_puzzle_hash,
+            maker_puzzle_hash=launcher_ph,
             public_key=public_key,
             tail_hash=tail_hash,
             rate=rate,
             offer_mojos=offer_mojos,
         )
 
-        genesis_puzzle = partial_info.to_partial_puzzle()
-        genesis_ph = genesis_puzzle.get_tree_hash()
+        partial_puzzle = partial_info.to_partial_puzzle()
+        partial_ph = partial_puzzle.get_tree_hash()
 
-        genesis_coin = Coin(maker_coin.name(), genesis_ph, offer_mojos)
+        partial_coin = Coin(launcher_coin.name(), partial_ph, offer_mojos)
 
-        assert_genesis_coin_spend_announcement = [
+        assert_launcher_coin_spend_announcement = [
             conditions_lib.AssertCoinAnnouncement(
-                asserted_msg=maker_puzzle_hash, asserted_id=genesis_coin.name()
+                asserted_msg=launcher_ph, asserted_id=partial_coin.name()
             )
         ]
 
         signed_txn_res = await wallet_rpc_client.create_signed_transaction(
             additions=[
                 {
-                    "puzzle_hash": genesis_ph,
+                    "puzzle_hash": partial_ph,
                     "amount": offer_mojos,
                     "memos": partial_info.to_memos(),
                 }
@@ -133,7 +133,7 @@ async def create_offer(
             coins=coins,
             tx_config=DEFAULT_TX_CONFIG,
             wallet_id=1,
-            extra_conditions=assert_genesis_coin_spend_announcement,
+            extra_conditions=assert_launcher_coin_spend_announcement,
         )
 
         maker_sb: SpendBundle = signed_txn_res.spend_bundle
@@ -143,12 +143,13 @@ async def create_offer(
         filepath = (
             filepath
             if filepath is not None
-            else pathlib.Path.cwd() / f"genesis-{offer.name()}.offer"
+            else pathlib.Path.cwd() / f"launcher-{offer.name()}.offer"
         )
         with filepath.open(mode="w") as file:
             file.write(offer_bech32)
 
         ret = {"partial_info": PartialInfo.to_json_dict(partial_info)}
-        ret["genesis_coin"] = genesis_coin.name().hex()
+        ret["partial_coin"] = partial_coin.to_json_dict()
+        ret["launcher_coin"] = launcher_coin.to_json_dict()
         ret["offer"] = offer_bech32
         print(json.dumps(ret, indent=2))
