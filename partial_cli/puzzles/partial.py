@@ -95,6 +95,7 @@ async def get_partial_info_from_parent_coin_info(
 
     solutions = list(coin_spend.solution.to_program().as_iter())
     uncurried_puzzle = uncurry_puzzle(coin_spend.puzzle_reveal.to_program())
+    assert uncurried_puzzle.mod.get_tree_hash() == MOD_HASH
     curried_args = list(uncurried_puzzle.args.as_iter())
     partial_info = PartialInfo(
         maker_puzzle_hash=bytes32.from_bytes(curried_args[1].as_atom()),
@@ -107,37 +108,43 @@ async def get_partial_info_from_parent_coin_info(
 
 
 def get_partial_info(coin_spends) -> Optional[Tuple[Coin, PartialInfo]]:
-    assert len(coin_spends) == 1
-    cs = coin_spends[0]
+    try:
+        assert len(coin_spends) == 1
+        cs = coin_spends[0]
 
-    solution = coin_spends[0].solution.to_program()
-    if len(list(solution.as_iter())) == 0:  # empty solution
-        # child partial offer coin
-        parent_coin_info = cs.coin.parent_coin_info
-        partial_info = asyncio.run(
-            get_partial_info_from_parent_coin_info(parent_coin_info)
-        )
-        return (cs.coin, partial_info, False)
-    else:
-        p = cs.puzzle_reveal.to_program()
-        s = cs.solution.to_program()
-        conditions = conditions_lib.parse_conditions_non_consensus(
-            conditions=p.run(s).as_iter(), abstractions=False
-        )
-        for c in conditions:
-            if type(c) is conditions_lib.CreateCoin:
-                # check 1st memo
-                if len(c.memos) == 2 and c.memos[0] == "dexie_partial".encode("utf-8"):
-                    partial_info: PartialInfo = PartialInfo.from_json_dict(
-                        json.loads(c.memos[1].decode("utf-8"))
-                    )
-                    eph_partial_coin = Coin(
-                        cs.coin.name(),
-                        c.puzzle_hash,
-                        partial_info.offer_mojos,
-                    )
-                    return (eph_partial_coin, partial_info, True)
-    return None
+        solution = coin_spends[0].solution.to_program()
+        if len(list(solution.as_iter())) == 0:  # empty solution
+            # child partial offer coin
+            parent_coin_info = cs.coin.parent_coin_info
+            partial_info = asyncio.run(
+                get_partial_info_from_parent_coin_info(parent_coin_info)
+            )
+            return (cs.coin, partial_info, None)
+        else:
+            p = cs.puzzle_reveal.to_program()  # genesis puzzle
+            s = cs.solution.to_program()
+            conditions = conditions_lib.parse_conditions_non_consensus(
+                conditions=p.run(s).as_iter(), abstractions=False
+            )
+            for c in conditions:
+                if type(c) is conditions_lib.CreateCoin:
+                    # check 1st memo
+                    if len(c.memos) == 2 and c.memos[0] == "dexie_partial".encode(
+                        "utf-8"
+                    ):
+                        partial_info: PartialInfo = PartialInfo.from_json_dict(
+                            json.loads(c.memos[1].decode("utf-8"))
+                        )
+                        eph_partial_coin = Coin(
+                            cs.coin.name(),
+                            c.puzzle_hash,
+                            partial_info.offer_mojos,
+                        )
+                        return (eph_partial_coin, partial_info, cs.coin)
+        return None
+    except Exception as e:
+        print(f"Error: {e}")
+        return None
 
 
 def get_puzzle(
@@ -147,7 +154,7 @@ def get_puzzle(
     rate: uint64,
     offer_mojos: uint64,
 ):
-    p = MOD.curry(
+    return MOD.curry(
         MOD_HASH,
         puzzle_hash,
         public_key,
@@ -155,7 +162,6 @@ def get_puzzle(
         rate,
         offer_mojos,
     )
-    return p
 
 
 def process_taker_offer(taker_offer: Offer, maker_request_payments):

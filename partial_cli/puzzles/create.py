@@ -1,10 +1,12 @@
 import asyncio
 from decimal import Decimal
+import json
+import pathlib
 import rich_click as click
+from typing import Optional
 
 from chia.cmds.cmds_util import get_wallet_client
 from chia.cmds.units import units
-from chia.rpc.wallet_rpc_client import WalletRpcClient
 from chia.types.blockchain_format.coin import Coin
 from chia.types.blockchain_format.sized_bytes import bytes32
 from chia.types.spend_bundle import SpendBundle
@@ -19,6 +21,7 @@ from chia_rs import G1Element
 from partial_cli.config import wallet_rpc_port
 
 from partial_cli.puzzles.partial import PartialInfo
+from partial_cli.utils.shared import get_public_key
 
 
 # create
@@ -42,23 +45,32 @@ from partial_cli.puzzles.partial import PartialInfo
     help="A wallet id of an asset to receive and the amount you wish to receive (formatted like wallet_id:amount). Support CAT only",
     required=True,
 )
+@click.option(
+    "-p",
+    "--filepath",
+    help="The path to write the generated offer file to",
+    required=False,
+    type=click.Path(dir_okay=False, writable=True, path_type=pathlib.Path),
+)
 @click.pass_context
 def create_cmd(
     ctx,
     fingerprint: int,
     offer: str,
     request: str,
+    filepath: Optional[pathlib.Path],
 ):
-    asyncio.run(create_offer(fingerprint, offer, request))
+    asyncio.run(create_offer(fingerprint, offer, request, filepath))
 
 
-async def create_offer(fingerprint: int, offer: str, request: str):
+async def create_offer(
+    fingerprint: int, offer: str, request: str, filepath: Optional[pathlib.Path]
+):
     async with get_wallet_client(wallet_rpc_port, fingerprint) as (
-        wallet_client,
+        wallet_rpc_client,
         fingerprint,
         config,
     ):
-        wallet_rpc_client: WalletRpcClient = wallet_client
         offer_wallet_id, offer_amount = tuple(offer.split(":")[0:2])
         request_wallet, request_amount = tuple(request.split(":")[0:2])
 
@@ -90,9 +102,7 @@ async def create_offer(fingerprint: int, offer: str, request: str):
         maker_coin = coins[0]
         maker_puzzle_hash = maker_coin.puzzle_hash
 
-        # get public key
-        private_key_res = await wallet_rpc_client.get_private_key(fingerprint)
-        public_key = G1Element.from_bytes(bytes.fromhex(private_key_res["pk"]))
+        public_key = await get_public_key(fingerprint)
         partial_info = PartialInfo(
             maker_puzzle_hash=maker_puzzle_hash,
             public_key=public_key,
@@ -129,4 +139,16 @@ async def create_offer(fingerprint: int, offer: str, request: str):
         maker_sb: SpendBundle = signed_txn_res.spend_bundle
 
         offer = Offer.from_spend_bundle(maker_sb)
-        print(offer.to_bech32())
+        offer_bech32 = offer.to_bech32()
+        filepath = (
+            filepath
+            if filepath is not None
+            else pathlib.Path.cwd() / f"genesis-{offer.name()}.offer"
+        )
+        with filepath.open(mode="w") as file:
+            file.write(offer_bech32)
+
+        ret = {"partial_info": PartialInfo.to_json_dict(partial_info)}
+        ret["genesis_coin"] = genesis_coin.name().hex()
+        ret["offer"] = offer_bech32
+        print(json.dumps(ret, indent=2))

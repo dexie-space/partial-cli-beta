@@ -1,3 +1,4 @@
+import json
 import rich_click as click
 
 
@@ -53,16 +54,6 @@ from partial_cli.utils.shared import Bytes32ParamType, G1ElementParamType
     help="Offer amount in mojos",
     type=uint64,
 )
-@click.option(
-    "-h",
-    "--hash",
-    "show_hash",
-    required=False,
-    is_flag=True,
-    show_default=True,
-    default=False,
-    help="Show puzzle hash",
-)
 @click.pass_context
 def get_cmd(
     ctx,
@@ -71,11 +62,7 @@ def get_cmd(
     tail_hash: bytes32,
     rate: uint64,
     offer_mojos: uint64,
-    show_hash: bool,
 ):
     p = get_puzzle(puzzle_hash, public_key, tail_hash, rate, offer_mojos)
-    print(rate, offer_mojos)
-    if show_hash:
-        print(p.get_tree_hash())
-    else:
-        print(str(p))
+    ret = {"puzzle_hash": p.get_tree_hash().hex(), "puzzle": str(p)}
+    print(json.dumps(ret, indent=2))

@@ -17,14 +17,17 @@ from clvm.casts import int_to_bytes
 from partial_cli.config import wallet_rpc_port
 from partial_cli.puzzles.partial import PartialInfo, get_partial_info, get_puzzle
 
-from chia_rs import AugSchemeMPL, PrivateKey
+from chia_rs import AugSchemeMPL, G1Element, PrivateKey
 
 
 async def get_clawback_signature(
-    fingerprint: int, partial_coin_name: bytes32, offer_mojos: uint64
+    fingerprint: int,
+    partial_coin_name: bytes32,
+    partial_pk: G1Element,
+    offer_mojos: uint64,
 ):
     async with get_wallet_client(wallet_rpc_port, fingerprint) as (
-        wallet_client,
+        wallet_rpc_client,
         fingerprint,
         config,
     ):
@@ -34,9 +37,11 @@ async def get_clawback_signature(
             config["network_overrides"]["constants"]["mainnet"]["GENESIS_CHALLENGE"]
         )
 
-        wallet_rpc_client: WalletRpcClient = wallet_client
         private_key_res = await wallet_rpc_client.get_private_key(fingerprint)
         sk = PrivateKey.from_bytes(bytes.fromhex(private_key_res["sk"]))
+
+        assert sk.get_g1() == partial_pk
+
         return AugSchemeMPL.sign(
             sk,
             std_hash(int_to_bytes(offer_mojos)) + partial_coin_name + genesis_challenge,
@@ -62,7 +67,10 @@ async def clawback_partial_offer(
     eph_partial_cs: CoinSpend = make_spend(partial_coin, puzzle_reveal=p, solution=s)
 
     cb_signature = await get_clawback_signature(
-        fingerprint, partial_coin.name(), partial_info.offer_mojos
+        fingerprint,
+        partial_coin_name=partial_coin.name(),
+        partial_pk=partial_info.public_key,
+        offer_mojos=partial_info.offer_mojos,
     )
 
     paritial_offer_sb = SpendBundle([eph_partial_cs], cb_signature)
@@ -75,6 +83,12 @@ async def clawback_partial_offer(
         if create_offer_coin_sb is not None
         else paritial_offer_sb
     )
+    async with get_wallet_client(wallet_rpc_port, fingerprint) as (
+        wallet_rpc_client,
+        fingerprint,
+        config,
+    ):
+        await wallet_rpc_client.push_tx(sb)
     print(json.dumps(sb.to_json_dict(), indent=2))
 
 

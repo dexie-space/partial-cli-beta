@@ -4,7 +4,6 @@ import rich_click as click
 from typing import Optional
 
 from chia.cmds.cmds_util import get_wallet_client
-from chia.rpc.wallet_rpc_client import WalletRpcClient
 from chia.types.blockchain_format.coin import Coin
 from chia.types.blockchain_format.program import Program
 from chia.types.coin_spend import CoinSpend, make_spend
@@ -41,7 +40,7 @@ from partial_cli.puzzles.partial import (
     help="Taken amount in mojos",
     type=uint64,
 )
-@click.argument("offer_file", type=click.File("r"))
+@click.argument("offer_file", type=click.File("r"), required=True)
 @click.pass_context
 def take_cmd(ctx, fingerprint, taken_mojos, offer_file):
 
@@ -78,11 +77,10 @@ async def create_taker_offer(
     taken_mojos: uint64,
 ):
     async with get_wallet_client(wallet_rpc_port, fingerprint) as (
-        wallet_client,
+        wallet_rpc_client,
         fingerprint,
         config,
     ):
-        wallet_rpc_client: WalletRpcClient = wallet_client
 
         tail_hash = partial_info.tail_hash.hex()
         request_cat_mojos = uint64(taken_mojos * partial_info.rate * 1e-12)
@@ -164,11 +162,10 @@ async def take_partial_offer(
     )
 
     async with get_wallet_client(wallet_rpc_port, fingerprint) as (
-        wallet_client,
+        wallet_rpc_client,
         fingerprint,
         config,
     ):
-        wallet_rpc_client: WalletRpcClient = wallet_client
         await wallet_rpc_client.push_tx(sb)
 
     ret = {
