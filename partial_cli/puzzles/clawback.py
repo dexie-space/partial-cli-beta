@@ -15,7 +15,12 @@ from chia.wallet.trading.offer import ZERO_32, Offer
 from clvm.casts import int_to_bytes
 
 from partial_cli.config import wallet_rpc_port
-from partial_cli.puzzles.partial import PartialInfo, get_partial_info, get_puzzle
+from partial_cli.puzzles.partial import (
+    PartialInfo,
+    get_launcher_or_partial_cs,
+    get_partial_info,
+    get_puzzle,
+)
 
 from chia_rs import AugSchemeMPL, G1Element, PrivateKey
 
@@ -105,17 +110,22 @@ async def clawback_partial_offer(
 def clawback_cmd(ctx, fingerprint, offer_file):
     offer_bech32 = offer_file.read()
     offer: Offer = Offer.from_bech32(offer_bech32)
-    create_offer_coin_sb: SpendBundle = offer.to_spend_bundle()
-    partial_coin, partial_info, launcher_coin = get_partial_info(
-        create_offer_coin_sb.coin_spends
-    )
+    sb: SpendBundle = offer.to_spend_bundle()
+
+    cs, is_spent = asyncio.run(get_launcher_or_partial_cs(sb.coin_spends))
+    if is_spent:
+        print("Partial offer is not valid")
+        return
+
+    partial_coin, partial_info, launcher_coin = get_partial_info(cs)
+
     if partial_info is None:
-        print("No partial information found.")
+        print("Partial offer is not valid.")
         return
 
     asyncio.run(
         clawback_partial_offer(
-            create_offer_coin_sb if launcher_coin is not None else None,
+            sb if launcher_coin is not None else None,
             partial_coin,
             partial_info,
             fingerprint,

@@ -107,12 +107,20 @@ async def get_partial_info_from_parent_coin_info(
     return partial_info
 
 
-def get_partial_info(coin_spends) -> Optional[Tuple[Coin, PartialInfo]]:
-    try:
-        assert len(coin_spends) == 1
-        cs = coin_spends[0]
+@with_full_node_rpc_client(self_hostname, full_node_rpc_port, chia_root, chia_config)
+async def get_launcher_or_partial_cs(
+    full_node_rpc_client: FullNodeRpcClient, coin_spends
+):
+    assert len(coin_spends) == 1
+    cs = coin_spends[0]
+    coin_name = cs.coin.name()
+    coin_record = await full_node_rpc_client.get_coin_record_by_name(coin_name)
+    return cs, coin_record.spent
 
-        solution = coin_spends[0].solution.to_program()
+
+def get_partial_info(cs) -> Optional[Tuple[Coin, PartialInfo]]:
+    try:
+        solution = cs.solution.to_program()
         if len(list(solution.as_iter())) == 0:  # empty solution
             # child partial offer coin
             parent_coin_info = cs.coin.parent_coin_info
@@ -121,7 +129,8 @@ def get_partial_info(coin_spends) -> Optional[Tuple[Coin, PartialInfo]]:
             )
             return (cs.coin, partial_info, None)
         else:
-            p = cs.puzzle_reveal.to_program()  # genesis puzzle
+            # launcher
+            p = cs.puzzle_reveal.to_program()
             s = cs.solution.to_program()
             conditions = conditions_lib.parse_conditions_non_consensus(
                 conditions=p.run(s).as_iter(), abstractions=False

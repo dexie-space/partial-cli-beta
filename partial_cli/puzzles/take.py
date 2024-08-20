@@ -17,6 +17,7 @@ from chia_rs import G2Element
 from partial_cli.config import wallet_rpc_port
 from partial_cli.puzzles.partial import (
     PartialInfo,
+    get_launcher_or_partial_cs,
     get_partial_info,
     get_puzzle,
     process_taker_offer,
@@ -46,12 +47,17 @@ def take_cmd(ctx, fingerprint, taken_mojos, offer_file):
 
     offer_bech32 = offer_file.read()
     offer: Offer = Offer.from_bech32(offer_bech32)
-    create_offer_coin_sb: SpendBundle = offer.to_spend_bundle()
-    partial_coin, partial_info, launcher_coin = get_partial_info(
-        create_offer_coin_sb.coin_spends
-    )
+    sb: SpendBundle = offer.to_spend_bundle()
+
+    cs, is_spent = asyncio.run(get_launcher_or_partial_cs(sb.coin_spends))
+    if is_spent:
+        print("Partial offer is not valid")
+        return
+
+    partial_coin, partial_info, launcher_coin = get_partial_info(cs)
+
     if partial_info is None:
-        print("No partial information found.")
+        print("Partial offer is not valid")
         return
 
     if partial_info.offer_mojos < taken_mojos:
@@ -62,7 +68,7 @@ def take_cmd(ctx, fingerprint, taken_mojos, offer_file):
 
     asyncio.run(
         take_partial_offer(
-            create_offer_coin_sb if launcher_coin is not None else None,
+            sb if launcher_coin is not None else None,
             partial_coin,
             partial_info,
             fingerprint,

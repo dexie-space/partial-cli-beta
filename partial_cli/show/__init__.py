@@ -1,9 +1,10 @@
+import asyncio
 import json
 import rich_click as click
 
 from chia.wallet.trading.offer import Offer
 
-from partial_cli.puzzles.partial import get_partial_info
+from partial_cli.puzzles.partial import get_launcher_or_partial_cs, get_partial_info
 
 
 @click.command("show", help="display the dexie partial offer information.")
@@ -14,15 +15,17 @@ def show_cmd(ctx, offer_file):
     offer: Offer = Offer.from_bech32(offer_bech32)
     sb = offer.to_spend_bundle()
 
-    partial_coin, partial_info, launcher_coin = get_partial_info(sb.coin_spends)
+    cs, is_spent = asyncio.run(get_launcher_or_partial_cs(sb.coin_spends))
+    partial_coin, partial_info, launcher_coin = get_partial_info(cs)
 
     if partial_info is None:
-        print("No partial information found.")
+        print("Partial offer is not valid.")
         return
     else:
         ret = {
             "partial_info": partial_info.to_json_dict(),
             "partial_coin": partial_coin.to_json_dict(),
+            "is_valid": not is_spent,
         }
         if launcher_coin is not None:
             ret["launcher_coin"] = launcher_coin.to_json_dict()
