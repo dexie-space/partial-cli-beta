@@ -1,5 +1,6 @@
 import asyncio
 import json
+from rich.prompt import Confirm
 import rich_click as click
 from typing import Optional
 
@@ -66,15 +67,30 @@ def take_cmd(ctx, fingerprint, taken_mojos, offer_file):
         )
         return
 
-    asyncio.run(
-        take_partial_offer(
-            sb if launcher_coin is not None else None,
-            partial_coin,
-            partial_info,
-            fingerprint,
-            taken_mojos,
+    offer_cat_mojos = uint64(taken_mojos * partial_info.rate * 1e-12)
+    total_request_cat_mojos = partial_info.offer_mojos * partial_info.rate * 1e-12
+    print("Dexie Partial Offer Summary:")
+    print("============================")
+    print(f"Total Offer Amount: {partial_info.offer_mojos/1e12} XCH")
+    print(f"Total Request Amount: {total_request_cat_mojos/1e3} CATs")
+    print(f"Rate: {partial_info.rate/1e3} CATs -> 1 XCH")
+    print(f"Sending {offer_cat_mojos/1e3} CATs")
+    print(f"Receiving {taken_mojos/1e12} XCH")
+
+    is_confirmed = Confirm.ask("Would you like to take this offer?")
+
+    if not is_confirmed:
+        return
+    else:
+        asyncio.run(
+            take_partial_offer(
+                sb if launcher_coin is not None else None,
+                partial_coin,
+                partial_info,
+                fingerprint,
+                taken_mojos,
+            )
         )
-    )
 
 
 async def create_taker_offer(
