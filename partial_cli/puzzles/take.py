@@ -18,6 +18,7 @@ from chia_rs import G2Element
 from partial_cli.config import wallet_rpc_port
 from partial_cli.puzzles.partial import (
     PartialInfo,
+    display_partial_info,
     get_launcher_or_partial_cs,
     get_partial_info,
     get_puzzle,
@@ -68,16 +69,12 @@ def take_cmd(ctx, fingerprint, taken_mojos, offer_file):
         return
 
     offer_cat_mojos = uint64(taken_mojos * partial_info.rate * 1e-12)
-    total_request_cat_mojos = partial_info.offer_mojos * partial_info.rate * 1e-12
-    print("Dexie Partial Offer Summary:")
-    print("============================")
-    print(f"Total Offer Amount: {partial_info.offer_mojos/1e12} XCH")
-    print(f"Total Request Amount: {total_request_cat_mojos/1e3} CATs")
-    print(f"Rate: {partial_info.rate/1e3} CATs -> 1 XCH")
-    print(f"Sending {offer_cat_mojos/1e3} CATs")
-    print(f"Receiving {taken_mojos/1e12} XCH")
+    display_partial_info(partial_info)
+    print("")
+    print(f" Sending {offer_cat_mojos/1e3} CATs")
+    print(f" Receiving {taken_mojos/1e12} XCH")
 
-    is_confirmed = Confirm.ask("Would you like to take this offer?")
+    is_confirmed = Confirm.ask("\n Would you like to take this offer?")
 
     if not is_confirmed:
         return

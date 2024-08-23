@@ -1,6 +1,10 @@
 import asyncio
 import json
 from dataclasses import dataclass
+from rich import box
+from rich.console import Console
+from rich.table import Column, Table
+from rich.text import Text
 from typing import Any, Dict, List, Optional, Tuple
 
 from chia.rpc.full_node_rpc_client import FullNodeRpcClient
@@ -230,3 +234,19 @@ def process_taker_offer(taker_offer: Offer, maker_request_payments):
         Program.to(notarized_payments_solutions[0]),
         sb.aggregated_signature,
     )
+
+
+def display_partial_info(partial_info: PartialInfo):
+    total_request_cat_mojos = partial_info.offer_mojos * partial_info.rate * 1e-12
+
+    table = Table(
+        Column(justify="left"),
+        Column(),
+        show_header=False,
+        box=box.ROUNDED,
+    )
+    table.add_row("Total Offer Amount:", f"{partial_info.offer_mojos/1e12} XCH")
+    table.add_row("Total Request Amount:", f"{total_request_cat_mojos/1e3} CATs")
+    table.add_row("Request Tail Hash:", f"0x{partial_info.tail_hash.hex()}")
+    table.add_row("Rate (1 XCH):", f"{partial_info.rate/1e3} CATs")
+    Console().print(table)
