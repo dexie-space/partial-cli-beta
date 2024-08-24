@@ -10,6 +10,10 @@
         (/ (* RATE taken_mojos) 1000000000000)
     )
 
+    (defun calculate-fee-mojos (FEE_RATE taken_mojos)
+        (/ (* FEE_RATE taken_mojos) 10000)
+    )
+
     (defun assert-taker-announcement (MAKER_PH TAIL_HASH coin_id request_cat_mojos)
         (let (
                 (msg 
@@ -33,8 +37,8 @@
         )
     )
 
-    (defun create-settlement-coin (taken_mojos)
-        (list CREATE_COIN OFFER_MOD_HASH taken_mojos)
+    (defun create-settlement-coin (taken_mojos_minus_fee)
+        (list CREATE_COIN OFFER_MOD_HASH taken_mojos_minus_fee)
     )
 
     (defun create-partial-coin (MOD_HASH FEE_PH FEE_RATE MAKER_PH MAKER_PK TAIL_HASH RATE new_offer_mojos) 

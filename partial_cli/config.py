@@ -19,5 +19,5 @@ FEE_PH = bytes32.from_hexstr(
     "bf00456f9fecf7fb57651b0c99ce13bd9d2858e9b190ec373ba158c9a9934e5a"
 )
 # represented as an integer from 0 to 10,000
-# e.g., 3% is represented as 300
-FEE_RATE = 300
+# e.g., 1% is represented as 100
+FEE_RATE = 100
