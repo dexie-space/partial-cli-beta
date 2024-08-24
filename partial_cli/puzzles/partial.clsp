@@ -1,4 +1,4 @@
-(mod (MOD_HASH MAKER_PH MAKER_PK TAIL_HASH RATE OFFER_MOJOS coin_id taken_mojos_or_clawback)
+(mod (MOD_HASH FEE_PH FEE_RATE MAKER_PH MAKER_PK TAIL_HASH RATE OFFER_MOJOS coin_id taken_mojos_or_clawback)
     (include *standard-cl-23*)
     (include "fns.clsp")
 
@@ -22,7 +22,7 @@
                                 (if (> new_offer_mojos 0)
                                     (list
                                         ; create a new partial coin if there are any mojos left
-                                        (create-partial-coin MOD_HASH MAKER_PH MAKER_PK TAIL_HASH RATE new_offer_mojos)
+                                        (create-partial-coin MOD_HASH FEE_PH FEE_RATE MAKER_PH MAKER_PK TAIL_HASH RATE new_offer_mojos)
                                     )
                                     ; else
                                     ()

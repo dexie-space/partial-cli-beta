@@ -21,7 +21,6 @@ from partial_cli.puzzles.partial import (
     display_partial_info,
     get_launcher_or_partial_cs,
     get_partial_info,
-    get_puzzle,
     process_taker_offer,
 )
 
@@ -69,10 +68,10 @@ def take_cmd(ctx, fingerprint, taken_mojos, offer_file):
         return
 
     offer_cat_mojos = uint64(taken_mojos * partial_info.rate * 1e-12)
-    display_partial_info(partial_info)
+    display_partial_info(partial_info, is_valid=not is_spent)
     print("")
-    print(f" Sending {offer_cat_mojos/1e3} CATs")
     print(f" Receiving {taken_mojos/1e12} XCH")
+    print(f" Sending {offer_cat_mojos/1e3} CATs")
 
     is_confirmed = Confirm.ask("\n Would you like to take this offer?")
 
@@ -130,13 +129,7 @@ async def take_partial_offer(
     )
 
     # create spend bundle
-    p = get_puzzle(
-        partial_info.maker_puzzle_hash,
-        partial_info.public_key,
-        partial_info.tail_hash,
-        partial_info.rate,
-        partial_info.offer_mojos,
-    )
+    p = partial_info.to_partial_puzzle()
     s = Program.to([partial_coin_id, taken_mojos])
 
     eph_partial_cs: CoinSpend = make_spend(partial_coin, puzzle_reveal=p, solution=s)
@@ -193,13 +186,17 @@ async def take_partial_offer(
     new_offer_mojos = partial_info.offer_mojos - taken_mojos
     if new_offer_mojos > 0:
         # create next offer file if needed
-        next_puzzle = get_puzzle(
+        next_partial_info = PartialInfo(
+            partial_info.fee_puzzle_hash,
+            partial_info.fee_rate,
             partial_info.maker_puzzle_hash,
             partial_info.public_key,
             partial_info.tail_hash,
             partial_info.rate,
             partial_info.offer_mojos - taken_mojos,
         )
+
+        next_puzzle = next_partial_info.to_partial_puzzle()
         next_offer_cs = make_spend(
             coin=Coin(
                 parent_coin_info=partial_coin.name(),

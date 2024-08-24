@@ -19,7 +19,6 @@ from partial_cli.puzzles.partial import (
     PartialInfo,
     get_launcher_or_partial_cs,
     get_partial_info,
-    get_puzzle,
 )
 
 from chia_rs import AugSchemeMPL, G1Element, PrivateKey
@@ -60,13 +59,7 @@ async def clawback_partial_offer(
     fingerprint: int,
 ):
     # create spend bundle
-    p = get_puzzle(
-        partial_info.maker_puzzle_hash,
-        partial_info.public_key,
-        partial_info.tail_hash,
-        partial_info.rate,
-        partial_info.offer_mojos,
-    )
+    p = partial_info.to_partial_puzzle()
     s = Program.to([ZERO_32, 0])
 
     eph_partial_cs: CoinSpend = make_spend(partial_coin, puzzle_reveal=p, solution=s)

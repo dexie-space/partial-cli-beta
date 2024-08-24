@@ -18,7 +18,7 @@ from chia.wallet.util.tx_config import DEFAULT_COIN_SELECTION_CONFIG, DEFAULT_TX
 
 from chia_rs import G1Element
 
-from partial_cli.config import wallet_rpc_port
+from partial_cli.config import FEE_PH, FEE_RATE, wallet_rpc_port
 
 from partial_cli.puzzles.partial import PartialInfo
 from partial_cli.utils.shared import get_public_key
@@ -104,6 +104,8 @@ async def create_offer(
 
         public_key = await get_public_key(fingerprint)
         partial_info = PartialInfo(
+            fee_puzzle_hash=FEE_PH,
+            fee_rate=FEE_RATE,
             maker_puzzle_hash=launcher_ph,
             public_key=public_key,
             tail_hash=tail_hash,

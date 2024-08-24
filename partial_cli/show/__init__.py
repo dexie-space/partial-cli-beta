@@ -5,6 +5,7 @@ import rich_click as click
 from chia.wallet.trading.offer import Offer
 
 from partial_cli.puzzles.partial import (
+    MOD_HASH,
     display_partial_info,
     get_launcher_or_partial_cs,
     get_partial_info,
@@ -38,6 +39,7 @@ def show_cmd(ctx, as_json, offer_file):
         if as_json:
             ret = {
                 "is_valid": not is_spent,
+                "MOD_HASH": MOD_HASH.hex(),
                 "partial_info": partial_info.to_json_dict(),
                 "partial_coin": partial_coin.to_json_dict(),
             }
@@ -45,4 +47,4 @@ def show_cmd(ctx, as_json, offer_file):
                 ret["launcher_coin"] = launcher_coin.to_json_dict()
             print(json.dumps(ret, indent=2))
         else:
-            display_partial_info(partial_info)
+            display_partial_info(partial_info, is_valid=not is_spent)

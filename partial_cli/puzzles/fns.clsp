@@ -37,7 +37,7 @@
         (list CREATE_COIN OFFER_MOD_HASH taken_mojos)
     )
 
-    (defun create-partial-coin (MOD_HASH MAKER_PH MAKER_PK TAIL_HASH RATE new_offer_mojos) 
+    (defun create-partial-coin (MOD_HASH FEE_PH FEE_RATE MAKER_PH MAKER_PK TAIL_HASH RATE new_offer_mojos) 
         (let 
             (
                 (new_puzzle_hash
@@ -48,6 +48,8 @@
                         (sha256 ONE TAIL_HASH)
                         (sha256 ONE MAKER_PK)
                         (sha256 ONE MAKER_PH)
+                        (sha256 ONE FEE_RATE)
+                        (sha256 ONE FEE_PH)
                         (sha256 ONE MOD_HASH)
                     )
                 )
