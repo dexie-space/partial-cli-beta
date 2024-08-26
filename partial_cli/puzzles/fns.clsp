@@ -6,6 +6,26 @@
     (defconstant CAT_MOD_HASH 0x37bef360ee858133b69d595a906dc45d01af50379dad515eb9518abb7c1d2a7a)
     (defconstant OFFER_MOD_HASH 0xcfbfdeed5c4ca2de3d0bf520b9cb4bb7743a359bd2e6a188d19ce7dffc21d3e7)
 
+    (defun filter-empty (acc lst)
+        (if lst
+            (let
+                ((item (f lst)))
+                
+                (filter-empty
+                    (if item
+                        (c
+                            item
+                            acc
+                        )
+                        acc
+                    )
+                    (r lst) 
+                )
+            )
+            acc
+        )
+    )
+
     (defun calculate-cat-mojos (RATE taken_mojos)
         (/ (* RATE taken_mojos) 1000000000000)
     )
@@ -62,10 +82,16 @@
         )
     )
 
-    (defun clawback-offer-mojos (MAKER_PH MAKER_PK OFFER_MOJOS)
-        (list
-            (list CREATE_COIN MAKER_PH OFFER_MOJOS)
-            (list AGG_SIG_ME MAKER_PK (sha256 OFFER_MOJOS))
+    (defun clawback-offer-mojos (MAKER_PH MAKER_PK OFFER_MOJOS chain_fee_mojos)
+        (filter-empty ()
+            (list
+                (list CREATE_COIN MAKER_PH (- OFFER_MOJOS chain_fee_mojos))
+                (list AGG_SIG_ME MAKER_PK (sha256 OFFER_MOJOS))
+                (if (> chain_fee_mojos 0)
+                    (list RESERVE_FEE chain_fee_mojos)
+                    ()
+                )
+            )
         )
     )
 )

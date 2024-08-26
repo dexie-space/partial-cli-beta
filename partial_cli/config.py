@@ -15,6 +15,8 @@ self_hostname = chia_config["self_hostname"]
 full_node_rpc_port = chia_config["full_node"]["rpc_port"]
 wallet_rpc_port = chia_config["wallet"]["rpc_port"]
 
+# configurable
+# dexie should also check it
 FEE_PH = bytes32.from_hexstr(
     "bf00456f9fecf7fb57651b0c99ce13bd9d2858e9b190ec373ba158c9a9934e5a"
 )

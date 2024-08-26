@@ -57,10 +57,11 @@ async def clawback_partial_offer(
     partial_coin: Coin,
     partial_info: PartialInfo,
     fingerprint: int,
+    fee: uint64,
 ):
     # create spend bundle
     p = partial_info.to_partial_puzzle()
-    s = Program.to([ZERO_32, 0])
+    s = Program.to([ZERO_32, 0, fee])
 
     eph_partial_cs: CoinSpend = make_spend(partial_coin, puzzle_reveal=p, solution=s)
 
@@ -98,9 +99,17 @@ async def clawback_partial_offer(
     help="Set the fingerprint to specify which wallet to use",
     type=int,
 )
+@click.option(
+    "-m",
+    "--fee",
+    help="The fee to use when clawing back the partial offer, in XCH",
+    default="0",
+    show_default=True,
+    type=uint64,
+)
 @click.argument("offer_file", type=click.File("r"))
 @click.pass_context
-def clawback_cmd(ctx, fingerprint, offer_file):
+def clawback_cmd(ctx, fingerprint, fee, offer_file):
     offer_bech32 = offer_file.read()
     offer: Offer = Offer.from_bech32(offer_bech32)
     sb: SpendBundle = offer.to_spend_bundle()
@@ -122,5 +131,6 @@ def clawback_cmd(ctx, fingerprint, offer_file):
             partial_coin,
             partial_info,
             fingerprint,
+            fee,
         )
     )

@@ -1,4 +1,4 @@
-(mod (MOD_HASH FEE_PH FEE_RATE MAKER_PH MAKER_PK TAIL_HASH RATE OFFER_MOJOS coin_id taken_mojos_or_clawback)
+(mod (MOD_HASH FEE_PH FEE_RATE MAKER_PH MAKER_PK TAIL_HASH RATE OFFER_MOJOS coin_id taken_mojos_or_clawback chain_fee_mojos)
     (include *standard-cl-23*)
     (include "fns.clsp")
 
@@ -36,7 +36,7 @@
                         )
                     )
                 )
-                (clawback-offer-mojos MAKER_PH MAKER_PK OFFER_MOJOS)
+                (clawback-offer-mojos MAKER_PH MAKER_PK OFFER_MOJOS chain_fee_mojos)
             )
         )
     )
