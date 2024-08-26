@@ -31,6 +31,7 @@ async def create_taker_offer(
     fingerprint: int,
     request_mojos_minus_fees: uint64,
     offer_cat_mojos: uint64,
+    blockchain_fee_mojos: uint64,
 ):
     async with get_wallet_client(wallet_rpc_port, fingerprint) as (
         wallet_rpc_client,
@@ -45,7 +46,10 @@ async def create_taker_offer(
         }
 
         offer, tx_record = await wallet_rpc_client.create_offer_for_ids(
-            offer_dict=offer_dict, tx_config=DEFAULT_TX_CONFIG, validate_only=False
+            offer_dict=offer_dict,
+            tx_config=DEFAULT_TX_CONFIG,
+            validate_only=False,
+            fee=blockchain_fee_mojos,
         )
         if offer is None:
             raise Exception("Failed to create offer")
@@ -61,12 +65,17 @@ async def take_partial_offer(
     request_mojos: uint64,
     fee_mojos: uint64,
     offer_cat_mojos: uint64,
+    blockchain_fee_mojos: uint64,
 ):
     partial_coin_id = partial_coin.name()
     # only request the amount minus fees
     request_mojos_minus_fees = request_mojos - fee_mojos
     taker_offer = await create_taker_offer(
-        partial_info, fingerprint, request_mojos_minus_fees, offer_cat_mojos
+        partial_info,
+        fingerprint,
+        request_mojos_minus_fees,
+        offer_cat_mojos,
+        blockchain_fee_mojos,
     )
 
     # create spend bundle
@@ -172,9 +181,17 @@ async def take_partial_offer(
     help="Request XCH amount in mojos",
     type=uint64,
 )
+@click.option(
+    "-m",
+    "--fee",
+    "blockchain_fee_mojos",
+    help="The blockchain fee to use when taking the partial offer, in mojos",
+    default="0",
+    show_default=True,
+)
 @click.argument("offer_file", type=click.File("r"), required=True)
 @click.pass_context
-def take_cmd(ctx, fingerprint, request_mojos, offer_file):
+def take_cmd(ctx, fingerprint, request_mojos, blockchain_fee_mojos, offer_file):
 
     offer_bech32 = offer_file.read()
     offer: Offer = Offer.from_bech32(offer_bech32)
@@ -219,5 +236,6 @@ def take_cmd(ctx, fingerprint, request_mojos, offer_file):
                 request_mojos,
                 fee_mojos,
                 offer_cat_mojos,
+                blockchain_fee_mojos,
             )
         )
