@@ -139,7 +139,6 @@ async def get_partial_info_from_parent_coin_info(
 async def get_launcher_or_partial_cs(
     full_node_rpc_client: FullNodeRpcClient, coin_spends
 ):
-    assert len(coin_spends) == 1
     cs = coin_spends[0]
     coin_name = cs.coin.name()
     coin_record = await full_node_rpc_client.get_coin_record_by_name(coin_name)

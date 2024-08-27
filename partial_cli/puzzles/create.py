@@ -98,7 +98,7 @@ async def create_offer(
             coin_selection_config=DEFAULT_COIN_SELECTION_CONFIG,
         )
 
-        assert len(coins) == 1
+        # launcher coin is the first coin
         launcher_coin = coins[0]
         launcher_ph = launcher_coin.puzzle_hash
 
