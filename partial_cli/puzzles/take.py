@@ -58,10 +58,10 @@ async def create_taker_offer(
 
 
 async def take_partial_offer(
+    taker_offer: Offer,
     create_offer_coin_sb: Optional[SpendBundle],
     partial_coin: Coin,
     partial_info: PartialInfo,
-    fingerprint: int,
     request_mojos: uint64,
     fee_mojos: uint64,
     offer_cat_mojos: uint64,
@@ -70,13 +70,6 @@ async def take_partial_offer(
     partial_coin_id = partial_coin.name()
     # only request the amount minus fees
     request_mojos_minus_fees = request_mojos - fee_mojos
-    taker_offer = await create_taker_offer(
-        partial_info,
-        fingerprint,
-        request_mojos_minus_fees,
-        offer_cat_mojos,
-        blockchain_fee_mojos,
-    )
 
     # create spend bundle
     p = partial_info.to_partial_puzzle()
@@ -123,16 +116,6 @@ async def take_partial_offer(
         else partial_offer_sb
     )
 
-    async with get_wallet_client(wallet_rpc_port, fingerprint) as (
-        wallet_rpc_client,
-        fingerprint,
-        config,
-    ):
-        await wallet_rpc_client.push_tx(sb)
-
-    ret = {
-        "spend_bundle": sb.to_json_dict(),
-    }
     new_offer_mojos = partial_info.offer_mojos - request_mojos
     if new_offer_mojos > 0:
         # create next offer file if needed
@@ -159,8 +142,56 @@ async def take_partial_offer(
 
         next_offer_sb = SpendBundle([next_offer_cs], G2Element())
         next_offer = Offer.from_spend_bundle(next_offer_sb)
-        ret["next_offer"] = next_offer.to_bech32()
+        return sb, next_offer
+    else:
+        return sb, None
 
+
+def get_offer_values(partial_info: PartialInfo, request_mojos: uint64):
+    fee_mojos = FEE_MOD.run(Program.to([partial_info.fee_rate, request_mojos])).as_int()
+    offer_cat_mojos = uint64(request_mojos * partial_info.rate * 1e-12)
+    return fee_mojos, offer_cat_mojos
+
+
+async def take_cmd_async(
+    create_offer_coin_sb: Optional[SpendBundle],
+    partial_coin: Coin,
+    partial_info: PartialInfo,
+    fingerprint: int,
+    request_mojos: uint64,
+    fee_mojos: uint64,
+    offer_cat_mojos: uint64,
+    blockchain_fee_mojos: uint64,
+):
+    taker_offer = await create_taker_offer(
+        partial_info,
+        fingerprint,
+        request_mojos - fee_mojos,
+        offer_cat_mojos,
+        blockchain_fee_mojos,
+    )
+
+    sb, next_offer = await take_partial_offer(
+        taker_offer=taker_offer,
+        create_offer_coin_sb=create_offer_coin_sb,
+        partial_coin=partial_coin,
+        partial_info=partial_info,
+        request_mojos=request_mojos,
+        fee_mojos=fee_mojos,
+        offer_cat_mojos=offer_cat_mojos,
+        blockchain_fee_mojos=blockchain_fee_mojos,
+    )
+
+    async with get_wallet_client(wallet_rpc_port, fingerprint) as (
+        wallet_rpc_client,
+        fingerprint,
+        config,
+    ):
+        await wallet_rpc_client.push_tx(sb)
+
+    ret = {"spend_bundle": sb.to_json_dict()}
+    if next_offer is not None:
+        ret["next_offer"] = next_offer.to_bech32()
     print(json.dumps(ret, indent=2))
 
 
@@ -214,13 +245,13 @@ def take_cmd(ctx, fingerprint, request_mojos, blockchain_fee_mojos, offer_file):
         )
         return
 
-    fee_mojos = FEE_MOD.run(Program.to([partial_info.fee_rate, request_mojos])).as_int()
-    offer_cat_mojos = uint64(request_mojos * partial_info.rate * 1e-12)
+    fee_mojos, offer_cat_mojos = get_offer_values(partial_info, request_mojos)
     display_partial_info(partial_info, is_valid=not is_spent)
     print("")
-    print(f" Receiving {(request_mojos - fee_mojos)/1e12} XCH")
-    print(f" Paying {fee_mojos/1e12} XCH in fees")
+    print(f" {offer_cat_mojos/1e3} CATs -> {request_mojos/1e12} XCH")
     print(f" Sending {offer_cat_mojos/1e3} CATs")
+    print(f" Paying {fee_mojos/1e12} XCH in fees")
+    print(f" Receiving {(request_mojos - fee_mojos)/1e12} XCH")
 
     is_confirmed = Confirm.ask("\n Would you like to take this offer?")
 
@@ -228,14 +259,14 @@ def take_cmd(ctx, fingerprint, request_mojos, blockchain_fee_mojos, offer_file):
         return
     else:
         asyncio.run(
-            take_partial_offer(
-                sb if launcher_coin is not None else None,
-                partial_coin,
-                partial_info,
-                fingerprint,
-                request_mojos,
-                fee_mojos,
-                offer_cat_mojos,
-                blockchain_fee_mojos,
+            take_cmd_async(
+                create_offer_coin_sb=sb if launcher_coin is not None else None,
+                partial_coin=partial_coin,
+                partial_info=partial_info,
+                fingerprint=fingerprint,
+                request_mojos=request_mojos,
+                fee_mojos=fee_mojos,
+                offer_cat_mojos=offer_cat_mojos,
+                blockchain_fee_mojos=blockchain_fee_mojos,
             )
         )

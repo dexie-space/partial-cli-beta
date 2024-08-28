@@ -252,7 +252,7 @@ def display_partial_info(partial_info: PartialInfo, is_valid: bool):
         box=box.ROUNDED,
     )
     table.add_row("MOD_HASH:", f"0x{MOD_HASH.hex()}")
-    table.add_row("Partial Offer is Valid:", "Yes" if is_valid else "No")
+    table.add_row("Valid:", "Yes" if is_valid else "No")
     table.add_row("Total Offer Amount:", f"{partial_info.offer_mojos/1e12} XCH")
     table.add_row("Total Request Amount:", f"{total_request_cat_mojos/1e3} CATs")
     table.add_row("Request Tail Hash:", f"0x{partial_info.tail_hash.hex()}")
