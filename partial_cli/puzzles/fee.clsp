@@ -2,5 +2,5 @@
     (include *standard-cl-23*)
     (include "fns.clsp")
     
-    (calculate-fee-mojos fee_rate offer_mojos)
+    (calculate-fee-mojos fee_rate taken_mojos)
 )

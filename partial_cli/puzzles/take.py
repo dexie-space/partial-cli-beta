@@ -162,14 +162,16 @@ async def take_cmd_async(
     fee_mojos: uint64,
     offer_cat_mojos: uint64,
     blockchain_fee_mojos: uint64,
+    taker_offer: Optional[Offer] = None,
 ):
-    taker_offer = await create_taker_offer(
-        partial_info,
-        fingerprint,
-        request_mojos - fee_mojos,
-        offer_cat_mojos,
-        blockchain_fee_mojos,
-    )
+    if taker_offer is None:
+        taker_offer = await create_taker_offer(
+            partial_info,
+            fingerprint,
+            request_mojos - fee_mojos,
+            offer_cat_mojos,
+            blockchain_fee_mojos,
+        )
 
     sb, next_offer = await take_partial_offer(
         taker_offer=taker_offer,
@@ -196,7 +198,10 @@ async def take_cmd_async(
 
 
 # take
-@click.command("take", help="take the dexie partial offer.")
+@click.command(
+    "take",
+    help="Take the dexie partial offer by providing the taker offer file or request information.",
+)
 @click.option(
     "-f",
     "--fingerprint",
@@ -205,26 +210,35 @@ async def take_cmd_async(
     type=int,
 )
 @click.option(
-    "-a",
-    "--request-mojos",
-    required=True,
-    default=None,
-    help="Request XCH amount in mojos",
-    type=uint64,
+    "-o",
+    "--offer-file",
+    "taker_offer_file",
+    help="Taker offer file",
+    required=False,
+    type=click.File("r"),
 )
 @click.option(
-    "-m",
-    "--fee",
-    "blockchain_fee_mojos",
-    help="The blockchain fee to use when taking the partial offer, in mojos",
-    default="0",
-    show_default=True,
+    "-r",
+    "--request-information",
+    required=False,
+    nargs=2,
+    help="Request XCH amount and blockchain fee in mojos (e.g., -r 100000000000 1000)",
+    type=click.Tuple([uint64, uint64]),
 )
-@click.argument("offer_file", type=click.File("r"), required=True)
+@click.argument("partial_offer_file", type=click.File("r"), required=True)
 @click.pass_context
-def take_cmd(ctx, fingerprint, request_mojos, blockchain_fee_mojos, offer_file):
+def take_cmd(
+    ctx,
+    fingerprint,
+    taker_offer_file,
+    request_information,
+    partial_offer_file,
+):
+    if taker_offer_file is None and request_information is None:
+        print("Either offer file or request information is required.")
+        return
 
-    offer_bech32 = offer_file.read()
+    offer_bech32 = partial_offer_file.read()
     offer: Offer = Offer.from_bech32(offer_bech32)
     sb: SpendBundle = offer.to_spend_bundle()
 
@@ -239,19 +253,37 @@ def take_cmd(ctx, fingerprint, request_mojos, blockchain_fee_mojos, offer_file):
         print("Partial offer is not valid")
         return
 
-    if partial_info.offer_mojos < request_mojos:
-        print(
-            f"Requested amount, {request_mojos} mojos is greater than the offer amount, {partial_info.offer_mojos} mojos."
+    # calculate request amounts and fees
+    if taker_offer_file is not None:
+        taker_offer_bech32 = taker_offer_file.read()
+        taker_offer: Offer = Offer.from_bech32(taker_offer_bech32)
+        request_amounts = taker_offer.get_requested_amounts()
+        assert len(request_amounts) == 1
+        assert None in request_amounts
+        request_mojos_minus_fees = taker_offer.get_requested_amounts()[None]
+        blockchain_fee_mojos = taker_offer.fees()
+        request_mojos = uint64(
+            request_mojos_minus_fees / (1 - (partial_info.fee_rate / 1e4))
         )
-        return
+        fee_mojos = int(request_mojos - request_mojos_minus_fees)
+        offer_cat_mojos = uint64(request_mojos * partial_info.rate * 1e-12)
+    else:
+        request_mojos, blockchain_fee_mojos = request_information
+        if partial_info.offer_mojos < request_mojos:
+            print(
+                f"Requested amount, {request_mojos} mojos is greater than the offer amount, {partial_info.offer_mojos} mojos."
+            )
+            return
 
-    fee_mojos, offer_cat_mojos = get_offer_values(partial_info, request_mojos)
-    display_partial_info(partial_info, is_valid=not is_spent)
+        fee_mojos, offer_cat_mojos = get_offer_values(partial_info, request_mojos)
+        request_mojos_minus_fees = request_mojos - fee_mojos
+
+    display_partial_info(partial_info, partial_coin.name(), is_valid=not is_spent)
     print("")
     print(f" {offer_cat_mojos/1e3} CATs -> {request_mojos/1e12} XCH")
     print(f" Sending {offer_cat_mojos/1e3} CATs")
     print(f" Paying {fee_mojos/1e12} XCH in fees")
-    print(f" Receiving {(request_mojos - fee_mojos)/1e12} XCH")
+    print(f" Receiving {request_mojos_minus_fees/1e12} XCH")
 
     is_confirmed = Confirm.ask("\n Would you like to take this offer?")
 
@@ -268,5 +300,6 @@ def take_cmd(ctx, fingerprint, request_mojos, blockchain_fee_mojos, offer_file):
                 fee_mojos=fee_mojos,
                 offer_cat_mojos=offer_cat_mojos,
                 blockchain_fee_mojos=blockchain_fee_mojos,
+                taker_offer=taker_offer if taker_offer_file is not None else None,
             )
         )

@@ -242,7 +242,9 @@ def process_taker_offer(taker_offer: Offer, maker_request_payments):
     )
 
 
-def display_partial_info(partial_info: PartialInfo, is_valid: bool):
+def display_partial_info(
+    partial_info: PartialInfo, partial_coin_name: bytes32, is_valid: bool
+):
     total_request_cat_mojos = partial_info.offer_mojos * partial_info.rate * 1e-12
 
     table = Table(
@@ -253,6 +255,8 @@ def display_partial_info(partial_info: PartialInfo, is_valid: bool):
     )
     table.add_row("MOD_HASH:", f"0x{MOD_HASH.hex()}")
     table.add_row("Valid:", "Yes" if is_valid else "No")
+    table.add_row("Partial Offer Coin Name:", f"0x{partial_coin_name.hex()}")
+    table.add_section()
     table.add_row("Total Offer Amount:", f"{partial_info.offer_mojos/1e12} XCH")
     table.add_row("Total Request Amount:", f"{total_request_cat_mojos/1e3} CATs")
     table.add_row("Request Tail Hash:", f"0x{partial_info.tail_hash.hex()}")
