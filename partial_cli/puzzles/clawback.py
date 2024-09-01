@@ -3,7 +3,6 @@ import json
 import rich_click as click
 
 from chia.cmds.cmds_util import get_wallet_client
-from chia.rpc.wallet_rpc_client import WalletRpcClient
 from chia.types.blockchain_format.coin import Coin
 from chia.types.blockchain_format.program import Program
 from chia.types.blockchain_format.sized_bytes import bytes32
@@ -14,7 +13,7 @@ from chia.util.ints import uint64
 from chia.wallet.trading.offer import ZERO_32, Offer
 from clvm.casts import int_to_bytes
 
-from partial_cli.config import wallet_rpc_port
+from partial_cli.config import genesis_challenge, wallet_rpc_port
 from partial_cli.puzzles.partial import (
     PartialInfo,
     get_launcher_or_partial_cs,
@@ -35,15 +34,9 @@ async def get_clawback_signature(
         fingerprint,
         config,
     ):
-        # TODO: get network constants from config
-        # selected_network = config["wallet"]["selected_network"]
-        genesis_challenge = bytes.fromhex(
-            config["network_overrides"]["constants"]["mainnet"]["GENESIS_CHALLENGE"]
-        )
 
         private_key_res = await wallet_rpc_client.get_private_key(fingerprint)
         sk = PrivateKey.from_bytes(bytes.fromhex(private_key_res["sk"]))
-
         assert sk.get_g1() == partial_pk
 
         return AugSchemeMPL.sign(

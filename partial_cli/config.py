@@ -15,6 +15,14 @@ self_hostname = chia_config["self_hostname"]
 full_node_rpc_port = chia_config["full_node"]["rpc_port"]
 wallet_rpc_port = chia_config["wallet"]["rpc_port"]
 
+# TODO: get network constants from config
+# selected_network = config["wallet"]["selected_network"]
+genesis_challenge = bytes.fromhex(
+    # config["network_overrides"]["constants"]["mainnet"]["GENESIS_CHALLENGE"]
+    chia_config["network_overrides"]["constants"]["testnet11"]["GENESIS_CHALLENGE"]
+)
+
+
 # configurable
 # dexie should also check it
 FEE_PH = bytes32.from_hexstr(
