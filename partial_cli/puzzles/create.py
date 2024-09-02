@@ -108,7 +108,6 @@ async def create_offer(
             for cs in offer.to_spend_bundle().coin_spends
             if cs.coin.parent_coin_info != ZERO_32
         ]
-        print(coins)
 
         # launcher coin is the first coin
         launcher_coin = coins[0]

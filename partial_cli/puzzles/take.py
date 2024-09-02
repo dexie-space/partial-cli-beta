@@ -221,12 +221,20 @@ async def take_cmd_async(
     type=click.File("r"),
 )
 @click.option(
-    "-r",
-    "--request-information",
+    "-a",
+    "--request-mojos",
     required=False,
-    nargs=2,
-    help="Request XCH amount and blockchain fee in mojos (e.g., -r 100000000000 1000)",
-    type=click.Tuple([uint64, uint64]),
+    default=None,
+    help="Request XCH amount in mojos",
+    type=uint64,
+)
+@click.option(
+    "-m",
+    "--fee",
+    "blockchain_fee_mojos",
+    help="The blockchain fee to use when taking the partial offer, in mojos",
+    default="0",
+    show_default=True,
 )
 @click.argument("partial_offer_file", type=click.File("r"), required=True)
 @click.pass_context
@@ -234,11 +242,12 @@ def take_cmd(
     ctx,
     fingerprint,
     taker_offer_file,
-    request_information,
+    request_mojos,
+    blockchain_fee_mojos,
     partial_offer_file,
 ):
-    if taker_offer_file is None and request_information is None:
-        print("Either offer file or request information is required.")
+    if taker_offer_file is None and request_mojos is None:
+        print("Either offer file or request mojos is required.")
         return
 
     offer_bech32 = partial_offer_file.read()
@@ -271,7 +280,6 @@ def take_cmd(
         fee_mojos = int(request_mojos - request_mojos_minus_fees)
         offer_cat_mojos = uint64(request_mojos * partial_info.rate * 1e-12)
     else:
-        request_mojos, blockchain_fee_mojos = request_information
         if partial_info.offer_mojos < request_mojos:
             print(
                 f"Requested amount, {request_mojos} mojos is greater than the offer amount, {partial_info.offer_mojos} mojos."
