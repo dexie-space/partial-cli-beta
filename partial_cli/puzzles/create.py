@@ -13,7 +13,7 @@ from chia.types.spend_bundle import SpendBundle
 from chia.util.ints import uint64
 
 import chia.wallet.conditions as conditions_lib
-from chia.wallet.trading.offer import Offer
+from chia.wallet.trading.offer import ZERO_32, Offer
 from chia.wallet.util.tx_config import DEFAULT_COIN_SELECTION_CONFIG, DEFAULT_TX_CONFIG
 
 from chia_rs import G1Element
@@ -91,12 +91,24 @@ async def create_offer(
 
         rate = uint64((request_cat_mojos / offer_mojos) * 1e12)
 
-        # select coins
-        coins = await wallet_rpc_client.select_coins(
-            amount=offer_mojos,
-            wallet_id=1,
-            coin_selection_config=DEFAULT_COIN_SELECTION_CONFIG,
+        # create_offer_for_ids to lock coins
+        offer_dict = {
+            "1": -1 * offer_mojos,
+            tail_hash.hex(): request_cat_mojos,
+        }
+        offer, tx_record = await wallet_rpc_client.create_offer_for_ids(
+            offer_dict=offer_dict, tx_config=DEFAULT_TX_CONFIG, validate_only=False
         )
+        if offer is None:
+            raise Exception("Failed to create offer")
+
+        # get coins from offer coin spends
+        coins = [
+            cs.coin
+            for cs in offer.to_spend_bundle().coin_spends
+            if cs.coin.parent_coin_info != ZERO_32
+        ]
+        print(coins)
 
         # launcher coin is the first coin
         launcher_coin = coins[0]

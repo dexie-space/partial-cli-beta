@@ -51,9 +51,6 @@ async def create_taker_offer(
             validate_only=False,
             fee=blockchain_fee_mojos,
         )
-        if offer is None:
-            raise Exception("Failed to create offer")
-
         return offer
 
 
@@ -164,37 +161,43 @@ async def take_cmd_async(
     blockchain_fee_mojos: uint64,
     taker_offer: Optional[Offer] = None,
 ):
-    if taker_offer is None:
-        taker_offer = await create_taker_offer(
-            partial_info,
-            fingerprint,
-            request_mojos - fee_mojos,
-            offer_cat_mojos,
-            blockchain_fee_mojos,
+    try:
+        if taker_offer is None:
+            taker_offer = await create_taker_offer(
+                partial_info,
+                fingerprint,
+                request_mojos - fee_mojos,
+                offer_cat_mojos,
+                blockchain_fee_mojos,
+            )
+        if taker_offer is None:
+            print("Failed to create taker offer")
+            return
+
+        sb, next_offer = await take_partial_offer(
+            taker_offer=taker_offer,
+            create_offer_coin_sb=create_offer_coin_sb,
+            partial_coin=partial_coin,
+            partial_info=partial_info,
+            request_mojos=request_mojos,
+            fee_mojos=fee_mojos,
+            offer_cat_mojos=offer_cat_mojos,
+            blockchain_fee_mojos=blockchain_fee_mojos,
         )
 
-    sb, next_offer = await take_partial_offer(
-        taker_offer=taker_offer,
-        create_offer_coin_sb=create_offer_coin_sb,
-        partial_coin=partial_coin,
-        partial_info=partial_info,
-        request_mojos=request_mojos,
-        fee_mojos=fee_mojos,
-        offer_cat_mojos=offer_cat_mojos,
-        blockchain_fee_mojos=blockchain_fee_mojos,
-    )
+        async with get_wallet_client(wallet_rpc_port, fingerprint) as (
+            wallet_rpc_client,
+            fingerprint,
+            config,
+        ):
+            await wallet_rpc_client.push_tx(sb)
 
-    async with get_wallet_client(wallet_rpc_port, fingerprint) as (
-        wallet_rpc_client,
-        fingerprint,
-        config,
-    ):
-        await wallet_rpc_client.push_tx(sb)
-
-    ret = {"spend_bundle": sb.to_json_dict()}
-    if next_offer is not None:
-        ret["next_offer"] = next_offer.to_bech32()
-    print(json.dumps(ret, indent=2))
+        ret = {"spend_bundle": sb.to_json_dict()}
+        if next_offer is not None:
+            ret["next_offer"] = next_offer.to_bech32()
+        print(json.dumps(ret, indent=2))
+    except Exception as e:
+        print(f"Error: {e}")
 
 
 # take
