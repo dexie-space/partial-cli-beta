@@ -32,13 +32,13 @@
  Take the dexie partial offer by providing the taker offer file or request information.
 
 ╭─ Options ─────────────────────────────────────────────────────────────────────────────────────────╮
-│ *  --fingerprint          -f  INTEGER             Set the fingerprint to specify which wallet to  │
-│                                                   use                                             │
-│                                                   [required]                                      │
-│    --offer-file           -o  FILENAME            Taker offer file                                │
-│    --request-information  -r  <UINT64 UINT64>...  Request XCH amount and blockchain fee in mojos  │
-│                                                   (e.g., -r 100000000000 1000)                    │
-│    --help                                         Show this message and exit.                     │
+│ *  --fingerprint    -f  INTEGER   Set the fingerprint to specify which wallet to use [required]   │
+│    --offer-file     -o  FILENAME  Taker offer file                                                │
+│    --request-mojos  -a  UINT64    Request XCH amount in mojos                                     │
+│    --fee            -m  TEXT      The blockchain fee to use when taking the partial offer, in     │
+│                                   mojos                                                           │
+│                                   [default: 0]                                                    │
+│    --help                         Show this message and exit.                                     │
 ╰───────────────────────────────────────────────────────────────────────────────────────────────────╯
 
 ```
@@ -110,7 +110,7 @@
 
 3. take 0.2 TXCH from the partial offer.
 ```bash
-❯ partial take -f $partial_taker_fp -r $(0.2e12) 1000 ./launcher-ceb5eb165f8004daf94c107900b7e97c02b887f78f67fb683643b77b86107e1a.offer
+❯ partial take -f $partial_taker_fp -a $(0.2e12) -m 1000 ./launcher-ceb5eb165f8004daf94c107900b7e97c02b887f78f67fb683643b77b86107e1a.offer
 ╭──────────────────────────┬────────────────────────────────────────────────────────────────────╮
 │ MOD_HASH:                │ 0x5a3875e000ab384ac01cdf8c272509f02845ba0a87fe1b8d267ba7cd7e2c807b │
 │ Valid:                   │ Yes                                                                │
