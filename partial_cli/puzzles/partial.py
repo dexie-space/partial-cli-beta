@@ -11,7 +11,8 @@ from chia.rpc.full_node_rpc_client import FullNodeRpcClient
 from chia.types.blockchain_format.coin import Coin
 from chia.types.blockchain_format.program import Program
 from chia.types.blockchain_format.sized_bytes import bytes32
-from chia.types.coin_spend import CoinSpend
+from chia.types.coin_spend import CoinSpend, make_spend
+from chia.types.spend_bundle import SpendBundle
 
 from chia.util.ints import uint16, uint64
 from chia.wallet.cat_wallet.cat_utils import (
@@ -26,7 +27,7 @@ from chia.wallet.lineage_proof import LineageProof
 from chia.wallet.trading.offer import OFFER_MOD, OFFER_MOD_HASH, ZERO_32, Offer
 from chia.wallet.uncurried_puzzle import uncurry_puzzle
 
-from chia_rs import G1Element
+from chia_rs import G1Element, G2Element
 
 from partial_cli.config import (
     FEE_PH,
@@ -104,6 +105,40 @@ class PartialInfo:
         )
 
 
+def get_next_offer(
+    partial_info: PartialInfo, partial_coin_id: bytes32, request_mojos: uint64
+) -> Optional[Offer]:
+    new_offer_mojos = partial_info.offer_mojos - request_mojos
+    if new_offer_mojos > 0:
+        # create next offer file if needed
+        next_partial_info = PartialInfo(
+            partial_info.fee_puzzle_hash,
+            partial_info.fee_rate,
+            partial_info.maker_puzzle_hash,
+            partial_info.public_key,
+            partial_info.tail_hash,
+            partial_info.rate,
+            new_offer_mojos,
+        )
+
+        next_puzzle = next_partial_info.to_partial_puzzle()
+        next_offer_cs = make_spend(
+            coin=Coin(
+                parent_coin_info=partial_coin_id,
+                puzzle_hash=next_puzzle.get_tree_hash(),
+                amount=new_offer_mojos,
+            ),
+            puzzle_reveal=next_puzzle,
+            solution=Program.to(["dexie_partial"]),
+        )
+
+        next_offer_sb = SpendBundle([next_offer_cs], G2Element())
+        next_offer = Offer.from_spend_bundle(next_offer_sb)
+        return next_offer
+    else:
+        return None
+
+
 @with_full_node_rpc_client(self_hostname, full_node_rpc_port, chia_root, chia_config)
 async def get_partial_info_from_parent_coin_info(
     full_node_rpc_client: FullNodeRpcClient, parent_coin_info: bytes32
@@ -135,6 +170,26 @@ async def get_partial_info_from_parent_coin_info(
     return partial_info
 
 
+def get_partial_coin_spend(coin_spends: List[CoinSpend]) -> Optional[CoinSpend]:
+    return next(
+        (
+            cs
+            for cs in coin_spends
+            if cs.solution.to_program() == Program.to(["dexie_partial"])
+        ),
+        None,
+    )
+
+
+def get_launcher_coin_spend(
+    partial_coin_parent_info: bytes32, coin_spends: List[CoinSpend]
+) -> Optional[CoinSpend]:
+    return next(
+        (cs for cs in coin_spends if partial_coin_parent_info == cs.coin.name()),
+        None,
+    )
+
+
 @with_full_node_rpc_client(self_hostname, full_node_rpc_port, chia_root, chia_config)
 async def get_launcher_or_partial_cs(
     full_node_rpc_client: FullNodeRpcClient, coin_spends
@@ -142,45 +197,32 @@ async def get_launcher_or_partial_cs(
     cs = coin_spends[0]
     coin_name = cs.coin.name()
     coin_record = await full_node_rpc_client.get_coin_record_by_name(coin_name)
+    print(coin_record)
     return cs, coin_record.spent
 
 
-def get_partial_info(cs) -> Optional[Tuple[Coin, PartialInfo]]:
-    try:
-        solution = cs.solution.to_program()
-        if len(list(solution.as_iter())) == 0:  # empty solution
-            # child partial offer coin
-            parent_coin_info = cs.coin.parent_coin_info
-            partial_info = asyncio.run(
-                get_partial_info_from_parent_coin_info(parent_coin_info)
-            )
-            return (cs.coin, partial_info, None)
-        else:
-            # launcher
-            p = cs.puzzle_reveal.to_program()
-            s = cs.solution.to_program()
-            conditions = conditions_lib.parse_conditions_non_consensus(
-                conditions=p.run(s).as_iter(), abstractions=False
-            )
-            for c in conditions:
-                if type(c) is conditions_lib.CreateCoin:
-                    # check 1st memo
-                    if len(c.memos) == 2 and c.memos[0] == "dexie_partial".encode(
-                        "utf-8"
-                    ):
-                        partial_info: PartialInfo = PartialInfo.from_json_dict(
-                            json.loads(c.memos[1].decode("utf-8"))
-                        )
-                        eph_partial_coin = Coin(
-                            cs.coin.name(),
-                            c.puzzle_hash,
-                            partial_info.offer_mojos,
-                        )
-                        return (eph_partial_coin, partial_info, cs.coin)
+@with_full_node_rpc_client(self_hostname, full_node_rpc_port, chia_root, chia_config)
+async def is_coin_spent(full_node_rpc_client: FullNodeRpcClient, coin_name: bytes32):
+    coin_record = await full_node_rpc_client.get_coin_record_by_name(coin_name)
+    return coin_record is not None and coin_record.spent
+
+
+def get_partial_info(cs) -> Optional[PartialInfo]:
+    uncurried_puzzle = uncurry_puzzle(cs.puzzle_reveal.to_program())
+    if uncurried_puzzle.mod.get_tree_hash() != MOD_HASH:
         return None
-    except Exception as e:
-        print(f"Error: {e}")
-        return None
+
+    curried_args = list(uncurried_puzzle.args.as_iter())
+    partial_info = PartialInfo(
+        fee_puzzle_hash=bytes32.from_bytes(curried_args[1].as_atom()),
+        fee_rate=uint16(curried_args[2].as_int()),
+        maker_puzzle_hash=bytes32.from_bytes(curried_args[3].as_atom()),
+        public_key=G1Element.from_bytes(curried_args[4].as_atom()),
+        tail_hash=bytes32.from_bytes(curried_args[5].as_atom()),
+        rate=uint64(curried_args[6].as_int()),
+        offer_mojos=uint64(curried_args[7].as_int()),
+    )
+    return partial_info
 
 
 def process_taker_offer(taker_offer: Offer, maker_request_payments):

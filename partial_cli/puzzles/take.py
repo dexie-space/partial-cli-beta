@@ -20,7 +20,10 @@ from partial_cli.puzzles.partial import (
     FEE_MOD,
     PartialInfo,
     display_partial_info,
-    get_launcher_or_partial_cs,
+    is_coin_spent,
+    get_launcher_coin_spend,
+    get_next_offer,
+    get_partial_coin_spend,
     get_partial_info,
     process_taker_offer,
 )
@@ -113,35 +116,8 @@ async def take_partial_offer(
         else partial_offer_sb
     )
 
-    new_offer_mojos = partial_info.offer_mojos - request_mojos
-    if new_offer_mojos > 0:
-        # create next offer file if needed
-        next_partial_info = PartialInfo(
-            partial_info.fee_puzzle_hash,
-            partial_info.fee_rate,
-            partial_info.maker_puzzle_hash,
-            partial_info.public_key,
-            partial_info.tail_hash,
-            partial_info.rate,
-            new_offer_mojos,
-        )
-
-        next_puzzle = next_partial_info.to_partial_puzzle()
-        next_offer_cs = make_spend(
-            coin=Coin(
-                parent_coin_info=partial_coin.name(),
-                puzzle_hash=next_puzzle.get_tree_hash(),
-                amount=new_offer_mojos,
-            ),
-            puzzle_reveal=next_puzzle,
-            solution=Program.to([]),
-        )
-
-        next_offer_sb = SpendBundle([next_offer_cs], G2Element())
-        next_offer = Offer.from_spend_bundle(next_offer_sb)
-        return sb, next_offer
-    else:
-        return sb, None
+    next_offer = get_next_offer(partial_info, partial_coin_id, request_mojos)
+    return sb, next_offer
 
 
 def get_offer_values(partial_info: PartialInfo, request_mojos: uint64):
@@ -192,7 +168,11 @@ async def take_cmd_async(
         ):
             await wallet_rpc_client.push_tx(sb)
 
-        ret = {"spend_bundle": sb.to_json_dict()}
+        ret = {
+            "spend_bundle": sb.to_json_dict(),
+            "taker_offer": taker_offer.to_bech32(),
+        }
+
         if next_offer is not None:
             ret["next_offer"] = next_offer.to_bech32()
         print(json.dumps(ret, indent=2))
@@ -254,16 +234,24 @@ def take_cmd(
     offer: Offer = Offer.from_bech32(offer_bech32)
     sb: SpendBundle = offer.to_spend_bundle()
 
-    cs, is_spent = asyncio.run(get_launcher_or_partial_cs(sb.coin_spends))
-    if is_spent:
+    partial_cs = get_partial_coin_spend(sb.coin_spends)
+    if partial_cs is None:
         print("Partial offer is not valid")
         return
 
-    partial_coin, partial_info, launcher_coin = get_partial_info(cs)
+    partial_coin = partial_cs.coin
 
+    is_partial_coin_spent = asyncio.run(is_coin_spent(partial_coin.name()))
+    if is_partial_coin_spent:
+        print("Partial offer is not valid")
+        return
+
+    partial_info = get_partial_info(partial_cs)
     if partial_info is None:
         print("Partial offer is not valid")
         return
+
+    launcher_cs = get_launcher_coin_spend(partial_coin.parent_coin_info, sb.coin_spends)
 
     # calculate request amounts and fees
     if taker_offer_file is not None:
@@ -289,7 +277,9 @@ def take_cmd(
         fee_mojos, offer_cat_mojos = get_offer_values(partial_info, request_mojos)
         request_mojos_minus_fees = request_mojos - fee_mojos
 
-    display_partial_info(partial_info, partial_coin.name(), is_valid=not is_spent)
+    display_partial_info(
+        partial_info, partial_coin.name(), is_valid=not is_partial_coin_spent
+    )
     print("")
     print(f" {offer_cat_mojos/1e3} CATs -> {request_mojos/1e12} XCH")
     print(f" Sending {offer_cat_mojos/1e3} CATs")
@@ -303,7 +293,11 @@ def take_cmd(
     else:
         asyncio.run(
             take_cmd_async(
-                create_offer_coin_sb=sb if launcher_coin is not None else None,
+                create_offer_coin_sb=(
+                    SpendBundle([launcher_cs], sb.aggregated_signature)
+                    if launcher_cs is not None
+                    else None
+                ),
                 partial_coin=partial_coin,
                 partial_info=partial_info,
                 fingerprint=fingerprint,

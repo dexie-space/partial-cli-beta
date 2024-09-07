@@ -8,7 +8,9 @@ from typing import Optional
 from chia.cmds.cmds_util import get_wallet_client
 from chia.cmds.units import units
 from chia.types.blockchain_format.coin import Coin
+from chia.types.blockchain_format.program import Program
 from chia.types.blockchain_format.sized_bytes import bytes32
+from chia.types.coin_spend import CoinSpend, make_spend
 from chia.types.spend_bundle import SpendBundle
 from chia.util.ints import uint64
 
@@ -16,7 +18,7 @@ import chia.wallet.conditions as conditions_lib
 from chia.wallet.trading.offer import ZERO_32, Offer
 from chia.wallet.util.tx_config import DEFAULT_COIN_SELECTION_CONFIG, DEFAULT_TX_CONFIG
 
-from chia_rs import G1Element
+from chia_rs import G1Element, G2Element
 
 from partial_cli.config import FEE_PH, FEE_RATE, wallet_rpc_port
 
@@ -140,7 +142,6 @@ async def create_offer(
                 {
                     "puzzle_hash": partial_ph,
                     "amount": offer_mojos,
-                    "memos": partial_info.to_memos(),
                 }
             ],
             coins=coins,
@@ -149,7 +150,16 @@ async def create_offer(
             extra_conditions=assert_launcher_coin_spend_announcement,
         )
 
-        maker_sb: SpendBundle = signed_txn_res.spend_bundle
+        # eph partial coin spend
+        partial_cs: CoinSpend = make_spend(
+            coin=partial_coin,
+            puzzle_reveal=partial_puzzle,
+            solution=Program.to(["dexie_partial"]),
+        )
+        partial_sb = SpendBundle([partial_cs], G2Element())
+        maker_sb: SpendBundle = SpendBundle.aggregate(
+            [signed_txn_res.spend_bundle, partial_sb]
+        )
 
         offer = Offer.from_spend_bundle(maker_sb)
         offer_bech32 = offer.to_bech32()
