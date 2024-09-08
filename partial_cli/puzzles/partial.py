@@ -165,6 +165,21 @@ async def is_coin_spent(full_node_rpc_client: FullNodeRpcClient, coin_name: byte
     return coin_record is not None and coin_record.spent
 
 
+async def get_create_offer_coin_sb(
+    coin_spends: List[CoinSpend], aggregated_signature: G2Element
+) -> Optional[SpendBundle]:
+    non_partial_coin_spends = get_non_partial_coin_spends(coin_spends)
+    if len(non_partial_coin_spends) == 0:
+        return None
+
+    for cs in non_partial_coin_spends:
+        is_spent = await is_coin_spent(cs.coin.name())
+        if is_spent:
+            return None
+
+    return SpendBundle(non_partial_coin_spends, aggregated_signature)
+
+
 def get_partial_info(cs) -> Optional[PartialInfo]:
     uncurried_puzzle = uncurry_puzzle(cs.puzzle_reveal.to_program())
     if uncurried_puzzle.mod.get_tree_hash() != MOD_HASH:

@@ -17,7 +17,7 @@ from partial_cli.config import genesis_challenge, wallet_rpc_port
 from partial_cli.puzzles.partial import (
     PartialInfo,
     is_coin_spent,
-    get_non_partial_coin_spends,
+    get_create_offer_coin_sb,
     get_partial_coin_spend,
     get_partial_info,
 )
@@ -127,15 +127,12 @@ def clawback_cmd(ctx, fingerprint, blockchain_fee_mojos, offer_file):
         print("Partial offer is not valid")
         return
 
-    non_partial_coin_spends = get_non_partial_coin_spends(sb.coin_spends)
-
+    create_offer_coin_sb = asyncio.run(
+        get_create_offer_coin_sb(sb.coin_spends, sb.aggregated_signature)
+    )
     asyncio.run(
         clawback_partial_offer(
-            create_offer_coin_sb=(
-                SpendBundle(non_partial_coin_spends, sb.aggregated_signature)
-                if len(non_partial_coin_spends) > 0
-                else None
-            ),
+            create_offer_coin_sb=create_offer_coin_sb,
             partial_coin=partial_coin,
             partial_info=partial_info,
             fingerprint=fingerprint,

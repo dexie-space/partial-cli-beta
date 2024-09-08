@@ -13,16 +13,14 @@ from chia.util.ints import uint64
 from chia.wallet.trading.offer import OFFER_MOD, OFFER_MOD_HASH, Offer
 from chia.wallet.util.tx_config import DEFAULT_COIN_SELECTION_CONFIG, DEFAULT_TX_CONFIG
 
-from chia_rs import G2Element
-
 from partial_cli.config import wallet_rpc_port
 from partial_cli.puzzles.partial import (
     FEE_MOD,
     PartialInfo,
     display_partial_info,
     is_coin_spent,
-    get_non_partial_coin_spends,
     get_next_offer,
+    get_create_offer_coin_sb,
     get_partial_coin_spend,
     get_partial_info,
     process_taker_offer,
@@ -251,8 +249,6 @@ def take_cmd(
         print("Partial offer is not valid")
         return
 
-    non_partial_coin_spends = get_non_partial_coin_spends(sb.coin_spends)
-
     # calculate request amounts and fees
     if taker_offer_file is not None:
         taker_offer_bech32 = taker_offer_file.read()
@@ -288,16 +284,16 @@ def take_cmd(
 
     is_confirmed = Confirm.ask("\n Would you like to take this offer?")
 
+    create_offer_coin_sb = asyncio.run(
+        get_create_offer_coin_sb(sb.coin_spends, sb.aggregated_signature)
+    )
+
     if not is_confirmed:
         return
     else:
         asyncio.run(
             take_cmd_async(
-                create_offer_coin_sb=(
-                    SpendBundle(non_partial_coin_spends, sb.aggregated_signature)
-                    if len(non_partial_coin_spends) > 0
-                    else None
-                ),
+                create_offer_coin_sb=create_offer_coin_sb,
                 partial_coin=partial_coin,
                 partial_info=partial_info,
                 fingerprint=fingerprint,
