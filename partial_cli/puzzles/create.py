@@ -18,7 +18,7 @@ import chia.wallet.conditions as conditions_lib
 from chia.wallet.trading.offer import ZERO_32, Offer
 from chia.wallet.util.tx_config import DEFAULT_COIN_SELECTION_CONFIG, DEFAULT_TX_CONFIG
 
-from chia_rs import G1Element, G2Element
+from chia_rs import G2Element
 
 from partial_cli.config import FEE_PH, FEE_RATE, wallet_rpc_port
 
@@ -63,6 +63,22 @@ def create_cmd(
     filepath: Optional[pathlib.Path],
 ):
     asyncio.run(create_offer(fingerprint, offer, request, filepath))
+
+
+def get_launcher_coin(
+    sb: SpendBundle, partial_ph: bytes32, offer_mojos: uint64
+) -> Coin:
+    for cs in sb.coin_spends:
+        result = cs.puzzle_reveal.to_program().run(cs.solution.to_program())
+        conditions_list = conditions_lib.parse_conditions_non_consensus(
+            result.as_iter(), abstractions=False
+        )
+        for c in conditions_list:
+            if c == conditions_lib.CreateCoin(
+                puzzle_hash=partial_ph, amount=offer_mojos
+            ):
+                return cs.coin
+    return None
 
 
 async def create_offer(
@@ -111,15 +127,13 @@ async def create_offer(
             if cs.coin.parent_coin_info != ZERO_32
         ]
 
-        # launcher coin is the first coin
-        launcher_coin = coins[0]
-        launcher_ph = launcher_coin.puzzle_hash
+        maker_ph = coins[0].puzzle_hash
 
         public_key = await get_public_key(fingerprint)
         partial_info = PartialInfo(
             fee_puzzle_hash=FEE_PH,
             fee_rate=FEE_RATE,
-            maker_puzzle_hash=launcher_ph,
+            maker_puzzle_hash=maker_ph,
             public_key=public_key,
             tail_hash=tail_hash,
             rate=rate,
@@ -128,14 +142,6 @@ async def create_offer(
 
         partial_puzzle = partial_info.to_partial_puzzle()
         partial_ph = partial_puzzle.get_tree_hash()
-
-        partial_coin = Coin(launcher_coin.name(), partial_ph, offer_mojos)
-
-        assert_launcher_coin_spend_announcement = [
-            conditions_lib.AssertCoinAnnouncement(
-                asserted_msg=launcher_ph, asserted_id=partial_coin.name()
-            )
-        ]
 
         signed_txn_res = await wallet_rpc_client.create_signed_transaction(
             additions=[
@@ -147,8 +153,16 @@ async def create_offer(
             coins=coins,
             tx_config=DEFAULT_TX_CONFIG,
             wallet_id=1,
-            extra_conditions=assert_launcher_coin_spend_announcement,
         )
+
+        # find launcher coin
+        launcher_coin = get_launcher_coin(
+            signed_txn_res.spend_bundle, partial_ph, offer_mojos
+        )
+
+        assert launcher_coin is not None
+
+        partial_coin = Coin(launcher_coin.name(), partial_ph, offer_mojos)
 
         # eph partial coin spend
         partial_cs: CoinSpend = make_spend(
