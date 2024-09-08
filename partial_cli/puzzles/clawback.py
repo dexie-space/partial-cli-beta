@@ -16,7 +16,9 @@ from clvm.casts import int_to_bytes
 from partial_cli.config import genesis_challenge, wallet_rpc_port
 from partial_cli.puzzles.partial import (
     PartialInfo,
-    get_launcher_or_partial_cs,
+    is_coin_spent,
+    get_non_partial_coin_spends,
+    get_partial_coin_spend,
     get_partial_info,
 )
 
@@ -108,23 +110,35 @@ def clawback_cmd(ctx, fingerprint, blockchain_fee_mojos, offer_file):
     offer: Offer = Offer.from_bech32(offer_bech32)
     sb: SpendBundle = offer.to_spend_bundle()
 
-    cs, is_spent = asyncio.run(get_launcher_or_partial_cs(sb.coin_spends))
-    if is_spent:
+    partial_cs = get_partial_coin_spend(sb.coin_spends)
+    if partial_cs is None:
         print("Partial offer is not valid")
         return
 
-    partial_coin, partial_info, launcher_coin = get_partial_info(cs)
+    partial_coin = partial_cs.coin
 
-    if partial_info is None:
-        print("Partial offer is not valid.")
+    is_partial_coin_spent = asyncio.run(is_coin_spent(partial_coin.name()))
+    if is_partial_coin_spent:
+        print("Partial offer is not valid")
         return
+
+    partial_info = get_partial_info(partial_cs)
+    if partial_info is None:
+        print("Partial offer is not valid")
+        return
+
+    non_partial_coin_spends = get_non_partial_coin_spends(sb.coin_spends)
 
     asyncio.run(
         clawback_partial_offer(
-            sb if launcher_coin is not None else None,
-            partial_coin,
-            partial_info,
-            fingerprint,
-            blockchain_fee_mojos,
+            create_offer_coin_sb=(
+                SpendBundle(non_partial_coin_spends, sb.aggregated_signature)
+                if len(non_partial_coin_spends) > 0
+                else None
+            ),
+            partial_coin=partial_coin,
+            partial_info=partial_info,
+            fingerprint=fingerprint,
+            blockchain_fee_mojos=blockchain_fee_mojos,
         )
     )

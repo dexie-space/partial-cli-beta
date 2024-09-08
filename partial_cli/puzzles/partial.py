@@ -139,37 +139,6 @@ def get_next_offer(
         return None
 
 
-@with_full_node_rpc_client(self_hostname, full_node_rpc_port, chia_root, chia_config)
-async def get_partial_info_from_parent_coin_info(
-    full_node_rpc_client: FullNodeRpcClient, parent_coin_info: bytes32
-):
-    coin_record = await full_node_rpc_client.get_coin_record_by_name(parent_coin_info)
-    if coin_record is None:
-        raise Exception(f"Coin {parent_coin_info} not found.")
-
-    coin_spend = await full_node_rpc_client.get_puzzle_and_solution(
-        parent_coin_info, coin_record.spent_block_index
-    )
-
-    if coin_spend is None:
-        raise Exception(f"Coin {parent_coin_info} not spent.")
-
-    solutions = list(coin_spend.solution.to_program().as_iter())
-    uncurried_puzzle = uncurry_puzzle(coin_spend.puzzle_reveal.to_program())
-    assert uncurried_puzzle.mod.get_tree_hash() == MOD_HASH
-    curried_args = list(uncurried_puzzle.args.as_iter())
-    partial_info = PartialInfo(
-        fee_puzzle_hash=bytes32.from_bytes(curried_args[1].as_atom()),
-        fee_rate=uint16(curried_args[2].as_int()),
-        maker_puzzle_hash=bytes32.from_bytes(curried_args[3].as_atom()),
-        public_key=G1Element.from_bytes(curried_args[4].as_atom()),
-        tail_hash=bytes32.from_bytes(curried_args[5].as_atom()),
-        rate=uint64(curried_args[6].as_int()),
-        offer_mojos=uint64(curried_args[7].as_int()) - uint64(solutions[1].as_int()),
-    )
-    return partial_info
-
-
 def get_partial_coin_spend(coin_spends: List[CoinSpend]) -> Optional[CoinSpend]:
     return next(
         (
@@ -181,24 +150,13 @@ def get_partial_coin_spend(coin_spends: List[CoinSpend]) -> Optional[CoinSpend]:
     )
 
 
-def get_launcher_coin_spend(
-    partial_coin_parent_info: bytes32, coin_spends: List[CoinSpend]
-) -> Optional[CoinSpend]:
-    return next(
-        (cs for cs in coin_spends if partial_coin_parent_info == cs.coin.name()),
-        None,
+def get_non_partial_coin_spends(coin_spends: List[CoinSpend]) -> List[CoinSpend]:
+    return list(
+        filter(
+            lambda cs: cs.solution.to_program() != Program.to(["dexie_partial"]),
+            coin_spends,
+        )
     )
-
-
-@with_full_node_rpc_client(self_hostname, full_node_rpc_port, chia_root, chia_config)
-async def get_launcher_or_partial_cs(
-    full_node_rpc_client: FullNodeRpcClient, coin_spends
-):
-    cs = coin_spends[0]
-    coin_name = cs.coin.name()
-    coin_record = await full_node_rpc_client.get_coin_record_by_name(coin_name)
-    print(coin_record)
-    return cs, coin_record.spent
 
 
 @with_full_node_rpc_client(self_hostname, full_node_rpc_port, chia_root, chia_config)

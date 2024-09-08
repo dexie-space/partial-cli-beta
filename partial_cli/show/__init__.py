@@ -8,7 +8,7 @@ from partial_cli.puzzles.partial import (
     MOD_HASH,
     display_partial_info,
     is_coin_spent,
-    get_launcher_coin_spend,
+    get_non_partial_coin_spends,
     get_partial_coin_spend,
     get_partial_info,
 )
@@ -36,9 +36,7 @@ def show_cmd(ctx, as_json, offer_file):
     is_partial_coin_spent = asyncio.run(is_coin_spent(partial_coin.name()))
     assert partial_cs is not None
 
-    launcher_cs = get_launcher_coin_spend(
-        partial_cs.coin.parent_coin_info, sb.coin_spends
-    )
+    non_partial_coin_spends = get_non_partial_coin_spends(sb.coin_spends)
 
     partial_info = get_partial_info(partial_cs)
     if partial_info is None:
@@ -52,8 +50,14 @@ def show_cmd(ctx, as_json, offer_file):
                 "partial_info": partial_info.to_json_dict(),
                 "partial_coin": partial_coin.to_json_dict(),
             }
-            if launcher_cs is not None:
-                ret["launcher_coin"] = launcher_cs.coin.to_json_dict()
+            if len(non_partial_coin_spends) > 0:
+                launcher_cs = next(
+                    cs
+                    for cs in non_partial_coin_spends
+                    if cs.coin.name() == partial_coin.parent_coin_info
+                )
+                if launcher_cs is not None:
+                    ret["launcher_coin"] = launcher_cs.coin.to_json_dict()
             print(json.dumps(ret, indent=2))
         else:
             display_partial_info(
