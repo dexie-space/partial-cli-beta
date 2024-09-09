@@ -1,5 +1,6 @@
 import rich_click as click
 
+from partial_cli.config import config_cmd
 from partial_cli.puzzles import get_cmd
 from partial_cli.puzzles.clawback import clawback_cmd
 from partial_cli.puzzles.create import create_cmd
@@ -13,6 +14,7 @@ def partial_cmd(ctx):
     pass
 
 
+partial_cmd.add_command(config_cmd)
 partial_cmd.add_command(get_cmd)
 partial_cmd.add_command(show_cmd)
 
