@@ -46,13 +46,13 @@ async def create_taker_offer(
             tail_hash: -1 * offer_cat_mojos,
         }
 
-        offer, tx_record = await wallet_rpc_client.create_offer_for_ids(
+        create_offer_res = await wallet_rpc_client.create_offer_for_ids(
             offer_dict=offer_dict,
             tx_config=DEFAULT_TX_CONFIG,
             validate_only=False,
             fee=blockchain_fee_mojos,
         )
-        return offer
+        return create_offer_res.offer
 
 
 async def take_partial_offer(

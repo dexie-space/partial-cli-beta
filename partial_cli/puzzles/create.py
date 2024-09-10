@@ -114,9 +114,11 @@ async def create_offer(
             "1": -1 * offer_mojos,
             tail_hash.hex(): request_cat_mojos,
         }
-        offer, tx_record = await wallet_rpc_client.create_offer_for_ids(
+        create_offer_res = await wallet_rpc_client.create_offer_for_ids(
             offer_dict=offer_dict, tx_config=DEFAULT_TX_CONFIG, validate_only=False
         )
+
+        offer = create_offer_res.offer
         if offer is None:
             raise Exception("Failed to create offer")
 
@@ -143,7 +145,7 @@ async def create_offer(
         partial_puzzle = partial_info.to_partial_puzzle()
         partial_ph = partial_puzzle.get_tree_hash()
 
-        signed_txn_res = await wallet_rpc_client.create_signed_transaction(
+        signed_txn_res = await wallet_rpc_client.create_signed_transactions(
             additions=[
                 {
                     "puzzle_hash": partial_ph,
@@ -156,9 +158,8 @@ async def create_offer(
         )
 
         # find launcher coin
-        launcher_coin = get_launcher_coin(
-            signed_txn_res.spend_bundle, partial_ph, offer_mojos
-        )
+        sb = signed_txn_res.signed_tx.spend_bundle
+        launcher_coin = get_launcher_coin(sb, partial_ph, offer_mojos)
 
         assert launcher_coin is not None
 
@@ -171,16 +172,14 @@ async def create_offer(
             solution=Program.to(["dexie_partial"]),
         )
         partial_sb = SpendBundle([partial_cs], G2Element())
-        maker_sb: SpendBundle = SpendBundle.aggregate(
-            [signed_txn_res.spend_bundle, partial_sb]
-        )
+        maker_sb: SpendBundle = SpendBundle.aggregate([sb, partial_sb])
 
         offer = Offer.from_spend_bundle(maker_sb)
         offer_bech32 = offer.to_bech32()
         filepath = (
             filepath
             if filepath is not None
-            else pathlib.Path.cwd() / f"launcher-{offer.name()}.offer"
+            else pathlib.Path.cwd() / f"launcher-{offer.name().hex()}.offer"
         )
         with filepath.open(mode="w") as file:
             file.write(offer_bech32)
