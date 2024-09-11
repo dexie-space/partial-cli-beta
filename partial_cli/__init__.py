@@ -1,11 +1,11 @@
 import rich_click as click
 
+from partial_cli.create import create_cmd
+from partial_cli.clawback import clawback_cmd
 from partial_cli.config import config_cmd
-from partial_cli.puzzles import get_cmd
-from partial_cli.puzzles.clawback import clawback_cmd
-from partial_cli.puzzles.create import create_cmd
-from partial_cli.puzzles.take import take_cmd
+from partial_cli.get import get_cmd
 from partial_cli.show import show_cmd
+from partial_cli.take import take_cmd
 
 
 @click.group("partial", help="Manage dexie partial offers")

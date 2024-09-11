@@ -2,7 +2,7 @@ import asyncio
 import json
 from rich.prompt import Confirm
 import rich_click as click
-from typing import Optional
+from typing import Any, Dict, List, Optional
 
 from chia.cmds.cmds_util import get_wallet_client
 from chia.types.blockchain_format.coin import Coin
@@ -10,21 +10,85 @@ from chia.types.blockchain_format.program import Program
 from chia.types.coin_spend import CoinSpend, make_spend
 from chia.types.spend_bundle import SpendBundle
 from chia.util.ints import uint64
-from chia.wallet.trading.offer import OFFER_MOD, OFFER_MOD_HASH, Offer
-from chia.wallet.util.tx_config import DEFAULT_COIN_SELECTION_CONFIG, DEFAULT_TX_CONFIG
+from chia.wallet.cat_wallet.cat_utils import (
+    CAT_MOD,
+    SpendableCAT,
+    match_cat_puzzle,
+    unsigned_spend_bundle_for_spendable_cats,
+)
+from chia.wallet.lineage_proof import LineageProof
+from chia.wallet.trading.offer import OFFER_MOD, OFFER_MOD_HASH, ZERO_32, Offer
+from chia.wallet.uncurried_puzzle import uncurry_puzzle
+from chia.wallet.util.tx_config import DEFAULT_TX_CONFIG
 
 from partial_cli.config import wallet_rpc_port
-from partial_cli.puzzles.partial import (
+from partial_cli.puzzles import (
     FEE_MOD,
-    PartialInfo,
-    display_partial_info,
-    is_coin_spent,
-    get_next_offer,
     get_create_offer_coin_sb,
     get_partial_coin_spend,
-    get_partial_info,
-    process_taker_offer,
 )
+from partial_cli.types.partial_info import PartialInfo
+from partial_cli.utils.partial import display_partial_info
+from partial_cli.utils.rpc import is_coin_spent
+
+
+def process_taker_offer(taker_offer: Offer, maker_request_payments):
+    sb = taker_offer.to_spend_bundle()
+    taker_offer_coin_spends = sb.coin_spends
+    # partial_taker coin spends & notarized payments
+    coin_spends: Dict[str, CoinSpend] = {}  # offer input CAT coins
+    notarized_payments_solutions: List[Any] = []  # request XCH payments
+
+    for cs in taker_offer_coin_spends:
+        if cs.coin.parent_coin_info != ZERO_32:
+            coin_name = cs.coin.name().hex()
+            coin_spends[coin_name] = cs
+        else:
+            solutions = cs.solution.to_program().as_python()
+            notarized_payments_solutions.append(solutions)
+
+    settlement_spendable_cats: List[SpendableCAT] = []  # settlement spendable CAT
+    for tail_hash, coins in taker_offer.get_offered_coins().items():
+        for coin in coins:
+            parent_cs = coin_spends[coin.parent_coin_info.hex()]
+            matched_cat_puzzle = match_cat_puzzle(
+                uncurry_puzzle(parent_cs.puzzle_reveal.to_program())
+            )
+
+            if matched_cat_puzzle is None:
+                # TODO: raise error?
+                continue
+
+            parent_inner_puzzle_hash = list(matched_cat_puzzle)[2].get_tree_hash()
+            lineage_proof = LineageProof(
+                parent_cs.coin.parent_coin_info,
+                parent_inner_puzzle_hash,
+                uint64(parent_cs.coin.amount),
+            )
+
+            # payment to maker
+            intermediary_token_reserve_coin_inner_solution = [maker_request_payments]
+
+            spendable_cat = SpendableCAT(
+                coin=coin,
+                limitations_program_hash=tail_hash,
+                inner_puzzle=OFFER_MOD,
+                inner_solution=intermediary_token_reserve_coin_inner_solution,
+                lineage_proof=lineage_proof,
+            )
+            settlement_spendable_cats.append(spendable_cat)
+
+    settlement_coin_spends = unsigned_spend_bundle_for_spendable_cats(
+        CAT_MOD, settlement_spendable_cats
+    ).coin_spends
+
+    taker_coin_spends = list(coin_spends.values()) + settlement_coin_spends
+
+    return (
+        taker_coin_spends,
+        Program.to(notarized_payments_solutions[0]),
+        sb.aggregated_signature,
+    )
 
 
 async def create_taker_offer(
@@ -114,7 +178,7 @@ async def take_partial_offer(
         else partial_offer_sb
     )
 
-    next_offer = get_next_offer(partial_info, partial_coin_id, request_mojos)
+    next_offer = partial_info.get_next_partial_offer(partial_coin_id, request_mojos)
     return sb, next_offer
 
 
@@ -244,7 +308,7 @@ def take_cmd(
         print("Partial offer is not valid")
         return
 
-    partial_info = get_partial_info(partial_cs)
+    partial_info = PartialInfo.from_coin_spend(partial_cs)
     if partial_info is None:
         print("Partial offer is not valid")
         return

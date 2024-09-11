@@ -16,13 +16,13 @@ from chia.util.ints import uint64
 
 import chia.wallet.conditions as conditions_lib
 from chia.wallet.trading.offer import ZERO_32, Offer
-from chia.wallet.util.tx_config import DEFAULT_COIN_SELECTION_CONFIG, DEFAULT_TX_CONFIG
+from chia.wallet.util.tx_config import DEFAULT_TX_CONFIG
 
 from chia_rs import G2Element
 
 from partial_cli.config import FEE_PH, FEE_RATE, wallet_rpc_port
 
-from partial_cli.puzzles.partial import PartialInfo
+from partial_cli.types.partial_info import PartialInfo
 from partial_cli.utils.shared import get_public_key
 
 

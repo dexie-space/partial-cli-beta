@@ -14,13 +14,9 @@ from chia.wallet.trading.offer import ZERO_32, Offer
 from clvm.casts import int_to_bytes
 
 from partial_cli.config import genesis_challenge, wallet_rpc_port
-from partial_cli.puzzles.partial import (
-    PartialInfo,
-    is_coin_spent,
-    get_create_offer_coin_sb,
-    get_partial_coin_spend,
-    get_partial_info,
-)
+from partial_cli.puzzles import get_create_offer_coin_sb, get_partial_coin_spend
+from partial_cli.types.partial_info import PartialInfo
+from partial_cli.utils.rpc import is_coin_spent
 
 from chia_rs import AugSchemeMPL, G1Element, PrivateKey
 
@@ -122,7 +118,7 @@ def clawback_cmd(ctx, fingerprint, blockchain_fee_mojos, offer_file):
         print("Partial offer is not valid")
         return
 
-    partial_info = get_partial_info(partial_cs)
+    partial_info = PartialInfo.from_coin_spend(partial_cs)
     if partial_info is None:
         print("Partial offer is not valid")
         return

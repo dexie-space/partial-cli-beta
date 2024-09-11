@@ -42,16 +42,6 @@ class ProgramParamType(click.ParamType):
             self.fail(f"Invalid Program: {value}", param, ctx)
 
 
-def get_cat_puzzle_hash(asset_id: bytes32, inner_puzzlehash: bytes32):
-    if asset_id is None:
-        return inner_puzzlehash
-
-    outer_puzzlehash = CAT_MOD.curry(
-        CAT_MOD.get_tree_hash(), asset_id, inner_puzzlehash
-    ).get_tree_hash_precalc(inner_puzzlehash)
-    return outer_puzzlehash
-
-
 async def get_public_key(fingerprint: int):
     async with get_wallet_client(wallet_rpc_port, fingerprint) as (
         wallet_rpc_client,

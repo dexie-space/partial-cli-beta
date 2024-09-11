@@ -4,14 +4,14 @@ import rich_click as click
 
 from chia.wallet.trading.offer import Offer
 
-from partial_cli.puzzles.partial import (
+from partial_cli.puzzles import (
     MOD_HASH,
-    display_partial_info,
-    is_coin_spent,
-    get_non_partial_coin_spends,
     get_partial_coin_spend,
-    get_partial_info,
+    get_non_partial_coin_spends,
 )
+from partial_cli.types.partial_info import PartialInfo
+from partial_cli.utils.partial import display_partial_info
+from partial_cli.utils.rpc import is_coin_spent
 
 
 @click.command("show", help="display the dexie partial offer information.")
@@ -38,7 +38,7 @@ def show_cmd(ctx, as_json, offer_file):
 
     non_partial_coin_spends = get_non_partial_coin_spends(sb.coin_spends)
 
-    partial_info = get_partial_info(partial_cs)
+    partial_info = PartialInfo.from_coin_spend(partial_cs)
     if partial_info is None:
         print("Partial offer is not valid.")
         return
