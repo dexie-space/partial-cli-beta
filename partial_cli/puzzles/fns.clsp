@@ -26,6 +26,10 @@
         )
     )
 
+    (defun calculate-rate (offer_mojos request_cat_mojos)
+        (/ (* request_cat_mojos 1000000000000) offer_mojos)
+    )
+
     (defun calculate-cat-mojos (RATE taken_mojos)
         (/ (* RATE taken_mojos) 1000000000000)
     )

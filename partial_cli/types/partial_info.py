@@ -104,6 +104,7 @@ class PartialInfo:
     def from_coin_spend(cs: CoinSpend) -> Optional["PartialInfo"]:
         uncurried_puzzle = uncurry_puzzle(cs.puzzle_reveal.to_program())
 
+        # check if the uncurried puzzle is the same as the partial puzzle
         if uncurried_puzzle.mod.get_tree_hash() != MOD_HASH:
             return None
 

@@ -1,0 +1,6 @@
+(mod (offer_mojos request_cat_mojos)
+    (include *standard-cl-23*)
+    (include "fns.clsp")
+    
+    (calculate-rate offer_mojos request_cat_mojos)
+)

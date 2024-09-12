@@ -21,7 +21,7 @@ from chia.wallet.util.tx_config import DEFAULT_TX_CONFIG
 from chia_rs import G2Element
 
 from partial_cli.config import FEE_PH, FEE_RATE, wallet_rpc_port
-
+from partial_cli.puzzles import RATE_MOD
 from partial_cli.types.partial_info import PartialInfo
 from partial_cli.utils.shared import get_public_key
 
@@ -107,7 +107,7 @@ async def create_offer(
 
         request_cat_mojos = uint64(abs(int(Decimal(request_amount) * units["cat"])))
 
-        rate = uint64((request_cat_mojos / offer_mojos) * 1e12)
+        rate = RATE_MOD.run(Program.to([offer_mojos, request_cat_mojos])).as_int()
 
         # create_offer_for_ids to lock coins
         offer_dict = {
