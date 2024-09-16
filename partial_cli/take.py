@@ -127,7 +127,6 @@ async def take_partial_offer(
     request_mojos: uint64,
     fee_mojos: uint64,
     offer_cat_mojos: uint64,
-    blockchain_fee_mojos: uint64,
 ):
     # partial coin id (nonce) for puzzle announcement
     partial_coin_id = partial_coin.name()
@@ -136,7 +135,7 @@ async def take_partial_offer(
 
     # create spend bundle
     p = partial_info.to_partial_puzzle()
-    s = Program.to([partial_coin_id, request_mojos])
+    s = Program.to([partial_coin_id, request_mojos, 0])
 
     eph_partial_cs: CoinSpend = make_spend(partial_coin, puzzle_reveal=p, solution=s)
 
@@ -221,7 +220,6 @@ async def take_cmd_async(
             request_mojos=request_mojos,
             fee_mojos=fee_mojos,
             offer_cat_mojos=offer_cat_mojos,
-            blockchain_fee_mojos=blockchain_fee_mojos,
         )
 
         async with get_wallet_client(wallet_rpc_port, fingerprint) as (
