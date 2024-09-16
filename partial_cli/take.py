@@ -129,6 +129,7 @@ async def take_partial_offer(
     offer_cat_mojos: uint64,
     blockchain_fee_mojos: uint64,
 ):
+    # partial coin id (nonce) for puzzle announcement
     partial_coin_id = partial_coin.name()
     # only request the amount minus fees
     request_mojos_minus_fees = request_mojos - fee_mojos

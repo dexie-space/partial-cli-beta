@@ -87,10 +87,12 @@
     )
 
     (defun clawback-offer-mojos (MAKER_PH MAKER_PK OFFER_MOJOS chain_fee_mojos)
-        (filter-empty ()
+        (filter-empty 
             (list
                 (list CREATE_COIN MAKER_PH (- OFFER_MOJOS chain_fee_mojos))
                 (list AGG_SIG_ME MAKER_PK (sha256 OFFER_MOJOS))
+            )
+            (list
                 (if (> chain_fee_mojos 0)
                     (list RESERVE_FEE chain_fee_mojos)
                     ()

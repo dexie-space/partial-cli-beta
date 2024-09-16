@@ -38,9 +38,6 @@ class PartialInfo:
             self.offer_mojos,
         )
 
-    def to_memos(self):
-        return ["dexie_partial", json.dumps(self.to_json_dict())]
-
     def to_json_dict(self):
         return {
             "fee_puzzle_hash": self.fee_puzzle_hash.hex(),
