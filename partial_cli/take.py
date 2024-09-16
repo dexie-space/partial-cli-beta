@@ -135,7 +135,7 @@ async def take_partial_offer(
 
     # create spend bundle
     p = partial_info.to_partial_puzzle()
-    s = Program.to([partial_coin_id, request_mojos, 0])
+    s = Program.to([partial_coin.amount, partial_coin_id, request_mojos, 0])
 
     eph_partial_cs: CoinSpend = make_spend(partial_coin, puzzle_reveal=p, solution=s)
 
@@ -178,7 +178,7 @@ async def take_partial_offer(
         else partial_offer_sb
     )
 
-    next_offer = partial_info.get_next_partial_offer(partial_coin_id, request_mojos)
+    next_offer = partial_info.get_next_partial_offer(partial_coin, request_mojos)
     return sb, next_offer
 
 
@@ -327,18 +327,16 @@ def take_cmd(
         fee_mojos = int(request_mojos - request_mojos_minus_fees)
         offer_cat_mojos = uint64(request_mojos * partial_info.rate * 1e-12)
     else:
-        if partial_info.offer_mojos < request_mojos:
+        if partial_coin.amount < request_mojos:
             print(
-                f"Requested amount, {request_mojos} mojos is greater than the offer amount, {partial_info.offer_mojos} mojos."
+                f"Requested amount, {request_mojos} mojos is greater than the offer amount, {partial_coin.amount} mojos."
             )
             return
 
         fee_mojos, offer_cat_mojos = get_offer_values(partial_info, request_mojos)
         request_mojos_minus_fees = request_mojos - fee_mojos
 
-    display_partial_info(
-        partial_info, partial_coin.name(), is_valid=not is_partial_coin_spent
-    )
+    display_partial_info(partial_info, partial_coin, is_valid=not is_partial_coin_spent)
     print("")
     print(f" {offer_cat_mojos/1e3} CATs -> {request_mojos/1e12} XCH")
     print(f" Sending {offer_cat_mojos/1e3} CATs")

@@ -61,14 +61,6 @@ from partial_cli.utils.shared import Bytes32ParamType, G1ElementParamType
     help="Rate in 1000 (e.g., 1 XCH for 128.68 CAT is 128680)",
     type=uint64,
 )
-@click.option(
-    "-a",
-    "--offer-mojos",
-    required=True,
-    default=None,
-    help="Offer amount in mojos",
-    type=uint64,
-)
 @click.pass_context
 def get_cmd(
     ctx,
@@ -78,7 +70,6 @@ def get_cmd(
     public_key: G1Element,
     tail_hash: bytes32,
     rate: uint64,
-    offer_mojos: uint64,
 ):
     partial_info = PartialInfo(
         fee_puzzle_hash=fee_puzzle_hash,
@@ -87,7 +78,6 @@ def get_cmd(
         public_key=public_key,
         tail_hash=tail_hash,
         rate=rate,
-        offer_mojos=offer_mojos,
     )
     p = partial_info.to_partial_puzzle()
     ret = {"puzzle_hash": p.get_tree_hash().hex(), "puzzle": str(p)}

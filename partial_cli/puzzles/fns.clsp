@@ -65,13 +65,12 @@
         (list CREATE_COIN OFFER_MOD_HASH taken_mojos_minus_fee)
     )
 
-    (defun create-partial-coin (MOD_HASH FEE_PH FEE_RATE MAKER_PH MAKER_PK TAIL_HASH RATE new_offer_mojos) 
+    (defun create-partial-coin (MOD_HASH FEE_PH FEE_RATE MAKER_PH MAKER_PK TAIL_HASH RATE new_partial_coin_amount) 
         (let 
             (
                 (new_puzzle_hash
                     (puzzle-hash-of-curried-function 
                         MOD_HASH
-                        (sha256 ONE new_offer_mojos)
                         (sha256 ONE RATE) 
                         (sha256 ONE TAIL_HASH)
                         (sha256 ONE MAKER_PK)
@@ -82,15 +81,15 @@
                     )
                 )
             )
-            (list CREATE_COIN new_puzzle_hash new_offer_mojos)
+            (list CREATE_COIN new_puzzle_hash new_partial_coin_amount)
         )
     )
 
-    (defun clawback-offer-mojos (MAKER_PH MAKER_PK OFFER_MOJOS chain_fee_mojos)
+    (defun clawback (MAKER_PH MAKER_PK partial_coin_amount chain_fee_mojos)
         (filter-empty 
             (list
-                (list CREATE_COIN MAKER_PH (- OFFER_MOJOS chain_fee_mojos))
-                (list AGG_SIG_ME MAKER_PK (sha256 OFFER_MOJOS))
+                (list CREATE_COIN MAKER_PH (- partial_coin_amount chain_fee_mojos))
+                (list AGG_SIG_ME MAKER_PK (sha256 partial_coin_amount))
             )
             (list
                 (if (> chain_fee_mojos 0)

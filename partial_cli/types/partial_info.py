@@ -1,4 +1,3 @@
-import json
 from dataclasses import dataclass
 from typing import Optional
 
@@ -24,7 +23,6 @@ class PartialInfo:
     public_key: G1Element
     tail_hash: bytes32
     rate: uint64  # e.g., 1 XCH = 100 CATs, rate = 100
-    offer_mojos: uint64
 
     def to_partial_puzzle(self):
         return MOD.curry(
@@ -35,7 +33,6 @@ class PartialInfo:
             self.public_key,
             self.tail_hash,
             self.rate,
-            self.offer_mojos,
         )
 
     def to_json_dict(self):
@@ -46,33 +43,23 @@ class PartialInfo:
             "public_key": str(self.public_key),
             "tail_hash": self.tail_hash.hex(),
             "rate": self.rate,
-            "offer_mojos": self.offer_mojos,
         }
 
     def get_next_partial_offer(
-        self, partial_coin_id: bytes32, request_mojos: uint64
+        self, partial_coin: Coin, request_mojos: uint64
     ) -> Optional[Offer]:
-        new_offer_mojos = self.offer_mojos - request_mojos
-        if new_offer_mojos > 0:
-            # create next offer file if needed
-            next_partial_info = PartialInfo(
-                self.fee_puzzle_hash,
-                self.fee_rate,
-                self.maker_puzzle_hash,
-                self.public_key,
-                self.tail_hash,
-                self.rate,
-                new_offer_mojos,
-            )
+        new_amount = partial_coin.amount - request_mojos
 
-            next_puzzle = next_partial_info.to_partial_puzzle()
+        # create next offer if there is mojos left
+        if new_amount > 0:
+            puzzle = self.to_partial_puzzle()
             next_offer_cs = make_spend(
                 coin=Coin(
-                    parent_coin_info=partial_coin_id,
-                    puzzle_hash=next_puzzle.get_tree_hash(),
-                    amount=new_offer_mojos,
+                    parent_coin_info=partial_coin.name(),
+                    puzzle_hash=puzzle.get_tree_hash(),
+                    amount=new_amount,
                 ),
-                puzzle_reveal=next_puzzle,
+                puzzle_reveal=puzzle,
                 solution=Program.to(["dexie_partial"]),
             )
 
@@ -92,7 +79,6 @@ class PartialInfo:
                 G1Element.from_bytes(bytes.fromhex(data["public_key"])),
                 bytes32.from_hexstr(data["tail_hash"]),
                 uint64(data["rate"]),
-                uint64(data["offer_mojos"]),
             )
         except Exception:
             return None
@@ -113,6 +99,5 @@ class PartialInfo:
             public_key=G1Element.from_bytes(curried_args[4].as_atom()),
             tail_hash=bytes32.from_bytes(curried_args[5].as_atom()),
             rate=uint64(curried_args[6].as_int()),
-            offer_mojos=uint64(curried_args[7].as_int()),
         )
         return partial_info

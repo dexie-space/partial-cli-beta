@@ -1,32 +1,35 @@
-(mod (MOD_HASH FEE_PH FEE_RATE MAKER_PH MAKER_PK TAIL_HASH RATE OFFER_MOJOS coin_id taken_mojos_or_clawback chain_fee_mojos)
+(mod (MOD_HASH FEE_PH FEE_RATE MAKER_PH MAKER_PK TAIL_HASH RATE partial_coin_amount coin_id taken_mojos_or_clawback chain_fee_mojos)
     (include *standard-cl-23*)
     (include "fns.clsp")
 
-    (if (> taken_mojos_or_clawback 0)
-        (let 
-            (
-                (new_offer_mojos (- OFFER_MOJOS taken_mojos_or_clawback))
-                (request_cat_mojos (calculate-cat-mojos RATE taken_mojos_or_clawback))
-                (fee_mojos (calculate-fee-mojos FEE_RATE taken_mojos_or_clawback))
-            )
+    (c
+        (list ASSERT_MY_AMOUNT partial_coin_amount)
+        (if (> taken_mojos_or_clawback 0)
+            (let 
+                (
+                    (new_partial_coin_amount (- partial_coin_amount taken_mojos_or_clawback))
+                    (request_cat_mojos (calculate-cat-mojos RATE taken_mojos_or_clawback))
+                    (fee_mojos (calculate-fee-mojos FEE_RATE taken_mojos_or_clawback))
+                )
 
-            (filter-empty
-                ; partial coin settlement conditions
-                (list
-                    (list ASSERT_MY_COIN_ID coin_id)
-                    (assert-taker-announcement MAKER_PH TAIL_HASH coin_id request_cat_mojos)
-                    (create-settlement-coin (- taken_mojos_or_clawback fee_mojos))
-                    (list CREATE_COIN FEE_PH fee_mojos) 
-                )
-                ; if new_offer_mojos is greater than 0, create a new partial coin
-                (if (> new_offer_mojos 0)
+                (filter-empty
+                    ; partial coin settlement conditions
                     (list
-                        (create-partial-coin MOD_HASH FEE_PH FEE_RATE MAKER_PH MAKER_PK TAIL_HASH RATE new_offer_mojos)
+                        (list ASSERT_MY_COIN_ID coin_id)
+                        (assert-taker-announcement MAKER_PH TAIL_HASH coin_id request_cat_mojos)
+                        (create-settlement-coin (- taken_mojos_or_clawback fee_mojos))
+                        (list CREATE_COIN FEE_PH fee_mojos) 
                     )
-                    ()
+                    ; if new_partial_coin_amount is greater than 0, create a new partial coin
+                    (if (> new_partial_coin_amount 0)
+                        (list
+                            (create-partial-coin MOD_HASH FEE_PH FEE_RATE MAKER_PH MAKER_PK TAIL_HASH RATE new_partial_coin_amount)
+                        )
+                        ()
+                    )
                 )
             )
+            (clawback MAKER_PH MAKER_PK partial_coin_amount chain_fee_mojos)
         )
-        (clawback-offer-mojos MAKER_PH MAKER_PK OFFER_MOJOS chain_fee_mojos)
     )
 )

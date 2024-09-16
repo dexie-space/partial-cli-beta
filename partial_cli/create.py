@@ -139,7 +139,6 @@ async def create_offer(
             public_key=public_key,
             tail_hash=tail_hash,
             rate=rate,
-            offer_mojos=offer_mojos,
         )
 
         partial_puzzle = partial_info.to_partial_puzzle()

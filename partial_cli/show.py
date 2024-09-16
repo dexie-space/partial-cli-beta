@@ -61,5 +61,5 @@ def show_cmd(ctx, as_json, offer_file):
             print(json.dumps(ret, indent=2))
         else:
             display_partial_info(
-                partial_info, partial_coin.name(), is_valid=not is_partial_coin_spent
+                partial_info, partial_coin, is_valid=not is_partial_coin_spent
             )

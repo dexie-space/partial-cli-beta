@@ -25,7 +25,7 @@ async def get_clawback_signature(
     fingerprint: int,
     partial_coin_name: bytes32,
     partial_pk: G1Element,
-    offer_mojos: uint64,
+    coin_amount: uint64,
 ):
     async with get_wallet_client(wallet_rpc_port, fingerprint) as (
         wallet_rpc_client,
@@ -39,7 +39,7 @@ async def get_clawback_signature(
 
         return AugSchemeMPL.sign(
             sk,
-            std_hash(int_to_bytes(offer_mojos)) + partial_coin_name + genesis_challenge,
+            std_hash(int_to_bytes(coin_amount)) + partial_coin_name + genesis_challenge,
         )
 
 
@@ -52,7 +52,7 @@ async def clawback_partial_offer(
 ):
     # create spend bundle
     p = partial_info.to_partial_puzzle()
-    s = Program.to([ZERO_32, 0, blockchain_fee_mojos])
+    s = Program.to([partial_coin.amount, ZERO_32, 0, blockchain_fee_mojos])
 
     eph_partial_cs: CoinSpend = make_spend(partial_coin, puzzle_reveal=p, solution=s)
 
@@ -60,13 +60,10 @@ async def clawback_partial_offer(
         fingerprint,
         partial_coin_name=partial_coin.name(),
         partial_pk=partial_info.public_key,
-        offer_mojos=partial_info.offer_mojos,
+        coin_amount=partial_coin.amount,
     )
 
     paritial_offer_sb = SpendBundle([eph_partial_cs], cb_signature)
-
-    # print(json.dumps(paritial_offer_sb.to_json_dict(), indent=2))
-    # print(json.dumps(create_offer_coin_sb.to_json_dict(), indent=2))
 
     sb = (
         SpendBundle.aggregate([create_offer_coin_sb, paritial_offer_sb])
