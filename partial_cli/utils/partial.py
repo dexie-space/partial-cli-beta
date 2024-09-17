@@ -3,7 +3,6 @@ from rich.console import Console
 from rich.table import Column, Table
 
 from chia.types.blockchain_format.coin import Coin
-from chia.types.blockchain_format.sized_bytes import bytes32
 
 from partial_cli.puzzles import MOD_HASH
 from partial_cli.types.partial_info import PartialInfo
