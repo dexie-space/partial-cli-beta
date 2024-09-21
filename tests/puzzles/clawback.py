@@ -59,7 +59,7 @@ class TestClawback:
                 coin_amount,  # coin amount
                 ZERO_32,  # coin id
                 0,  # taken_mojos_or_clawback
-                0,  # chain_fee_mojos
+                0,  # clawback_fee_mojos
             ]
         )
 
@@ -90,7 +90,7 @@ class TestClawback:
                 clawback_amount,
                 ZERO_32,  # coin id
                 0,  # taken_mojos_or_clawback
-                0,  # chain_fee_mojos
+                0,  # clawback_fee_mojos
             ]
         )
 
@@ -110,7 +110,7 @@ class TestClawback:
                 clawback_amount,
                 ZERO_32,  # coin id
                 0,  # taken_mojos_or_clawback
-                0,  # chain_fee_mojos
+                0,  # clawback_fee_mojos
             ]
         )
 
@@ -124,13 +124,13 @@ class TestClawback:
 
     def test_clawback_with_fee(self):
         coin_amount = offer_mojos
-        chain_fee_mojos = uint64(100)
+        clawback_fee_mojos = uint64(100)
         solution = Program.to(
             [
                 coin_amount,
                 ZERO_32,  # coin id
                 0,  # taken_mojos_or_clawback
-                chain_fee_mojos,  # chain_fee_mojos
+                clawback_fee_mojos,  # clawback_fee_mojos
             ]
         )
 
@@ -142,6 +142,6 @@ class TestClawback:
         assert condition_exists(conditions, AssertMyAmount(coin_amount))
         assert condition_exists(
             conditions,
-            CreateCoin(puzzle_hash=MAKER_PH, amount=(coin_amount - chain_fee_mojos)),
+            CreateCoin(puzzle_hash=MAKER_PH, amount=(coin_amount - clawback_fee_mojos)),
         )
-        assert condition_exists(conditions, ReserveFee(chain_fee_mojos))
+        assert condition_exists(conditions, ReserveFee(clawback_fee_mojos))

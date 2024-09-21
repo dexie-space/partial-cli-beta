@@ -85,15 +85,15 @@
         )
     )
 
-    (defun clawback (MAKER_PH MAKER_PK partial_coin_amount chain_fee_mojos)
+    (defun clawback (MAKER_PH MAKER_PK partial_coin_amount clawback_fee_mojos)
         (filter-empty 
             (list
-                (list CREATE_COIN MAKER_PH (- partial_coin_amount chain_fee_mojos))
+                (list CREATE_COIN MAKER_PH (- partial_coin_amount clawback_fee_mojos))
                 (list AGG_SIG_ME MAKER_PK (sha256 partial_coin_amount))
             )
             (list
-                (if (> chain_fee_mojos 0)
-                    (list RESERVE_FEE chain_fee_mojos)
+                (if (> clawback_fee_mojos 0)
+                    (list RESERVE_FEE clawback_fee_mojos)
                     ()
                 )
             )

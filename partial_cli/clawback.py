@@ -48,11 +48,11 @@ async def clawback_partial_offer(
     partial_coin: Coin,
     partial_info: PartialInfo,
     fingerprint: int,
-    blockchain_fee_mojos: uint64,
+    clawback_fee_mojos: uint64,
 ):
     # create spend bundle
     p = partial_info.to_partial_puzzle()
-    s = Program.to([partial_coin.amount, ZERO_32, 0, blockchain_fee_mojos])
+    s = Program.to([partial_coin.amount, ZERO_32, 0, clawback_fee_mojos])
 
     eph_partial_cs: CoinSpend = make_spend(partial_coin, puzzle_reveal=p, solution=s)
 
@@ -90,7 +90,7 @@ async def clawback_partial_offer(
 @click.option(
     "-m",
     "--fee",
-    "blockchain_fee_mojos",
+    "clawback_fee_mojos",
     help="The blockchain fee to use when clawing back the partial offer, in mojos",
     default="0",
     show_default=True,
@@ -98,7 +98,7 @@ async def clawback_partial_offer(
 )
 @click.argument("offer_file", type=click.File("r"))
 @click.pass_context
-def clawback_cmd(ctx, fingerprint, blockchain_fee_mojos, offer_file):
+def clawback_cmd(ctx, fingerprint, clawback_fee_mojos, offer_file):
     offer_bech32 = offer_file.read()
     offer: Offer = Offer.from_bech32(offer_bech32)
     sb: SpendBundle = offer.to_spend_bundle()
@@ -129,6 +129,6 @@ def clawback_cmd(ctx, fingerprint, blockchain_fee_mojos, offer_file):
             partial_coin=partial_coin,
             partial_info=partial_info,
             fingerprint=fingerprint,
-            blockchain_fee_mojos=blockchain_fee_mojos,
+            clawback_fee_mojos=clawback_fee_mojos,
         )
     )
