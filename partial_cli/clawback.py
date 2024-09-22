@@ -1,6 +1,7 @@
 import asyncio
 import json
 import rich_click as click
+from typing import Optional
 
 from chia.cmds.cmds_util import get_wallet_client
 from chia.types.blockchain_format.coin import Coin
@@ -18,7 +19,7 @@ from partial_cli.puzzles import get_create_offer_coin_sb, get_partial_coin_spend
 from partial_cli.types.partial_info import PartialInfo
 from partial_cli.utils.rpc import is_coin_spent
 
-from chia_rs import AugSchemeMPL, G1Element, PrivateKey
+from chia_rs import AugSchemeMPL, G1Element, G2Element, PrivateKey
 
 
 async def get_clawback_signature(
@@ -26,7 +27,7 @@ async def get_clawback_signature(
     partial_coin_name: bytes32,
     partial_pk: G1Element,
     coin_amount: uint64,
-):
+) -> Optional[G2Element]:
     async with get_wallet_client(wallet_rpc_port, fingerprint) as (
         wallet_rpc_client,
         fingerprint,
@@ -35,7 +36,9 @@ async def get_clawback_signature(
 
         private_key_res = await wallet_rpc_client.get_private_key(fingerprint)
         sk = PrivateKey.from_bytes(bytes.fromhex(private_key_res["sk"]))
-        assert sk.get_g1() == partial_pk
+
+        if sk.get_g1() != partial_pk:
+            return None
 
         return AugSchemeMPL.sign(
             sk,
@@ -62,6 +65,11 @@ async def clawback_partial_offer(
         partial_pk=partial_info.public_key,
         coin_amount=partial_coin.amount,
     )
+    if cb_signature is None:
+        print(
+            f"Failed to get clawback signature for public key {bytes(partial_info.public_key).hex()}"
+        )
+        return
 
     paritial_offer_sb = SpendBundle([eph_partial_cs], cb_signature)
 

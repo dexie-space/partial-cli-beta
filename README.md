@@ -32,6 +32,26 @@ A dexie partial offer coin is a coin with a puzzle offering one asset (XCH only 
         clawback_fee_mojos      ; blockchain fee in mojos, used in clawback case
   )
 ```
+# Partial CLI commands
+```bash
+❯ partial --help
+
+ Usage: partial [OPTIONS] COMMAND [ARGS]...
+
+ Manage dexie partial offers
+
+╭─ Options ─────────────────────────────────────────────────────────────────────────────────────────╮
+│ --help      Show this message and exit.                                                           │
+╰───────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭─ Commands ────────────────────────────────────────────────────────────────────────────────────────╮
+│ clawback   clawback the partial offer coin.                                                       │
+│ config     display the cli config                                                                 │
+│ create     create a partial offer requesting CAT token                                            │
+│ get        get a serialized curried puzzle of the partial offer coin                              │
+│ show       display the dexie partial offer information.                                           │
+│ take       Take the dexie partial offer by providing the taker offer file or request information. │
+╰───────────────────────────────────────────────────────────────────────────────────────────────────╯
+```
 
 ## Sample
 ### Create
@@ -211,27 +231,85 @@ A dexie partial offer coin is a coin with a puzzle offering one asset (XCH only 
 ```
 #### Conditions
 ```lisp
+; assert its own amount (2 XCH offered)
 (ASSERT_MY_AMOUNT  0x01d1a94a2000)
-; create a new partial offer coin (1 XCH)
-(CREATE_COIN  0x1b5b1e89eb1346736003f23939407387bf66d146c66ae956f6521bc11447680c 0x00e8d4a51000)
+; assert its own coin id (nonce for announcement payment)
 (ASSERT_MY_COIN_ID  0x27a29bda975974d02edb2d3f9649dd44870edabdb501d05a4c6f22c47a628e87)
 ; assert announcement from taker settlement coin
 (ASSERT_PUZZLE_ANNOUNCEMENT  0xe6a193a62e190063b42335eadc6f7f0286e01282e2c8b6a9417d2d8787556a97)
+; create a new partial offer coin (1 XCH)
+(CREATE_COIN  0x1b5b1e89eb1346736003f23939407387bf66d146c66ae956f6521bc11447680c 0x00e8d4a51000)
 ; create an ephemeral XCH settlement coin (pay to taker 0.99 XCH)
 (CREATE_COIN  0xcfbfdeed5c4ca2de3d0bf520b9cb4bb7743a359bd2e6a188d19ce7dffc21d3e7 0x00e680992c00)
 ; create a fee coin (0.01 XCH)
 (CREATE_COIN  0xbf00456f9fecf7fb57651b0c99ce13bd9d2858e9b190ec373ba158c9a9934e5a 0x02540be400) 
 ```
 
+#### New Partial Offer Coin
+```bash
+❯ chia rpc full_node get_coin_records_by_puzzle_hash '{"puzzle_hash": "0x1b5b1e89eb1346736003f23939407387bf66d146c66ae956f6521bc11447680c"}' | jq
+{
+  "coin_records": [
+    {
+      "coin": {
+        "amount": 1000000000000,
+        "parent_coin_info": "0x27a29bda975974d02edb2d3f9649dd44870edabdb501d05a4c6f22c47a628e87",
+        "puzzle_hash": "0x1b5b1e89eb1346736003f23939407387bf66d146c66ae956f6521bc11447680c"
+      },
+      "coinbase": false,
+      "confirmed_block_index": 1372092,
+      "spent": false,
+      "spent_block_index": 0,
+      "timestamp": 1726994752
+    }
+  ],
+  "success": true
+}
+```
 
 ### Clawback 
-#### conditions
+```bash
+❯ partial clawback -f $partial_fp 001.offer
+{
+  "coin_spends": [
+    {
+      "coin": {
+        "parent_coin_info": "0x27a29bda975974d02edb2d3f9649dd44870edabdb501d05a4c6f22c47a628e87",
+        "puzzle_hash": "0x1b5b1e89eb1346736003f23939407387bf66d146c66ae956f6521bc11447680c",
+        "amount": 1000000000000
+      },
+      "puzzle_reveal": "0xff02ffff01ff02ffff01ff04ffff04ffff0149ffff04ff8202ffff808080ffff02ffff03ffff15ff820bffff8080ffff01ff02ff2cffff04ff02ffff04ffff04ffff04ffff0146ffff04ff8205ffff808080ffff04ffff02ff1affff04ff02ffff04ff2fffff04ff8200bfffff04ff8205ffffff04ffff02ff3cffff04ff02ffff04ff82017fffff04ff820bffff8080808080ff80808080808080ffff04ffff02ff16ffff04ff02ffff04ffff11ff820bffffff02ff12ffff04ff02ffff04ff17ffff04ff820bffff808080808080ff80808080ffff04ffff04ffff0133ffff04ff0bffff04ffff02ff12ffff04ff02ffff04ff17ffff04ff820bffff8080808080ff80808080ff8080808080ffff04ffff02ffff03ffff15ffff11ff8202ffff820bff80ff8080ffff01ff04ffff02ff2effff04ff02ffff04ff05ffff04ff0bffff04ff17ffff04ff2fffff04ff5fffff04ff8200bfffff04ff82017fffff04ffff11ff8202ffff820bff80ff8080808080808080808080ff8080ffff01ff018080ff0180ff8080808080ffff01ff02ff3effff04ff02ffff04ff2fffff04ff5fffff04ff8202ffffff04ff8217ffff8080808080808080ff018080ffff04ffff01ffffffff02ffff03ff05ffff01ff02ff10ffff04ff02ffff04ff0dffff04ffff0bffff0102ffff0bffff0101ffff010480ffff0bffff0102ffff0bffff0102ffff0bffff0101ffff010180ff0980ffff0bffff0102ff0bffff0bffff0101ff8080808080ff8080808080ffff010b80ff0180ff0bffff0102ffff0bffff0101ffff010280ffff0bffff0102ffff0bffff0102ffff0bffff0101ffff010180ff0580ffff0bffff0102ffff02ff10ffff04ff02ffff04ff07ffff04ffff0bffff0101ffff010180ff8080808080ffff0bffff0101ff8080808080ffff02ffff03ffff07ff0580ffff01ff0bffff0102ffff02ff14ffff04ff02ffff04ff09ff80808080ffff02ff14ffff04ff02ffff04ff0dff8080808080ffff01ff0bffff0101ff058080ff0180ffff02ffff03ff0bffff01ff02ff2cffff04ff02ffff04ffff02ffff03ff13ffff01ff04ff13ff0580ffff010580ff0180ffff04ff1bff8080808080ffff010580ff0180ff05ffff14ffff12ff05ff0b80ffff018600e8d4a510008080ffffff05ffff14ffff12ff05ff0b80ffff018227108080ff04ffff013fffff04ffff0bffff02ff18ffff04ff02ffff04ffff01a037bef360ee858133b69d595a906dc45d01af50379dad515eb9518abb7c1d2a7affff04ffff01a0cfbfdeed5c4ca2de3d0bf520b9cb4bb7743a359bd2e6a188d19ce7dffc21d3e7ffff04ffff0bffff0101ff0b80ffff04ffff0bffff0101ffff01a037bef360ee858133b69d595a906dc45d01af50379dad515eb9518abb7c1d2a7a80ff80808080808080ffff02ff14ffff04ff02ffff04ffff04ff17ffff04ffff04ff05ffff04ff2fffff04ffff04ff05ff8080ff80808080ff808080ff8080808080ff808080ffff04ffff0133ffff04ffff01a0cfbfdeed5c4ca2de3d0bf520b9cb4bb7743a359bd2e6a188d19ce7dffc21d3e7ffff04ff05ff80808080ffff04ffff0133ffff04ffff02ff18ffff04ff02ffff04ff05ffff04ffff0bffff0101ff82017f80ffff04ffff0bffff0101ff8200bf80ffff04ffff0bffff0101ff5f80ffff04ffff0bffff0101ff2f80ffff04ffff0bffff0101ff1780ffff04ffff0bffff0101ff0b80ffff04ffff0bffff0101ff0580ff8080808080808080808080ffff04ff8202ffff80808080ff02ff2cffff04ff02ffff04ffff04ffff04ffff0133ffff04ff05ffff04ffff11ff17ff2f80ff80808080ffff04ffff04ffff0132ffff04ff0bffff04ffff0bff1780ff80808080ff808080ffff04ffff04ffff02ffff03ffff15ff2fff8080ffff01ff04ffff0134ffff04ff2fff808080ffff01ff018080ff0180ff8080ff8080808080ff018080ffff04ffff01a0e506255126ce71dccd6b5dac93d8950ecc863ba5f4aa68b123bfed59beccb03affff04ffff01a0bf00456f9fecf7fb57651b0c99ce13bd9d2858e9b190ec373ba158c9a9934e5affff04ffff0164ffff04ffff01a027a3681e800dd064316e74173577be23c9e514ded4b6cd55e4bb84e26a6a55f1ffff04ffff01b08049a7369adf936b3ad73c88fc6abd3d172d1ea1661f7d6597842152c2652966ac6a9b93653124cd93bd9a769a039275ffff04ffff01a0d82dd03f8a9ad2f84353cd953c4de6b21dbaaf7de3ba3f4ddd9abe31ecba80adffff04ffff01830493e0ff018080808080808080",
+      "solution": "0xff8600e8d4a51000ffa00000000000000000000000000000000000000000000000000000000000000000ff80ff8080"
+    }
+  ],
+  "aggregated_signature": "0xa43343c6777a5aced8cb90e38eed81dbf74d14511353fbc3b6f1e98892ccc54fe0047c40556cd891cf4af75a3b97bc5a0c243cee6f93653e900285104c1960805006a9726b4378c7f89fe6de4881c31d0207236959645c159012cfad50470aa3"
+}
+```
+#### Parameters
 ```lisp
+(
+  ; partial_coin_amount (1 XCH)
+  0x00e8d4a51000
+  ; partial offer coin id (ignored)
+  0x0000000000000000000000000000000000000000000000000000000000000000
+  ; taken_mojos_or_clawback (clawback case)
+  ()
+  ; clawback_fee_mojos
+  ()
+)
 ```
 
-#### Taken
+#### Conditions
 ```lisp
+; assert its own amount (1 XCH offered)
+(ASSERT_MY_AMOUNT  0x00e8d4a51000)
+; create a clawback coin and send to the maker (1 XCH minus fee)
+(CREATE_COIN  0x27a3681e800dd064316e74173577be23c9e514ded4b6cd55e4bb84e26a6a55f1 0x00e8d4a51000)
+; signature for the clawback
+(AGG_SIG_ME  0x8049a7369adf936b3ad73c88fc6abd3d172d1ea1661f7d6597842152c2652966ac6a9b93653124cd93bd9a769a039275    
+0x19b6f428a262c387186c195922d543d88492ba7d83f204d5a03f2004d741b86c) 
 ```
+
 
 ```mermaid
 ---
@@ -248,24 +326,3 @@ stateDiagram-v2
   if_state --> [*]: taken all
 ```
 
-# Partial CLI commands
-```bash
-❯ partial --help
-
- Usage: partial [OPTIONS] COMMAND [ARGS]...
-
- Manage dexie partial offers
-
-╭─ Options ─────────────────────────────────────────────────────────────────────────────────────────╮
-│ --help      Show this message and exit.                                                           │
-╰───────────────────────────────────────────────────────────────────────────────────────────────────╯
-╭─ Commands ────────────────────────────────────────────────────────────────────────────────────────╮
-│ clawback   clawback the partial offer coin.                                                       │
-│ config     display the cli config                                                                 │
-│ create     create a partial offer requesting CAT token                                            │
-│ get        get a serialized curried puzzle of the partial offer coin                              │
-│ show       display the dexie partial offer information.                                           │
-│ take       Take the dexie partial offer by providing the taker offer file or request information. │
-╰───────────────────────────────────────────────────────────────────────────────────────────────────╯
-
-```
