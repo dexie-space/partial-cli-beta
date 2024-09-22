@@ -5,7 +5,7 @@
         MAKER_PH                ; maker puzzle hash (both receive and clawback)
         MAKER_PK                ; maker public key used in clawback case
         TAIL_HASH               ; request CAT tail hash
-        RATE                    ; number of CAT per XCH, e.g., 1 XCH = 100 CATs, rate = 100
+        RATE                    ; number of CAT per XCH, e.g., 1 XCH = 100 CATs, rate = 100000
         partial_coin_amount     ; amount of partial offer coin
         coin_id                 ; coin id of the partial offer coin
         taken_mojos_or_clawback ; amount of XCH mojos taken, or 0 if clawback

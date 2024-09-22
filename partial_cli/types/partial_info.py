@@ -22,7 +22,7 @@ class PartialInfo:
     maker_puzzle_hash: bytes32
     public_key: G1Element
     tail_hash: bytes32
-    rate: uint64  # e.g., 1 XCH = 100 CATs, rate = 100
+    rate: uint64  # e.g., 1 XCH = 100 CATs, rate = 100000
 
     def to_partial_puzzle(self):
         return MOD.curry(
