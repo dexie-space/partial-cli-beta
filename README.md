@@ -55,28 +55,29 @@ A dexie partial offer coin is a coin with a puzzle offering one asset (XCH only 
 
 ## Sample
 ### Create
+> Offer 1 XCH for 714.28 DBX
 ```bash
-❯ partial create -f $partial_fp --offer 1:2 --request d82dd03f8a9ad2f84353cd953c4de6b21dbaaf7de3ba3f4ddd9abe31ecba80ad:600
+❯ partial create -f $partial_fp --offer 1:1 --request db1a9020d48d9d4ad22631b66ab4b9ebd3637ef7758ad38881348c5d24c38f20:714.28
 {
   "partial_info": {
-    "fee_puzzle_hash": "bf00456f9fecf7fb57651b0c99ce13bd9d2858e9b190ec373ba158c9a9934e5a",
+    "fee_puzzle_hash": "bc1f6e34fbc556d279b2e2187f2b7271df540926f21f74e26ba212c78a56b9b9",
     "fee_rate": 100,
-    "maker_puzzle_hash": "27a3681e800dd064316e74173577be23c9e514ded4b6cd55e4bb84e26a6a55f1",
-    "public_key": "8049a7369adf936b3ad73c88fc6abd3d172d1ea1661f7d6597842152c2652966ac6a9b93653124cd93bd9a769a039275",
-    "tail_hash": "d82dd03f8a9ad2f84353cd953c4de6b21dbaaf7de3ba3f4ddd9abe31ecba80ad",
-    "rate": 300000
+    "maker_puzzle_hash": "f3ef546a82ed460b966d72b2ca5d39711eb3daf1b3c372aa82d0071c21feffbc",
+    "public_key": "854500d2d9b4519e5e4a763d659f0bef63c96afe8437230f5c90ae6915a5acf631f37ba5d599ac957a23b4da4b5c34d1",
+    "tail_hash": "db1a9020d48d9d4ad22631b66ab4b9ebd3637ef7758ad38881348c5d24c38f20",
+    "rate": 714280
   },
   "partial_coin": {
-    "parent_coin_info": "0xa5def056fdeace500e7e23d0707eb1750d6774af476174171d216d2520f67886",
-    "puzzle_hash": "0x1b5b1e89eb1346736003f23939407387bf66d146c66ae956f6521bc11447680c",
-    "amount": 2000000000000
-  },
-  "launcher_coin": {
-    "parent_coin_info": "0x37e381c7936050d9ac639c5832fee8ff37475bc38e64e5971b14cc2ee84bb4d1",
-    "puzzle_hash": "0x27a3681e800dd064316e74173577be23c9e514ded4b6cd55e4bb84e26a6a55f1",
+    "parent_coin_info": "0x27387932fb360a2502ec6e4c06c1bb11ca48e50fd40ac2651db17f72bb34ccc3",
+    "puzzle_hash": "0x81966fee00e7dd9f6b7fec3e5116add8abd6865438b44513924c10450f8982c9",
     "amount": 1000000000000
   },
-  "offer": "offer1qqr83wcuu2rykcmqvpsrvl7u0p78yskqe56ujuez3nltm7r0ac08mwp0uh5hg6v3xdazl09ht329l8pp6lq8kgw9xzh5fh950j0l9jd8ytm6umpmr0axga7t5wk2e5y0gqe4uhze9tqqqma8pmmnjm4scyd3vas8m229wh36uwjh4enm0l5ukpjw6cmmx7s76lmwt2jmn3ndn0zx9s66x2hpsk9dlkha9lh5ee0w8lmqhtq4dsstp5alszhh9eazcllldamn5l8dcverlnql5ycny56s6dklh9s2j4tl6zw2tsgh4rg03lcza95tnnkhcfhv2zwvnukz68v2m0m6wht58wt02vhvtwg0gsg37uxfalmd3st4w73fxpq9f3em63dh0a8h4v9jm9yw8fjml4ju7hmhh32vmc3samex84lal9ta50m8766f2egqwqeckq5g7axxtza77v6xyww7sj9hlklcqhlc49slh5asrhmz6nva9f4cxte3ghkmxwykx2akkm06zcnznhjenlqnukn6aapa3h6huup036559u2dgmfvu4xj7k00nevzyt4tnz464u9d52x4pxsqccxrsnfqc5x2fprx7jzptk2g2kkz3drxsx5d2sdtzhln8wkpags93jvf83qq62whr8mz842ngqy3k3qdppkctsl2962vz30yvg84fdrnsddh7sjg2xx99mfpefhfpvuvu96ny83afqjn9gnwq32jnqhq2qq2566qjnr2sye7luccv0hzj87s4t0d28xyz4p7zqe3jy2atf5w3k4pqewrc5sdmgjga2x7z8y76066sdvqpdv7sqjkkjz6lh8u355qy2zzfscgawgcq39ev83qmj8pqdhu4gtgvnpxwfptggfdjm0vwzm5r42pd4qtv9zhlc2vry3lgkg8erfa073pg02gdyvzct8uruayqrakpglfggcdxu9jyp8tkje5y3n0mgs82x4cf7pzd4dy9mgqpmkrgqrxzgq9nvzvy4kxqhn0k038h34k6dx7xcmny6jza6g433h4q8n884cxcmksemx6t536k4g924m8alaakucnazlwm9e874wc08d8k7ufjh57cj70zem9e88nlnlpl3wte7gu9ydmqyj4qzw6sz2dtyqrzzt2yctfrsckaqv5t0g956ysh3r2gu6ejxd933ks8pqqgrftjgnjpgakpqhvxlnydc7ry3clny3aaqpttpv9zuep52kxhsz6kgvjxhpypz5h65z2rq35gzgrae668pqf2fs69regggvy6grpm2q9vq8ugl9avzu7k25sd25a9w78xd3mwmx7gx6nl88tgkf0lkez5car7tlt0y0meektpq32m087px3lllxl0hlp48frcv70p8hem2c379ew8pphumtqkg6w46wwc9c92xtqy42d4rrgd4nqpk0vhntxmk0ecmt4mknwxn7ktedhzhdes45l9ddf6dd3fqcw5442dtwfng7nn42suhkwf0dnefnrzne2skd8uslhsf7a0tzt87wg8n6wkhchmdjfwmtl4kk8h0k8mm7wmfnlsejhcddg3vnxjmys7s87s3ryzm62dfzkv6nug939zjtxvf8v8jhf0gfemvh656lcemhxmjd38kdh0qm0leqtxuwm302v2tuklln3d8w82gerntt5a6mmahf9lrnzpgfztyhff3dhyjj2euk4a0hqd6pc358mhysahmlfpg6r000ewmkzrxmyj58hhv27c8v5kduhlv73wk6uemu25rsqf6qjyfslg7tju"
+  "launcher_coin": {
+    "parent_coin_info": "0x8e9a00ad2ff9c5b81da91e9b16d17237c0582d23e70c4f8ec5784f7c36b75520",
+    "puzzle_hash": "0xf3ef546a82ed460b966d72b2ca5d39711eb3daf1b3c372aa82d0071c21feffbc",
+    "amount": 1000000000000
+  },
+  "offer": "offer1qqr83wcuu2rykcmqvpsw4x79kpt0le73rkezhetx3dwjcv3lzzs6hlyuc7l776y907xanajssh877sajnt0t5u20evka5ap266e9qmhn4k8ekrch444t4spw50uwllc75qvjlt3vz4sgpd6nsla3cd7cuqxn63vkdtl2d97dedjj5ntaumvjcyvluclw8k0eagfs90ekaem0uf7g4rc445lcklwtd0v2rwvtk65ln4gqw6c9rvyweap0pq44keajtd2yt984ueh6dsmeekaruryjz0m94vn749977920llg4krj5dr787s0rkn78wrx0al8vltnlvvtj3dhkcm4xkmfpzed4epf8lyyt3unhx6wlehcxp9atpl74954g6l5mwx5n90wf7dsnhwzm7z2vw5l79dwgw5n9xltp0mfk89ee3yrptr3pry44ry7kz7ga49kpdpgkfygt2wngch5h733htrsstjmjeq3ehyqzs9sn75spq72tqsg5nhgwvxav6pp3n92zech6qv5pr0wxcyzzfggz3ef9ytfc88r9pshueu0gg89v4zzzz42pvzvzgvq63tspjxx4zec2le3lfx0rj87s4tfx2rxyr9z6zqe3nyd6hh5xxv2gyepfhdhz3paqryfcl73mtfqy2q93skpxszjweluv9sxjssjgx2xtpf3vfz2pkfk7sqwraupkqz9yvfnug6ezyfy3mhrquacm2swagpnyfdc72es39ju4jpxf6lv8xv62gxzefpkpctp0lgfrhds2hcrrqrf8pveqg2cdu83t5ndcljy3llg6tqra6cr8pcch6facw9yrzgy9kxghnrhlh88s466az7xmmny2szdega3pn4c8nr846xcckuemq6mh3kk9v925m8ulma77cmuzewn8e0742c08d8h76f2k56ej702mmpchrnhnldl3gtelgu9y0msxj3qz26qr2ftyxrjqtz9gdft3gjr3w3ulz60d0zr59c449htvpjxsx3xskq38jq3jmjr7qvhvglnvvgmn7jgnncsdhzpg29f4zu3v4wsx4sjekvwzgkpfpws25kzrzs55xrswuxj2nqsp2fh63q3gf5gyz2nq66q9cplmgm9auq5ek64qm2uuywm8kd3awn97xx277nym7hfzl2ejxc4w7lcmh8hucp3t4zermuney6lclpja4tw0gj9zt6a63ur7pzna5flejfranzuy3emctmwup9gevqj4fk58ap7kw7k6uryhdehqn8qhua2kdxe6nlahmukf43ljmek2lsc384n93gh9mu7d7pelt54tx0t5et2jmeevkw7xus3dfaxm2gf3fth5em6m4frxhqkkhj7w67te86a7jam9mmngxn5cj4fems8knlf3xeenm5cqlyf35pda9x53txdf7yzcj3f9nxynjrgmtffnl3gupx87cenenj0hfgzefckawt8vdwncse55eqfw2u509l89ndul0fn8aj4se25auh43sq45g405expztllz26ezjmz3ft29hd3acvs6sv036q2u87ez3x8xnfktpe70k8dcxrstrnl4pqecxeu60wjfjxcqkt2jrxgks9xqq"
 }
 ```
 ```bash
@@ -84,12 +85,13 @@ A dexie partial offer coin is a coin with a puzzle offering one asset (XCH only 
 ╭──────────────────────────┬────────────────────────────────────────────────────────────────────╮
 │ MOD_HASH:                │ 0xe506255126ce71dccd6b5dac93d8950ecc863ba5f4aa68b123bfed59beccb03a │
 │ Valid:                   │ Yes                                                                │
-│ Partial Offer Coin Name: │ 0x27a29bda975974d02edb2d3f9649dd44870edabdb501d05a4c6f22c47a628e87 │
+│ Partial Offer Coin Name: │ 0x7c41e1d31f3a75e2ac282997162f589de56926d0552cf87c47e7978af59910cf │
 ├──────────────────────────┼────────────────────────────────────────────────────────────────────┤
-│ Total Offer Amount:      │ 2.0 XCH                                                            │
-│ Total Request Amount:    │ 600.0 CATs                                                         │
-│ Request Tail Hash:       │ 0xd82dd03f8a9ad2f84353cd953c4de6b21dbaaf7de3ba3f4ddd9abe31ecba80ad │
-│ Rate (1 XCH):            │ 300.0 CATs                                                         │
+│ Total Offer Amount:      │ 1.0 XCH                                                            │
+│ Total Request Amount:    │ 714.28 CATs                                                        │
+│ Request Tail Hash:       │ 0xdb1a9020d48d9d4ad22631b66ab4b9ebd3637ef7758ad38881348c5d24c38f20 │
+│ Rate (1 XCH):            │ 714.28 CATs                                                        │
+│ Fee Recipient:           │ xch1hs0kud8mc4tdy7djugv872mjw804gzfx7g0hfcnt5gfv0zjkhxus4ugkkf     │
 │ Fee Rate:                │ 1.0%                                                               │
 ╰──────────────────────────┴────────────────────────────────────────────────────────────────────╯
 ```
@@ -100,196 +102,190 @@ A dexie partial offer coin is a coin with a puzzle offering one asset (XCH only 
   ; MOD_HASH 
   0xe506255126ce71dccd6b5dac93d8950ecc863ba5f4aa68b123bfed59beccb03a
   ; FEE_PH 
-  0xbf00456f9fecf7fb57651b0c99ce13bd9d2858e9b190ec373ba158c9a9934e5a
+  0xbc1f6e34fbc556d279b2e2187f2b7271df540926f21f74e26ba212c78a56b9b9
   ; FEE_RATE   
   100                                                               
   ; MAKER_PH 
-  0x27a3681e800dd064316e74173577be23c9e514ded4b6cd55e4bb84e26a6a55f1
+  0xf3ef546a82ed460b966d72b2ca5d39711eb3daf1b3c372aa82d0071c21feffbc
   ; MAKER_PK
-  0x8049a7369adf936b3ad73c88fc6abd3d172d1ea1661f7d6597842152c2652966ac6a9b93653124cd93bd9a769a039275   
+  0x854500d2d9b4519e5e4a763d659f0bef63c96afe8437230f5c90ae6915a5acf631f37ba5d599ac957a23b4da4b5c34d1   
   ; TAIL_HASH (TDBX) 
-  0xd82dd03f8a9ad2f84353cd953c4de6b21dbaaf7de3ba3f4ddd9abe31ecba80ad
-  ; RATE (1XCH -> 300 CAT, 300000)
-  0x0493e0
+  0xdb1a9020d48d9d4ad22631b66ab4b9ebd3637ef7758ad38881348c5d24c38f20
+  ; RATE (1XCH -> 714.28 DBX, 714280)
+  0x0ae628
 ) 
 ```
 
 ### Taken 
 ```bash
-❯ partial take -f $partial_taker_fp -a $(1e12) -m 1 ./launcher.offer
+❯ partial take -f $partial_taker_fp -a $(0.2e12) ./launcher.offer
 ╭──────────────────────────┬────────────────────────────────────────────────────────────────────╮
 │ MOD_HASH:                │ 0xe506255126ce71dccd6b5dac93d8950ecc863ba5f4aa68b123bfed59beccb03a │
 │ Valid:                   │ Yes                                                                │
-│ Partial Offer Coin Name: │ 0x27a29bda975974d02edb2d3f9649dd44870edabdb501d05a4c6f22c47a628e87 │
+│ Partial Offer Coin Name: │ 0x7c41e1d31f3a75e2ac282997162f589de56926d0552cf87c47e7978af59910cf │
 ├──────────────────────────┼────────────────────────────────────────────────────────────────────┤
-│ Total Offer Amount:      │ 2.0 XCH                                                            │
-│ Total Request Amount:    │ 600.0 CATs                                                         │
-│ Request Tail Hash:       │ 0xd82dd03f8a9ad2f84353cd953c4de6b21dbaaf7de3ba3f4ddd9abe31ecba80ad │
-│ Rate (1 XCH):            │ 300.0 CATs                                                         │
+│ Total Offer Amount:      │ 1.0 XCH                                                            │
+│ Total Request Amount:    │ 714.28 CATs                                                        │
+│ Request Tail Hash:       │ 0xdb1a9020d48d9d4ad22631b66ab4b9ebd3637ef7758ad38881348c5d24c38f20 │
+│ Rate (1 XCH):            │ 714.28 CATs                                                        │
+│ Fee Recipient:           │ xch1hs0kud8mc4tdy7djugv872mjw804gzfx7g0hfcnt5gfv0zjkhxus4ugkkf     │
 │ Fee Rate:                │ 1.0%                                                               │
 ╰──────────────────────────┴────────────────────────────────────────────────────────────────────╯
 
- 300.0 CATs -> 1.0 XCH
- Sending 300.0 CATs
- Paying 0.01 XCH in fees
- Receiving 0.99 XCH
+ 142.856 CATs -> 0.2 XCH
+ Sending 142.856 CATs
+ Paying 0.002 XCH in fees
+ Receiving 0.198 XCH
 ```
 
 #### Full Spend Bundle
 ```json
 {
-  "coin_spends": [
-    {
-      "coin": {
-        "parent_coin_info": "0x37e381c7936050d9ac639c5832fee8ff37475bc38e64e5971b14cc2ee84bb4d1",
-        "puzzle_hash": "0x27a3681e800dd064316e74173577be23c9e514ded4b6cd55e4bb84e26a6a55f1",
-        "amount": 1000000000000
+    "coin_spends": [
+      {
+        "coin": {
+          "parent_coin_info": "0x8e9a00ad2ff9c5b81da91e9b16d17237c0582d23e70c4f8ec5784f7c36b75520",
+          "puzzle_hash": "0xf3ef546a82ed460b966d72b2ca5d39711eb3daf1b3c372aa82d0071c21feffbc",
+          "amount": 1000000000000
+        },
+        "puzzle_reveal": "0xff02ffff01ff02ffff01ff02ffff03ff0bffff01ff02ffff03ffff09ff05ffff1dff0bffff1effff0bff0bffff02ff06ffff04ff02ffff04ff17ff8080808080808080ffff01ff02ff17ff2f80ffff01ff088080ff0180ffff01ff04ffff04ff04ffff04ff05ffff04ffff02ff06ffff04ff02ffff04ff17ff80808080ff80808080ffff02ff17ff2f808080ff0180ffff04ffff01ff32ff02ffff03ffff07ff0580ffff01ff0bffff0102ffff02ff06ffff04ff02ffff04ff09ff80808080ffff02ff06ffff04ff02ffff04ff0dff8080808080ffff01ff0bffff0101ff058080ff0180ff018080ffff04ffff01b08c7239264f35d337771c79354c9e3ca417964798e6cf7bc810fab1bb43fe110128eb2933fb1eb6bd21b0038a7de6c827ff018080",
+        "solution": "0xff80ffff01ffff3cffa05676ae34bb15241505d9fb02c36e832d4c001990bd3905f47e678d1767f88d7780ffff33ffa081966fee00e7dd9f6b7fec3e5116add8abd6865438b44513924c10450f8982c9ff8600e8d4a510008080ff8080"
       },
-      "puzzle_reveal": "0xff02ffff01ff02ffff01ff02ffff03ff0bffff01ff02ffff03ffff09ff05ffff1dff0bffff1effff0bff0bffff02ff06ffff04ff02ffff04ff17ff8080808080808080ffff01ff02ff17ff2f80ffff01ff088080ff0180ffff01ff04ffff04ff04ffff04ff05ffff04ffff02ff06ffff04ff02ffff04ff17ff80808080ff80808080ffff02ff17ff2f808080ff0180ffff04ffff01ff32ff02ffff03ffff07ff0580ffff01ff0bffff0102ffff02ff06ffff04ff02ffff04ff09ff80808080ffff02ff06ffff04ff02ffff04ff0dff8080808080ffff01ff0bffff0101ff058080ff0180ff018080ffff04ffff01b0a18b513c7779d2cc4a25ccf78f75e9800905ec9a8ce37d8e6d2738cb04b3ac1665687a60e8244eadbfe9dc950b8fc6faff018080",
-      "solution": "0xff80ffff01ffff3cffa00e79b9a2e3febf8f0b6599bc9857e0afc891192930b3dcd0392a7fc13704804d80ffff33ffa01b5b1e89eb1346736003f23939407387bf66d146c66ae956f6521bc11447680cff8601d1a94a200080ffff33ffa05f407f3b888f8f2712a11b5aca3fad3725fbef21690dc440ee92e7ef8a6bd87dff85746a5288008080ff8080"
-    },
-    {
-      "coin": {
-        "parent_coin_info": "0x37e381c7936050d9ac639c5832fee8ff37475bc38e64e5971b14cc2ee84bb4d1",
-        "puzzle_hash": "0x27a3681e800dd064316e74173577be23c9e514ded4b6cd55e4bb84e26a6a55f1",
-        "amount": 1500000000000
+      {
+        "coin": {
+          "parent_coin_info": "0x27387932fb360a2502ec6e4c06c1bb11ca48e50fd40ac2651db17f72bb34ccc3",
+          "puzzle_hash": "0x81966fee00e7dd9f6b7fec3e5116add8abd6865438b44513924c10450f8982c9",
+          "amount": 1000000000000
+        },
+        "puzzle_reveal": "0xff02ffff01ff02ffff01ff04ffff04ffff0149ffff04ff8202ffff808080ffff02ffff03ffff15ff820bffff8080ffff01ff02ff2cffff04ff02ffff04ffff04ffff04ffff0146ffff04ff8205ffff808080ffff04ffff02ff1affff04ff02ffff04ff2fffff04ff8200bfffff04ff8205ffffff04ffff02ff3cffff04ff02ffff04ff82017fffff04ff820bffff8080808080ff80808080808080ffff04ffff02ff16ffff04ff02ffff04ffff11ff820bffffff02ff12ffff04ff02ffff04ff17ffff04ff820bffff808080808080ff80808080ffff04ffff04ffff0133ffff04ff0bffff04ffff02ff12ffff04ff02ffff04ff17ffff04ff820bffff8080808080ff80808080ff8080808080ffff04ffff02ffff03ffff15ffff11ff8202ffff820bff80ff8080ffff01ff04ffff02ff2effff04ff02ffff04ff05ffff04ff0bffff04ff17ffff04ff2fffff04ff5fffff04ff8200bfffff04ff82017fffff04ffff11ff8202ffff820bff80ff8080808080808080808080ff8080ffff01ff018080ff0180ff8080808080ffff01ff02ff3effff04ff02ffff04ff2fffff04ff5fffff04ff8202ffffff04ff8217ffff8080808080808080ff018080ffff04ffff01ffffffff02ffff03ff05ffff01ff02ff10ffff04ff02ffff04ff0dffff04ffff0bffff0102ffff0bffff0101ffff010480ffff0bffff0102ffff0bffff0102ffff0bffff0101ffff010180ff0980ffff0bffff0102ff0bffff0bffff0101ff8080808080ff8080808080ffff010b80ff0180ff0bffff0102ffff0bffff0101ffff010280ffff0bffff0102ffff0bffff0102ffff0bffff0101ffff010180ff0580ffff0bffff0102ffff02ff10ffff04ff02ffff04ff07ffff04ffff0bffff0101ffff010180ff8080808080ffff0bffff0101ff8080808080ffff02ffff03ffff07ff0580ffff01ff0bffff0102ffff02ff14ffff04ff02ffff04ff09ff80808080ffff02ff14ffff04ff02ffff04ff0dff8080808080ffff01ff0bffff0101ff058080ff0180ffff02ffff03ff0bffff01ff02ff2cffff04ff02ffff04ffff02ffff03ff13ffff01ff04ff13ff0580ffff010580ff0180ffff04ff1bff8080808080ffff010580ff0180ff05ffff14ffff12ff05ff0b80ffff018600e8d4a510008080ffffff05ffff14ffff12ff05ff0b80ffff018227108080ff04ffff013fffff04ffff0bffff02ff18ffff04ff02ffff04ffff01a037bef360ee858133b69d595a906dc45d01af50379dad515eb9518abb7c1d2a7affff04ffff01a0cfbfdeed5c4ca2de3d0bf520b9cb4bb7743a359bd2e6a188d19ce7dffc21d3e7ffff04ffff0bffff0101ff0b80ffff04ffff0bffff0101ffff01a037bef360ee858133b69d595a906dc45d01af50379dad515eb9518abb7c1d2a7a80ff80808080808080ffff02ff14ffff04ff02ffff04ffff04ff17ffff04ffff04ff05ffff04ff2fffff04ffff04ff05ff8080ff80808080ff808080ff8080808080ff808080ffff04ffff0133ffff04ffff01a0cfbfdeed5c4ca2de3d0bf520b9cb4bb7743a359bd2e6a188d19ce7dffc21d3e7ffff04ff05ff80808080ffff04ffff0133ffff04ffff02ff18ffff04ff02ffff04ff05ffff04ffff0bffff0101ff82017f80ffff04ffff0bffff0101ff8200bf80ffff04ffff0bffff0101ff5f80ffff04ffff0bffff0101ff2f80ffff04ffff0bffff0101ff1780ffff04ffff0bffff0101ff0b80ffff04ffff0bffff0101ff0580ff8080808080808080808080ffff04ff8202ffff80808080ff02ff2cffff04ff02ffff04ffff04ffff04ffff0133ffff04ff05ffff04ffff11ff17ff2f80ff80808080ffff04ffff04ffff0132ffff04ff0bffff04ffff0bff1780ff80808080ff808080ffff04ffff04ffff02ffff03ffff15ff2fff8080ffff01ff04ffff0134ffff04ff2fff808080ffff01ff018080ff0180ff8080ff8080808080ff018080ffff04ffff01a0e506255126ce71dccd6b5dac93d8950ecc863ba5f4aa68b123bfed59beccb03affff04ffff01a0bc1f6e34fbc556d279b2e2187f2b7271df540926f21f74e26ba212c78a56b9b9ffff04ffff0164ffff04ffff01a0f3ef546a82ed460b966d72b2ca5d39711eb3daf1b3c372aa82d0071c21feffbcffff04ffff01b0854500d2d9b4519e5e4a763d659f0bef63c96afe8437230f5c90ae6915a5acf631f37ba5d599ac957a23b4da4b5c34d1ffff04ffff01a0db1a9020d48d9d4ad22631b66ab4b9ebd3637ef7758ad38881348c5d24c38f20ffff04ffff01830ae628ff018080808080808080",
+        "solution": "0xff8600e8d4a51000ffa07c41e1d31f3a75e2ac282997162f589de56926d0552cf87c47e7978af59910cfff852e90edd000ff8080"
       },
-      "puzzle_reveal": "0xff02ffff01ff02ffff01ff02ffff03ff0bffff01ff02ffff03ffff09ff05ffff1dff0bffff1effff0bff0bffff02ff06ffff04ff02ffff04ff17ff8080808080808080ffff01ff02ff17ff2f80ffff01ff088080ff0180ffff01ff04ffff04ff04ffff04ff05ffff04ffff02ff06ffff04ff02ffff04ff17ff80808080ff80808080ffff02ff17ff2f808080ff0180ffff04ffff01ff32ff02ffff03ffff07ff0580ffff01ff0bffff0102ffff02ff06ffff04ff02ffff04ff09ff80808080ffff02ff06ffff04ff02ffff04ff0dff8080808080ffff01ff0bffff0101ff058080ff0180ff018080ffff04ffff01b0a18b513c7779d2cc4a25ccf78f75e9800905ec9a8ce37d8e6d2738cb04b3ac1665687a60e8244eadbfe9dc950b8fc6faff018080",
-      "solution": "0xff80ffff01ffff3dffa00f13e53187e556b83f84828924ad53d2025abe38c6649b8aad67b4021a0d9af38080ff8080"
-    },
-    {
-      "coin": {
-        "parent_coin_info": "0xa5def056fdeace500e7e23d0707eb1750d6774af476174171d216d2520f67886",
-        "puzzle_hash": "0x1b5b1e89eb1346736003f23939407387bf66d146c66ae956f6521bc11447680c",
-        "amount": 2000000000000
+      {
+        "coin": {
+          "parent_coin_info": "0x7c41e1d31f3a75e2ac282997162f589de56926d0552cf87c47e7978af59910cf",
+          "puzzle_hash": "0xcfbfdeed5c4ca2de3d0bf520b9cb4bb7743a359bd2e6a188d19ce7dffc21d3e7",
+          "amount": 198000000000
+        },
+        "puzzle_reveal": "0xff02ffff01ff02ff0affff04ff02ffff04ff03ff80808080ffff04ffff01ffff333effff02ffff03ff05ffff01ff04ffff04ff0cffff04ffff02ff1effff04ff02ffff04ff09ff80808080ff808080ffff02ff16ffff04ff02ffff04ff19ffff04ffff02ff0affff04ff02ffff04ff0dff80808080ff808080808080ff8080ff0180ffff02ffff03ff05ffff01ff02ffff03ffff15ff29ff8080ffff01ff04ffff04ff08ff0980ffff02ff16ffff04ff02ffff04ff0dffff04ff0bff808080808080ffff01ff088080ff0180ffff010b80ff0180ff02ffff03ffff07ff0580ffff01ff0bffff0102ffff02ff1effff04ff02ffff04ff09ff80808080ffff02ff1effff04ff02ffff04ff0dff8080808080ffff01ff0bffff0101ff058080ff0180ff018080",
+        "solution": "0xffffa0743196be3f486855c100a1a67c79967281eeb1984024d4359a43b8c595085955ffffa0e45df35ba061b9a177337db96320f1d04d15735b8e5fc3fd03c485d76a3d0dc7ff852e19b83c00ff80808080"
       },
-      "puzzle_reveal": "0xff02ffff01ff02ffff01ff04ffff04ffff0149ffff04ff8202ffff808080ffff02ffff03ffff15ff820bffff8080ffff01ff02ff2cffff04ff02ffff04ffff04ffff04ffff0146ffff04ff8205ffff808080ffff04ffff02ff1affff04ff02ffff04ff2fffff04ff8200bfffff04ff8205ffffff04ffff02ff3cffff04ff02ffff04ff82017fffff04ff820bffff8080808080ff80808080808080ffff04ffff02ff16ffff04ff02ffff04ffff11ff820bffffff02ff12ffff04ff02ffff04ff17ffff04ff820bffff808080808080ff80808080ffff04ffff04ffff0133ffff04ff0bffff04ffff02ff12ffff04ff02ffff04ff17ffff04ff820bffff8080808080ff80808080ff8080808080ffff04ffff02ffff03ffff15ffff11ff8202ffff820bff80ff8080ffff01ff04ffff02ff2effff04ff02ffff04ff05ffff04ff0bffff04ff17ffff04ff2fffff04ff5fffff04ff8200bfffff04ff82017fffff04ffff11ff8202ffff820bff80ff8080808080808080808080ff8080ffff01ff018080ff0180ff8080808080ffff01ff02ff3effff04ff02ffff04ff2fffff04ff5fffff04ff8202ffffff04ff8217ffff8080808080808080ff018080ffff04ffff01ffffffff02ffff03ff05ffff01ff02ff10ffff04ff02ffff04ff0dffff04ffff0bffff0102ffff0bffff0101ffff010480ffff0bffff0102ffff0bffff0102ffff0bffff0101ffff010180ff0980ffff0bffff0102ff0bffff0bffff0101ff8080808080ff8080808080ffff010b80ff0180ff0bffff0102ffff0bffff0101ffff010280ffff0bffff0102ffff0bffff0102ffff0bffff0101ffff010180ff0580ffff0bffff0102ffff02ff10ffff04ff02ffff04ff07ffff04ffff0bffff0101ffff010180ff8080808080ffff0bffff0101ff8080808080ffff02ffff03ffff07ff0580ffff01ff0bffff0102ffff02ff14ffff04ff02ffff04ff09ff80808080ffff02ff14ffff04ff02ffff04ff0dff8080808080ffff01ff0bffff0101ff058080ff0180ffff02ffff03ff0bffff01ff02ff2cffff04ff02ffff04ffff02ffff03ff13ffff01ff04ff13ff0580ffff010580ff0180ffff04ff1bff8080808080ffff010580ff0180ff05ffff14ffff12ff05ff0b80ffff018600e8d4a510008080ffffff05ffff14ffff12ff05ff0b80ffff018227108080ff04ffff013fffff04ffff0bffff02ff18ffff04ff02ffff04ffff01a037bef360ee858133b69d595a906dc45d01af50379dad515eb9518abb7c1d2a7affff04ffff01a0cfbfdeed5c4ca2de3d0bf520b9cb4bb7743a359bd2e6a188d19ce7dffc21d3e7ffff04ffff0bffff0101ff0b80ffff04ffff0bffff0101ffff01a037bef360ee858133b69d595a906dc45d01af50379dad515eb9518abb7c1d2a7a80ff80808080808080ffff02ff14ffff04ff02ffff04ffff04ff17ffff04ffff04ff05ffff04ff2fffff04ffff04ff05ff8080ff80808080ff808080ff8080808080ff808080ffff04ffff0133ffff04ffff01a0cfbfdeed5c4ca2de3d0bf520b9cb4bb7743a359bd2e6a188d19ce7dffc21d3e7ffff04ff05ff80808080ffff04ffff0133ffff04ffff02ff18ffff04ff02ffff04ff05ffff04ffff0bffff0101ff82017f80ffff04ffff0bffff0101ff8200bf80ffff04ffff0bffff0101ff5f80ffff04ffff0bffff0101ff2f80ffff04ffff0bffff0101ff1780ffff04ffff0bffff0101ff0b80ffff04ffff0bffff0101ff0580ff8080808080808080808080ffff04ff8202ffff80808080ff02ff2cffff04ff02ffff04ffff04ffff04ffff0133ffff04ff05ffff04ffff11ff17ff2f80ff80808080ffff04ffff04ffff0132ffff04ff0bffff04ffff0bff1780ff80808080ff808080ffff04ffff04ffff02ffff03ffff15ff2fff8080ffff01ff04ffff0134ffff04ff2fff808080ffff01ff018080ff0180ff8080ff8080808080ff018080ffff04ffff01a0e506255126ce71dccd6b5dac93d8950ecc863ba5f4aa68b123bfed59beccb03affff04ffff01a0bf00456f9fecf7fb57651b0c99ce13bd9d2858e9b190ec373ba158c9a9934e5affff04ffff0164ffff04ffff01a027a3681e800dd064316e74173577be23c9e514ded4b6cd55e4bb84e26a6a55f1ffff04ffff01b08049a7369adf936b3ad73c88fc6abd3d172d1ea1661f7d6597842152c2652966ac6a9b93653124cd93bd9a769a039275ffff04ffff01a0d82dd03f8a9ad2f84353cd953c4de6b21dbaaf7de3ba3f4ddd9abe31ecba80adffff04ffff01830493e0ff018080808080808080",
-      "solution": "0xff8601d1a94a2000ffa027a29bda975974d02edb2d3f9649dd44870edabdb501d05a4c6f22c47a628e87ff8600e8d4a51000ff8080"
-    },
-    {
-      "coin": {
-        "parent_coin_info": "0x27a29bda975974d02edb2d3f9649dd44870edabdb501d05a4c6f22c47a628e87",
-        "puzzle_hash": "0xcfbfdeed5c4ca2de3d0bf520b9cb4bb7743a359bd2e6a188d19ce7dffc21d3e7",
-        "amount": 990000000000
+      {
+        "coin": {
+          "parent_coin_info": "0xdc5be7fac36bf198aced19f90a4d720339bd096e5f81550da93192d61b82e20d",
+          "puzzle_hash": "0xf4f6b95e705a404a52ec6670160fd468d05779376766baee0a03215d0cfd8e6f",
+          "amount": 1000000
+        },
+        "puzzle_reveal": "0xff02ffff01ff02ffff01ff02ff5effff04ff02ffff04ffff04ff05ffff04ffff0bff34ff0580ffff04ff0bff80808080ffff04ffff02ff17ff2f80ffff04ff5fffff04ffff02ff2effff04ff02ffff04ff17ff80808080ffff04ffff02ff2affff04ff02ffff04ff82027fffff04ff82057fffff04ff820b7fff808080808080ffff04ff81bfffff04ff82017fffff04ff8202ffffff04ff8205ffffff04ff820bffff80808080808080808080808080ffff04ffff01ffffffff3d46ff02ff333cffff0401ff01ff81cb02ffffff20ff02ffff03ff05ffff01ff02ff32ffff04ff02ffff04ff0dffff04ffff0bff7cffff0bff34ff2480ffff0bff7cffff0bff7cffff0bff34ff2c80ff0980ffff0bff7cff0bffff0bff34ff8080808080ff8080808080ffff010b80ff0180ffff02ffff03ffff22ffff09ffff0dff0580ff2280ffff09ffff0dff0b80ff2280ffff15ff17ffff0181ff8080ffff01ff0bff05ff0bff1780ffff01ff088080ff0180ffff02ffff03ff0bffff01ff02ffff03ffff09ffff02ff2effff04ff02ffff04ff13ff80808080ff820b9f80ffff01ff02ff56ffff04ff02ffff04ffff02ff13ffff04ff5fffff04ff17ffff04ff2fffff04ff81bfffff04ff82017fffff04ff1bff8080808080808080ffff04ff82017fff8080808080ffff01ff088080ff0180ffff01ff02ffff03ff17ffff01ff02ffff03ffff20ff81bf80ffff0182017fffff01ff088080ff0180ffff01ff088080ff018080ff0180ff04ffff04ff05ff2780ffff04ffff10ff0bff5780ff778080ffffff02ffff03ff05ffff01ff02ffff03ffff09ffff02ffff03ffff09ff11ff5880ffff0159ff8080ff0180ffff01818f80ffff01ff02ff26ffff04ff02ffff04ff0dffff04ff0bffff04ffff04ff81b9ff82017980ff808080808080ffff01ff02ff7affff04ff02ffff04ffff02ffff03ffff09ff11ff5880ffff01ff04ff58ffff04ffff02ff76ffff04ff02ffff04ff13ffff04ff29ffff04ffff0bff34ff5b80ffff04ff2bff80808080808080ff398080ffff01ff02ffff03ffff09ff11ff7880ffff01ff02ffff03ffff20ffff02ffff03ffff09ffff0121ffff0dff298080ffff01ff02ffff03ffff09ffff0cff29ff80ff3480ff5c80ffff01ff0101ff8080ff0180ff8080ff018080ffff0109ffff01ff088080ff0180ffff010980ff018080ff0180ffff04ffff02ffff03ffff09ff11ff5880ffff0159ff8080ff0180ffff04ffff02ff26ffff04ff02ffff04ff0dffff04ff0bffff04ff17ff808080808080ff80808080808080ff0180ffff01ff04ff80ffff04ff80ff17808080ff0180ffff02ffff03ff05ffff01ff04ff09ffff02ff56ffff04ff02ffff04ff0dffff04ff0bff808080808080ffff010b80ff0180ff0bff7cffff0bff34ff2880ffff0bff7cffff0bff7cffff0bff34ff2c80ff0580ffff0bff7cffff02ff32ffff04ff02ffff04ff07ffff04ffff0bff34ff3480ff8080808080ffff0bff34ff8080808080ffff02ffff03ffff07ff0580ffff01ff0bffff0102ffff02ff2effff04ff02ffff04ff09ff80808080ffff02ff2effff04ff02ffff04ff0dff8080808080ffff01ff0bffff0101ff058080ff0180ffff04ffff04ff30ffff04ff5fff808080ffff02ff7effff04ff02ffff04ffff04ffff04ff2fff0580ffff04ff5fff82017f8080ffff04ffff02ff26ffff04ff02ffff04ff0bffff04ff05ffff01ff808080808080ffff04ff17ffff04ff81bfffff04ff82017fffff04ffff02ff2affff04ff02ffff04ff8204ffffff04ffff02ff76ffff04ff02ffff04ff09ffff04ff820affffff04ffff0bff34ff2d80ffff04ff15ff80808080808080ffff04ff8216ffff808080808080ffff04ff8205ffffff04ff820bffff808080808080808080808080ff02ff5affff04ff02ffff04ff5fffff04ff3bffff04ffff02ffff03ff17ffff01ff09ff2dffff02ff2affff04ff02ffff04ff27ffff04ffff02ff76ffff04ff02ffff04ff29ffff04ff57ffff04ffff0bff34ff81b980ffff04ff59ff80808080808080ffff04ff81b7ff80808080808080ff8080ff0180ffff04ff17ffff04ff05ffff04ff8202ffffff04ffff04ffff04ff78ffff04ffff0eff5cffff02ff2effff04ff02ffff04ffff04ff2fffff04ff82017fff808080ff8080808080ff808080ffff04ffff04ff20ffff04ffff0bff81bfff5cffff02ff2effff04ff02ffff04ffff04ff15ffff04ffff10ff82017fffff11ff8202dfff2b80ff8202ff80ff808080ff8080808080ff808080ff138080ff80808080808080808080ff018080ffff04ffff01a037bef360ee858133b69d595a906dc45d01af50379dad515eb9518abb7c1d2a7affff04ffff01a0db1a9020d48d9d4ad22631b66ab4b9ebd3637ef7758ad38881348c5d24c38f20ffff04ffff01ff02ffff01ff02ffff01ff02ffff03ff0bffff01ff02ffff03ffff09ff05ffff1dff0bffff1effff0bff0bffff02ff06ffff04ff02ffff04ff17ff8080808080808080ffff01ff02ff17ff2f80ffff01ff088080ff0180ffff01ff04ffff04ff04ffff04ff05ffff04ffff02ff06ffff04ff02ffff04ff17ff80808080ff80808080ffff02ff17ff2f808080ff0180ffff04ffff01ff32ff02ffff03ffff07ff0580ffff01ff0bffff0102ffff02ff06ffff04ff02ffff04ff09ff80808080ffff02ff06ffff04ff02ffff04ff0dff8080808080ffff01ff0bffff0101ff058080ff0180ff018080ffff04ffff01b08324899967bfa626d54e64cd703fbf56a3e138cd7c63f37a3fb73b61efefcb2b91e5cf90022a2c5e97ee93e6dc8f5fadff018080ff0180808080",
+        "solution": "0xffff80ffff01ffff3fffa099eecd8643e5cc9c50ea290b2a71e12b6379462059271ecd882803562a56501380ffff3cffa0a10e5f889112ce4b184fb6d69e30b00ea6dcd88fcb100435e785f698b4cd8db880ffff33ffa0cfbfdeed5c4ca2de3d0bf520b9cb4bb7743a359bd2e6a188d19ce7dffc21d3e7ff83022e08ffffa0cfbfdeed5c4ca2de3d0bf520b9cb4bb7743a359bd2e6a188d19ce7dffc21d3e78080ffff33ffa0e45df35ba061b9a177337db96320f1d04d15735b8e5fc3fd03c485d76a3d0dc7ff830d1438ffffa0e45df35ba061b9a177337db96320f1d04d15735b8e5fc3fd03c485d76a3d0dc7808080ff8080ffffa049dec02fd6de6f272ae4a421fb32cf68fb80330ff89523261a36273bf3311884ffa0e45df35ba061b9a177337db96320f1d04d15735b8e5fc3fd03c485d76a3d0dc7ff83022e0880ffa0f36eba869706ed28568067a491e84b4d5996e158b4f9d059f576f20360ab07daffffa0dc5be7fac36bf198aced19f90a4d720339bd096e5f81550da93192d61b82e20dffa0f4f6b95e705a404a52ec6670160fd468d05779376766baee0a03215d0cfd8e6fff830f424080ffffa0dc5be7fac36bf198aced19f90a4d720339bd096e5f81550da93192d61b82e20dffa0e45df35ba061b9a177337db96320f1d04d15735b8e5fc3fd03c485d76a3d0dc7ff830f424080ff80ff8080"
       },
-      "puzzle_reveal": "0xff02ffff01ff02ff0affff04ff02ffff04ff03ff80808080ffff04ffff01ffff333effff02ffff03ff05ffff01ff04ffff04ff0cffff04ffff02ff1effff04ff02ffff04ff09ff80808080ff808080ffff02ff16ffff04ff02ffff04ff19ffff04ffff02ff0affff04ff02ffff04ff0dff80808080ff808080808080ff8080ff0180ffff02ffff03ff05ffff01ff02ffff03ffff15ff29ff8080ffff01ff04ffff04ff08ff0980ffff02ff16ffff04ff02ffff04ff0dffff04ff0bff808080808080ffff01ff088080ff0180ffff010b80ff0180ff02ffff03ffff07ff0580ffff01ff0bffff0102ffff02ff1effff04ff02ffff04ff09ff80808080ffff02ff1effff04ff02ffff04ff0dff8080808080ffff01ff0bffff0101ff058080ff0180ff018080",
-      "solution": "0xffffa00029b77b7b232924e92df7afd41b34995ea77f6a082a457a721206cad2b9448bffffa0576be3af2f4cb87ea9cb281c8525411ce24aede112c6123f20bc4f075047f013ff8600e680992c00ff80808080"
-    },
-    {
-      "coin": {
-        "parent_coin_info": "0xffb149caf4832758484759b744948635980156d5a6f0c592a3d106da6b715cb6",
-        "puzzle_hash": "0x9990b8d8847911f83a8d107071b6e18e18b7ddab8a8ddee5a26e0cf7c89e3457",
-        "amount": 300000
-      },
-      "puzzle_reveal": "0xff02ffff01ff02ffff01ff02ff5effff04ff02ffff04ffff04ff05ffff04ffff0bff34ff0580ffff04ff0bff80808080ffff04ffff02ff17ff2f80ffff04ff5fffff04ffff02ff2effff04ff02ffff04ff17ff80808080ffff04ffff02ff2affff04ff02ffff04ff82027fffff04ff82057fffff04ff820b7fff808080808080ffff04ff81bfffff04ff82017fffff04ff8202ffffff04ff8205ffffff04ff820bffff80808080808080808080808080ffff04ffff01ffffffff3d46ff02ff333cffff0401ff01ff81cb02ffffff20ff02ffff03ff05ffff01ff02ff32ffff04ff02ffff04ff0dffff04ffff0bff7cffff0bff34ff2480ffff0bff7cffff0bff7cffff0bff34ff2c80ff0980ffff0bff7cff0bffff0bff34ff8080808080ff8080808080ffff010b80ff0180ffff02ffff03ffff22ffff09ffff0dff0580ff2280ffff09ffff0dff0b80ff2280ffff15ff17ffff0181ff8080ffff01ff0bff05ff0bff1780ffff01ff088080ff0180ffff02ffff03ff0bffff01ff02ffff03ffff09ffff02ff2effff04ff02ffff04ff13ff80808080ff820b9f80ffff01ff02ff56ffff04ff02ffff04ffff02ff13ffff04ff5fffff04ff17ffff04ff2fffff04ff81bfffff04ff82017fffff04ff1bff8080808080808080ffff04ff82017fff8080808080ffff01ff088080ff0180ffff01ff02ffff03ff17ffff01ff02ffff03ffff20ff81bf80ffff0182017fffff01ff088080ff0180ffff01ff088080ff018080ff0180ff04ffff04ff05ff2780ffff04ffff10ff0bff5780ff778080ffffff02ffff03ff05ffff01ff02ffff03ffff09ffff02ffff03ffff09ff11ff5880ffff0159ff8080ff0180ffff01818f80ffff01ff02ff26ffff04ff02ffff04ff0dffff04ff0bffff04ffff04ff81b9ff82017980ff808080808080ffff01ff02ff7affff04ff02ffff04ffff02ffff03ffff09ff11ff5880ffff01ff04ff58ffff04ffff02ff76ffff04ff02ffff04ff13ffff04ff29ffff04ffff0bff34ff5b80ffff04ff2bff80808080808080ff398080ffff01ff02ffff03ffff09ff11ff7880ffff01ff02ffff03ffff20ffff02ffff03ffff09ffff0121ffff0dff298080ffff01ff02ffff03ffff09ffff0cff29ff80ff3480ff5c80ffff01ff0101ff8080ff0180ff8080ff018080ffff0109ffff01ff088080ff0180ffff010980ff018080ff0180ffff04ffff02ffff03ffff09ff11ff5880ffff0159ff8080ff0180ffff04ffff02ff26ffff04ff02ffff04ff0dffff04ff0bffff04ff17ff808080808080ff80808080808080ff0180ffff01ff04ff80ffff04ff80ff17808080ff0180ffff02ffff03ff05ffff01ff04ff09ffff02ff56ffff04ff02ffff04ff0dffff04ff0bff808080808080ffff010b80ff0180ff0bff7cffff0bff34ff2880ffff0bff7cffff0bff7cffff0bff34ff2c80ff0580ffff0bff7cffff02ff32ffff04ff02ffff04ff07ffff04ffff0bff34ff3480ff8080808080ffff0bff34ff8080808080ffff02ffff03ffff07ff0580ffff01ff0bffff0102ffff02ff2effff04ff02ffff04ff09ff80808080ffff02ff2effff04ff02ffff04ff0dff8080808080ffff01ff0bffff0101ff058080ff0180ffff04ffff04ff30ffff04ff5fff808080ffff02ff7effff04ff02ffff04ffff04ffff04ff2fff0580ffff04ff5fff82017f8080ffff04ffff02ff26ffff04ff02ffff04ff0bffff04ff05ffff01ff808080808080ffff04ff17ffff04ff81bfffff04ff82017fffff04ffff02ff2affff04ff02ffff04ff8204ffffff04ffff02ff76ffff04ff02ffff04ff09ffff04ff820affffff04ffff0bff34ff2d80ffff04ff15ff80808080808080ffff04ff8216ffff808080808080ffff04ff8205ffffff04ff820bffff808080808080808080808080ff02ff5affff04ff02ffff04ff5fffff04ff3bffff04ffff02ffff03ff17ffff01ff09ff2dffff02ff2affff04ff02ffff04ff27ffff04ffff02ff76ffff04ff02ffff04ff29ffff04ff57ffff04ffff0bff34ff81b980ffff04ff59ff80808080808080ffff04ff81b7ff80808080808080ff8080ff0180ffff04ff17ffff04ff05ffff04ff8202ffffff04ffff04ffff04ff78ffff04ffff0eff5cffff02ff2effff04ff02ffff04ffff04ff2fffff04ff82017fff808080ff8080808080ff808080ffff04ffff04ff20ffff04ffff0bff81bfff5cffff02ff2effff04ff02ffff04ffff04ff15ffff04ffff10ff82017fffff11ff8202dfff2b80ff8202ff80ff808080ff8080808080ff808080ff138080ff80808080808080808080ff018080ffff04ffff01a037bef360ee858133b69d595a906dc45d01af50379dad515eb9518abb7c1d2a7affff04ffff01a0d82dd03f8a9ad2f84353cd953c4de6b21dbaaf7de3ba3f4ddd9abe31ecba80adffff04ffff01ff02ffff01ff02ffff01ff02ffff03ff0bffff01ff02ffff03ffff09ff05ffff1dff0bffff1effff0bff0bffff02ff06ffff04ff02ffff04ff17ff8080808080808080ffff01ff02ff17ff2f80ffff01ff088080ff0180ffff01ff04ffff04ff04ffff04ff05ffff04ffff02ff06ffff04ff02ffff04ff17ff80808080ff80808080ffff02ff17ff2f808080ff0180ffff04ffff01ff32ff02ffff03ffff07ff0580ffff01ff0bffff0102ffff02ff06ffff04ff02ffff04ff09ff80808080ffff02ff06ffff04ff02ffff04ff0dff8080808080ffff01ff0bffff0101ff058080ff0180ff018080ffff04ffff01b08ed1c6ea3debbc56b104369d60f0557c9135fc09b654b95848d9f7625e8c939832f8196cf3039493b102e65df9be3d65ff018080ff0180808080",
-      "solution": "0xffff80ffff01ffff3fffa05f1a2ebaeb121205ed7561d6a7c6b6b4a2e139d8faf91b83a539bc132f4b1cb880ffff3cffa001cc9fa53a5259d8070254552e9e4fa4ad091b6e1db78f927425d7393d4b651480ffff33ffa0cfbfdeed5c4ca2de3d0bf520b9cb4bb7743a359bd2e6a188d19ce7dffc21d3e7ff830493e0ffffa0cfbfdeed5c4ca2de3d0bf520b9cb4bb7743a359bd2e6a188d19ce7dffc21d3e7808080ff8080ffffa0f198da64f4e6472d491d481c8b2db6e2d0e6cbf196210cf825669c11c21a4bf0ffa0808e33c7fcef761b1c9156e9383336b505c03d028895d866c3c24e7ca81c99e8ff830b371880ffa084150482d59dca4388355de61f3101b653f7db9f6304f463ca4b489244c6633affffa0ffb149caf4832758484759b744948635980156d5a6f0c592a3d106da6b715cb6ffa09990b8d8847911f83a8d107071b6e18e18b7ddab8a8ddee5a26e0cf7c89e3457ff830493e080ffffa0ffb149caf4832758484759b744948635980156d5a6f0c592a3d106da6b715cb6ffa0808e33c7fcef761b1c9156e9383336b505c03d028895d866c3c24e7ca81c99e8ff830493e080ff80ff8080"
-    },
-    {
-      "coin": {
-        "parent_coin_info": "0x177b19e79abdd1a1b1a695ca724906540fc2d4cb8c25e75b78fbe952a5d115fc",
-        "puzzle_hash": "0x808e33c7fcef761b1c9156e9383336b505c03d028895d866c3c24e7ca81c99e8",
-        "amount": 123499950000
-      },
-      "puzzle_reveal": "0xff02ffff01ff02ffff01ff02ffff03ff0bffff01ff02ffff03ffff09ff05ffff1dff0bffff1effff0bff0bffff02ff06ffff04ff02ffff04ff17ff8080808080808080ffff01ff02ff17ff2f80ffff01ff088080ff0180ffff01ff04ffff04ff04ffff04ff05ffff04ffff02ff06ffff04ff02ffff04ff17ff80808080ff80808080ffff02ff17ff2f808080ff0180ffff04ffff01ff32ff02ffff03ffff07ff0580ffff01ff0bffff0102ffff02ff06ffff04ff02ffff04ff09ff80808080ffff02ff06ffff04ff02ffff04ff0dff8080808080ffff01ff0bffff0101ff058080ff0180ff018080ffff04ffff01b08ed1c6ea3debbc56b104369d60f0557c9135fc09b654b95848d9f7625e8c939832f8196cf3039493b102e65df9be3d65ff018080",
-      "solution": "0xff80ffff01ffff3dffa0060e8721e609beea4287995715e839ed3ae48e67b178d615414577e857fcc3f480ffff3cffa003542b3283104379a6fac1e0255dd23169f77f2c8337a22da787911ba07ad96980ffff33ffa0576be3af2f4cb87ea9cb281c8525411ce24aede112c6123f20bc4f075047f013ff851cc12bafaf80ffff34ff018080ff8080"
-    },
-    {
-      "coin": {
-        "parent_coin_info": "0x84150482d59dca4388355de61f3101b653f7db9f6304f463ca4b489244c6633a",
-        "puzzle_hash": "0x97e06ce07905686dbce24559b9691fdcbadf400da9cc7675c35d8beb87301974",
-        "amount": 300000
-      },
-      "puzzle_reveal": "0xff02ffff01ff02ffff01ff02ff5effff04ff02ffff04ffff04ff05ffff04ffff0bff34ff0580ffff04ff0bff80808080ffff04ffff02ff17ff2f80ffff04ff5fffff04ffff02ff2effff04ff02ffff04ff17ff80808080ffff04ffff02ff2affff04ff02ffff04ff82027fffff04ff82057fffff04ff820b7fff808080808080ffff04ff81bfffff04ff82017fffff04ff8202ffffff04ff8205ffffff04ff820bffff80808080808080808080808080ffff04ffff01ffffffff3d46ff02ff333cffff0401ff01ff81cb02ffffff20ff02ffff03ff05ffff01ff02ff32ffff04ff02ffff04ff0dffff04ffff0bff7cffff0bff34ff2480ffff0bff7cffff0bff7cffff0bff34ff2c80ff0980ffff0bff7cff0bffff0bff34ff8080808080ff8080808080ffff010b80ff0180ffff02ffff03ffff22ffff09ffff0dff0580ff2280ffff09ffff0dff0b80ff2280ffff15ff17ffff0181ff8080ffff01ff0bff05ff0bff1780ffff01ff088080ff0180ffff02ffff03ff0bffff01ff02ffff03ffff09ffff02ff2effff04ff02ffff04ff13ff80808080ff820b9f80ffff01ff02ff56ffff04ff02ffff04ffff02ff13ffff04ff5fffff04ff17ffff04ff2fffff04ff81bfffff04ff82017fffff04ff1bff8080808080808080ffff04ff82017fff8080808080ffff01ff088080ff0180ffff01ff02ffff03ff17ffff01ff02ffff03ffff20ff81bf80ffff0182017fffff01ff088080ff0180ffff01ff088080ff018080ff0180ff04ffff04ff05ff2780ffff04ffff10ff0bff5780ff778080ffffff02ffff03ff05ffff01ff02ffff03ffff09ffff02ffff03ffff09ff11ff5880ffff0159ff8080ff0180ffff01818f80ffff01ff02ff26ffff04ff02ffff04ff0dffff04ff0bffff04ffff04ff81b9ff82017980ff808080808080ffff01ff02ff7affff04ff02ffff04ffff02ffff03ffff09ff11ff5880ffff01ff04ff58ffff04ffff02ff76ffff04ff02ffff04ff13ffff04ff29ffff04ffff0bff34ff5b80ffff04ff2bff80808080808080ff398080ffff01ff02ffff03ffff09ff11ff7880ffff01ff02ffff03ffff20ffff02ffff03ffff09ffff0121ffff0dff298080ffff01ff02ffff03ffff09ffff0cff29ff80ff3480ff5c80ffff01ff0101ff8080ff0180ff8080ff018080ffff0109ffff01ff088080ff0180ffff010980ff018080ff0180ffff04ffff02ffff03ffff09ff11ff5880ffff0159ff8080ff0180ffff04ffff02ff26ffff04ff02ffff04ff0dffff04ff0bffff04ff17ff808080808080ff80808080808080ff0180ffff01ff04ff80ffff04ff80ff17808080ff0180ffff02ffff03ff05ffff01ff04ff09ffff02ff56ffff04ff02ffff04ff0dffff04ff0bff808080808080ffff010b80ff0180ff0bff7cffff0bff34ff2880ffff0bff7cffff0bff7cffff0bff34ff2c80ff0580ffff0bff7cffff02ff32ffff04ff02ffff04ff07ffff04ffff0bff34ff3480ff8080808080ffff0bff34ff8080808080ffff02ffff03ffff07ff0580ffff01ff0bffff0102ffff02ff2effff04ff02ffff04ff09ff80808080ffff02ff2effff04ff02ffff04ff0dff8080808080ffff01ff0bffff0101ff058080ff0180ffff04ffff04ff30ffff04ff5fff808080ffff02ff7effff04ff02ffff04ffff04ffff04ff2fff0580ffff04ff5fff82017f8080ffff04ffff02ff26ffff04ff02ffff04ff0bffff04ff05ffff01ff808080808080ffff04ff17ffff04ff81bfffff04ff82017fffff04ffff02ff2affff04ff02ffff04ff8204ffffff04ffff02ff76ffff04ff02ffff04ff09ffff04ff820affffff04ffff0bff34ff2d80ffff04ff15ff80808080808080ffff04ff8216ffff808080808080ffff04ff8205ffffff04ff820bffff808080808080808080808080ff02ff5affff04ff02ffff04ff5fffff04ff3bffff04ffff02ffff03ff17ffff01ff09ff2dffff02ff2affff04ff02ffff04ff27ffff04ffff02ff76ffff04ff02ffff04ff29ffff04ff57ffff04ffff0bff34ff81b980ffff04ff59ff80808080808080ffff04ff81b7ff80808080808080ff8080ff0180ffff04ff17ffff04ff05ffff04ff8202ffffff04ffff04ffff04ff78ffff04ffff0eff5cffff02ff2effff04ff02ffff04ffff04ff2fffff04ff82017fff808080ff8080808080ff808080ffff04ffff04ff20ffff04ffff0bff81bfff5cffff02ff2effff04ff02ffff04ffff04ff15ffff04ffff10ff82017fffff11ff8202dfff2b80ff8202ff80ff808080ff8080808080ff808080ff138080ff80808080808080808080ff018080ffff04ffff01a037bef360ee858133b69d595a906dc45d01af50379dad515eb9518abb7c1d2a7affff04ffff01a0d82dd03f8a9ad2f84353cd953c4de6b21dbaaf7de3ba3f4ddd9abe31ecba80adffff04ffff01ff02ffff01ff02ff0affff04ff02ffff04ff03ff80808080ffff04ffff01ffff333effff02ffff03ff05ffff01ff04ffff04ff0cffff04ffff02ff1effff04ff02ffff04ff09ff80808080ff808080ffff02ff16ffff04ff02ffff04ff19ffff04ffff02ff0affff04ff02ffff04ff0dff80808080ff808080808080ff8080ff0180ffff02ffff03ff05ffff01ff02ffff03ffff15ff29ff8080ffff01ff04ffff04ff08ff0980ffff02ff16ffff04ff02ffff04ff0dffff04ff0bff808080808080ffff01ff088080ff0180ffff010b80ff0180ff02ffff03ffff07ff0580ffff01ff0bffff0102ffff02ff1effff04ff02ffff04ff09ff80808080ffff02ff1effff04ff02ffff04ff0dff8080808080ffff01ff0bffff0101ff058080ff0180ff018080ff0180808080",
-      "solution": "0xffffffa027a29bda975974d02edb2d3f9649dd44870edabdb501d05a4c6f22c47a628e87ffffa027a3681e800dd064316e74173577be23c9e514ded4b6cd55e4bb84e26a6a55f1ff830493e0ffffa027a3681e800dd064316e74173577be23c9e514ded4b6cd55e4bb84e26a6a55f180808080ffffa0ffb149caf4832758484759b744948635980156d5a6f0c592a3d106da6b715cb6ffa0808e33c7fcef761b1c9156e9383336b505c03d028895d866c3c24e7ca81c99e8ff830493e080ffa087253fd18293c731b2cac1c82ae02c93256177a9398760f98d1bbf2136ec81a5ffffa084150482d59dca4388355de61f3101b653f7db9f6304f463ca4b489244c6633affa097e06ce07905686dbce24559b9691fdcbadf400da9cc7675c35d8beb87301974ff830493e080ffffa084150482d59dca4388355de61f3101b653f7db9f6304f463ca4b489244c6633affa0cfbfdeed5c4ca2de3d0bf520b9cb4bb7743a359bd2e6a188d19ce7dffc21d3e7ff830493e080ff80ff8080"
-    }
-  ],
-  "aggregated_signature": "0xb557ae716ee98dd7778e7e6cb294eeb9fe3afdd886baaa79d3f1b26a4919eb590b693ffe012bc809f63594e2499820f704e827ff73033111c9fe4266e2f42f42f2b4700b3543747d73d34bac53ad327c0e1bf3f9066e7911524f6b55888c0fb9"
-}
+      {
+        "coin": {
+          "parent_coin_info": "0xf36eba869706ed28568067a491e84b4d5996e158b4f9d059f576f20360ab07da",
+          "puzzle_hash": "0x2a8269fa3ec2a6968ee95219edc900ada54232beb24ad0f7581f3b3eab613e81",
+          "amount": 142856
+        },
+        "puzzle_reveal": "0xff02ffff01ff02ffff01ff02ff5effff04ff02ffff04ffff04ff05ffff04ffff0bff34ff0580ffff04ff0bff80808080ffff04ffff02ff17ff2f80ffff04ff5fffff04ffff02ff2effff04ff02ffff04ff17ff80808080ffff04ffff02ff2affff04ff02ffff04ff82027fffff04ff82057fffff04ff820b7fff808080808080ffff04ff81bfffff04ff82017fffff04ff8202ffffff04ff8205ffffff04ff820bffff80808080808080808080808080ffff04ffff01ffffffff3d46ff02ff333cffff0401ff01ff81cb02ffffff20ff02ffff03ff05ffff01ff02ff32ffff04ff02ffff04ff0dffff04ffff0bff7cffff0bff34ff2480ffff0bff7cffff0bff7cffff0bff34ff2c80ff0980ffff0bff7cff0bffff0bff34ff8080808080ff8080808080ffff010b80ff0180ffff02ffff03ffff22ffff09ffff0dff0580ff2280ffff09ffff0dff0b80ff2280ffff15ff17ffff0181ff8080ffff01ff0bff05ff0bff1780ffff01ff088080ff0180ffff02ffff03ff0bffff01ff02ffff03ffff09ffff02ff2effff04ff02ffff04ff13ff80808080ff820b9f80ffff01ff02ff56ffff04ff02ffff04ffff02ff13ffff04ff5fffff04ff17ffff04ff2fffff04ff81bfffff04ff82017fffff04ff1bff8080808080808080ffff04ff82017fff8080808080ffff01ff088080ff0180ffff01ff02ffff03ff17ffff01ff02ffff03ffff20ff81bf80ffff0182017fffff01ff088080ff0180ffff01ff088080ff018080ff0180ff04ffff04ff05ff2780ffff04ffff10ff0bff5780ff778080ffffff02ffff03ff05ffff01ff02ffff03ffff09ffff02ffff03ffff09ff11ff5880ffff0159ff8080ff0180ffff01818f80ffff01ff02ff26ffff04ff02ffff04ff0dffff04ff0bffff04ffff04ff81b9ff82017980ff808080808080ffff01ff02ff7affff04ff02ffff04ffff02ffff03ffff09ff11ff5880ffff01ff04ff58ffff04ffff02ff76ffff04ff02ffff04ff13ffff04ff29ffff04ffff0bff34ff5b80ffff04ff2bff80808080808080ff398080ffff01ff02ffff03ffff09ff11ff7880ffff01ff02ffff03ffff20ffff02ffff03ffff09ffff0121ffff0dff298080ffff01ff02ffff03ffff09ffff0cff29ff80ff3480ff5c80ffff01ff0101ff8080ff0180ff8080ff018080ffff0109ffff01ff088080ff0180ffff010980ff018080ff0180ffff04ffff02ffff03ffff09ff11ff5880ffff0159ff8080ff0180ffff04ffff02ff26ffff04ff02ffff04ff0dffff04ff0bffff04ff17ff808080808080ff80808080808080ff0180ffff01ff04ff80ffff04ff80ff17808080ff0180ffff02ffff03ff05ffff01ff04ff09ffff02ff56ffff04ff02ffff04ff0dffff04ff0bff808080808080ffff010b80ff0180ff0bff7cffff0bff34ff2880ffff0bff7cffff0bff7cffff0bff34ff2c80ff0580ffff0bff7cffff02ff32ffff04ff02ffff04ff07ffff04ffff0bff34ff3480ff8080808080ffff0bff34ff8080808080ffff02ffff03ffff07ff0580ffff01ff0bffff0102ffff02ff2effff04ff02ffff04ff09ff80808080ffff02ff2effff04ff02ffff04ff0dff8080808080ffff01ff0bffff0101ff058080ff0180ffff04ffff04ff30ffff04ff5fff808080ffff02ff7effff04ff02ffff04ffff04ffff04ff2fff0580ffff04ff5fff82017f8080ffff04ffff02ff26ffff04ff02ffff04ff0bffff04ff05ffff01ff808080808080ffff04ff17ffff04ff81bfffff04ff82017fffff04ffff02ff2affff04ff02ffff04ff8204ffffff04ffff02ff76ffff04ff02ffff04ff09ffff04ff820affffff04ffff0bff34ff2d80ffff04ff15ff80808080808080ffff04ff8216ffff808080808080ffff04ff8205ffffff04ff820bffff808080808080808080808080ff02ff5affff04ff02ffff04ff5fffff04ff3bffff04ffff02ffff03ff17ffff01ff09ff2dffff02ff2affff04ff02ffff04ff27ffff04ffff02ff76ffff04ff02ffff04ff29ffff04ff57ffff04ffff0bff34ff81b980ffff04ff59ff80808080808080ffff04ff81b7ff80808080808080ff8080ff0180ffff04ff17ffff04ff05ffff04ff8202ffffff04ffff04ffff04ff78ffff04ffff0eff5cffff02ff2effff04ff02ffff04ffff04ff2fffff04ff82017fff808080ff8080808080ff808080ffff04ffff04ff20ffff04ffff0bff81bfff5cffff02ff2effff04ff02ffff04ffff04ff15ffff04ffff10ff82017fffff11ff8202dfff2b80ff8202ff80ff808080ff8080808080ff808080ff138080ff80808080808080808080ff018080ffff04ffff01a037bef360ee858133b69d595a906dc45d01af50379dad515eb9518abb7c1d2a7affff04ffff01a0db1a9020d48d9d4ad22631b66ab4b9ebd3637ef7758ad38881348c5d24c38f20ffff04ffff01ff02ffff01ff02ff0affff04ff02ffff04ff03ff80808080ffff04ffff01ffff333effff02ffff03ff05ffff01ff04ffff04ff0cffff04ffff02ff1effff04ff02ffff04ff09ff80808080ff808080ffff02ff16ffff04ff02ffff04ff19ffff04ffff02ff0affff04ff02ffff04ff0dff80808080ff808080808080ff8080ff0180ffff02ffff03ff05ffff01ff02ffff03ffff15ff29ff8080ffff01ff04ffff04ff08ff0980ffff02ff16ffff04ff02ffff04ff0dffff04ff0bff808080808080ffff01ff088080ff0180ffff010b80ff0180ff02ffff03ffff07ff0580ffff01ff0bffff0102ffff02ff1effff04ff02ffff04ff09ff80808080ffff02ff1effff04ff02ffff04ff0dff8080808080ffff01ff0bffff0101ff058080ff0180ff018080ff0180808080",
+        "solution": "0xffffffa07c41e1d31f3a75e2ac282997162f589de56926d0552cf87c47e7978af59910cfffffa0f3ef546a82ed460b966d72b2ca5d39711eb3daf1b3c372aa82d0071c21feffbcff83022e08ffffa0f3ef546a82ed460b966d72b2ca5d39711eb3daf1b3c372aa82d0071c21feffbc80808080ffffa0dc5be7fac36bf198aced19f90a4d720339bd096e5f81550da93192d61b82e20dffa0e45df35ba061b9a177337db96320f1d04d15735b8e5fc3fd03c485d76a3d0dc7ff830f424080ffa01c52ead05c028aca7d3cabe86f4e0f23282c771524d25b7ddefa651877c55e51ffffa0f36eba869706ed28568067a491e84b4d5996e158b4f9d059f576f20360ab07daffa02a8269fa3ec2a6968ee95219edc900ada54232beb24ad0f7581f3b3eab613e81ff83022e0880ffffa0f36eba869706ed28568067a491e84b4d5996e158b4f9d059f576f20360ab07daffa0cfbfdeed5c4ca2de3d0bf520b9cb4bb7743a359bd2e6a188d19ce7dffc21d3e7ff83022e0880ff80ff8080"
+      }
+    ],
+    "aggregated_signature": "0x82cf1f994cb220f7c40df3840aa38c462f25d617e974dad22cae5ed24772652e5105d2b90ca89d6b243d357a45a38d2907043e5a4fef6dcfa2e27025f181aa6b4d47d147ce3509ed0b24f442c9e49c89617b4006c3b024c78bc15d932221a6a2"
+  }
 ```
 ##### Partial Coin
 ```json
 {
-  "parent_coin_info": "0xa5def056fdeace500e7e23d0707eb1750d6774af476174171d216d2520f67886",
-  "puzzle_hash": "0x1b5b1e89eb1346736003f23939407387bf66d146c66ae956f6521bc11447680c",
-  "amount": 2000000000000
-}
-```
-#### Parameters
-```lisp
-(
-  ; partial_coin_amount (2 XCH)
-  0x01d1a94a2000 
-  ; coin_id
-  0x27a29bda975974d02edb2d3f9649dd44870edabdb501d05a4c6f22c47a628e87
-  ; taken_mojos_or_clawback (1 XCH)
-  0x00e8d4a51000
-  ; clawback_fee_mojos (zero for taken case)
-  ()
-)              
-
-
-```
-#### Conditions
-```lisp
-; assert its own amount (2 XCH offered)
-(ASSERT_MY_AMOUNT  0x01d1a94a2000)
-; assert its own coin id (nonce for announcement payment)
-(ASSERT_MY_COIN_ID  0x27a29bda975974d02edb2d3f9649dd44870edabdb501d05a4c6f22c47a628e87)
-; assert announcement from taker settlement coin
-(ASSERT_PUZZLE_ANNOUNCEMENT  0xe6a193a62e190063b42335eadc6f7f0286e01282e2c8b6a9417d2d8787556a97)
-; create a new partial offer coin (1 XCH)
-(CREATE_COIN  0x1b5b1e89eb1346736003f23939407387bf66d146c66ae956f6521bc11447680c 0x00e8d4a51000)
-; create an ephemeral XCH settlement coin (pay to taker 0.99 XCH)
-(CREATE_COIN  0xcfbfdeed5c4ca2de3d0bf520b9cb4bb7743a359bd2e6a188d19ce7dffc21d3e7 0x00e680992c00)
-; create a fee coin (0.01 XCH)
-(CREATE_COIN  0xbf00456f9fecf7fb57651b0c99ce13bd9d2858e9b190ec373ba158c9a9934e5a 0x02540be400) 
-```
-
-#### New Partial Offer Coin
-```bash
-❯ chia rpc full_node get_coin_records_by_puzzle_hash '{"puzzle_hash": "0x1b5b1e89eb1346736003f23939407387bf66d146c66ae956f6521bc11447680c"}' | jq
-{
-  "coin_records": [
-    {
-      "coin": {
-        "amount": 1000000000000,
-        "parent_coin_info": "0x27a29bda975974d02edb2d3f9649dd44870edabdb501d05a4c6f22c47a628e87",
-        "puzzle_hash": "0x1b5b1e89eb1346736003f23939407387bf66d146c66ae956f6521bc11447680c"
-      },
-      "coinbase": false,
-      "confirmed_block_index": 1372092,
-      "spent": false,
-      "spent_block_index": 0,
-      "timestamp": 1726994752
-    }
-  ],
-  "success": true
-}
-```
-
-### Clawback 
-```bash
-❯ partial clawback -f $partial_fp 001.offer
-{
-  "coin_spends": [
-    {
-      "coin": {
-        "parent_coin_info": "0x27a29bda975974d02edb2d3f9649dd44870edabdb501d05a4c6f22c47a628e87",
-        "puzzle_hash": "0x1b5b1e89eb1346736003f23939407387bf66d146c66ae956f6521bc11447680c",
-        "amount": 1000000000000
-      },
-      "puzzle_reveal": "0xff02ffff01ff02ffff01ff04ffff04ffff0149ffff04ff8202ffff808080ffff02ffff03ffff15ff820bffff8080ffff01ff02ff2cffff04ff02ffff04ffff04ffff04ffff0146ffff04ff8205ffff808080ffff04ffff02ff1affff04ff02ffff04ff2fffff04ff8200bfffff04ff8205ffffff04ffff02ff3cffff04ff02ffff04ff82017fffff04ff820bffff8080808080ff80808080808080ffff04ffff02ff16ffff04ff02ffff04ffff11ff820bffffff02ff12ffff04ff02ffff04ff17ffff04ff820bffff808080808080ff80808080ffff04ffff04ffff0133ffff04ff0bffff04ffff02ff12ffff04ff02ffff04ff17ffff04ff820bffff8080808080ff80808080ff8080808080ffff04ffff02ffff03ffff15ffff11ff8202ffff820bff80ff8080ffff01ff04ffff02ff2effff04ff02ffff04ff05ffff04ff0bffff04ff17ffff04ff2fffff04ff5fffff04ff8200bfffff04ff82017fffff04ffff11ff8202ffff820bff80ff8080808080808080808080ff8080ffff01ff018080ff0180ff8080808080ffff01ff02ff3effff04ff02ffff04ff2fffff04ff5fffff04ff8202ffffff04ff8217ffff8080808080808080ff018080ffff04ffff01ffffffff02ffff03ff05ffff01ff02ff10ffff04ff02ffff04ff0dffff04ffff0bffff0102ffff0bffff0101ffff010480ffff0bffff0102ffff0bffff0102ffff0bffff0101ffff010180ff0980ffff0bffff0102ff0bffff0bffff0101ff8080808080ff8080808080ffff010b80ff0180ff0bffff0102ffff0bffff0101ffff010280ffff0bffff0102ffff0bffff0102ffff0bffff0101ffff010180ff0580ffff0bffff0102ffff02ff10ffff04ff02ffff04ff07ffff04ffff0bffff0101ffff010180ff8080808080ffff0bffff0101ff8080808080ffff02ffff03ffff07ff0580ffff01ff0bffff0102ffff02ff14ffff04ff02ffff04ff09ff80808080ffff02ff14ffff04ff02ffff04ff0dff8080808080ffff01ff0bffff0101ff058080ff0180ffff02ffff03ff0bffff01ff02ff2cffff04ff02ffff04ffff02ffff03ff13ffff01ff04ff13ff0580ffff010580ff0180ffff04ff1bff8080808080ffff010580ff0180ff05ffff14ffff12ff05ff0b80ffff018600e8d4a510008080ffffff05ffff14ffff12ff05ff0b80ffff018227108080ff04ffff013fffff04ffff0bffff02ff18ffff04ff02ffff04ffff01a037bef360ee858133b69d595a906dc45d01af50379dad515eb9518abb7c1d2a7affff04ffff01a0cfbfdeed5c4ca2de3d0bf520b9cb4bb7743a359bd2e6a188d19ce7dffc21d3e7ffff04ffff0bffff0101ff0b80ffff04ffff0bffff0101ffff01a037bef360ee858133b69d595a906dc45d01af50379dad515eb9518abb7c1d2a7a80ff80808080808080ffff02ff14ffff04ff02ffff04ffff04ff17ffff04ffff04ff05ffff04ff2fffff04ffff04ff05ff8080ff80808080ff808080ff8080808080ff808080ffff04ffff0133ffff04ffff01a0cfbfdeed5c4ca2de3d0bf520b9cb4bb7743a359bd2e6a188d19ce7dffc21d3e7ffff04ff05ff80808080ffff04ffff0133ffff04ffff02ff18ffff04ff02ffff04ff05ffff04ffff0bffff0101ff82017f80ffff04ffff0bffff0101ff8200bf80ffff04ffff0bffff0101ff5f80ffff04ffff0bffff0101ff2f80ffff04ffff0bffff0101ff1780ffff04ffff0bffff0101ff0b80ffff04ffff0bffff0101ff0580ff8080808080808080808080ffff04ff8202ffff80808080ff02ff2cffff04ff02ffff04ffff04ffff04ffff0133ffff04ff05ffff04ffff11ff17ff2f80ff80808080ffff04ffff04ffff0132ffff04ff0bffff04ffff0bff1780ff80808080ff808080ffff04ffff04ffff02ffff03ffff15ff2fff8080ffff01ff04ffff0134ffff04ff2fff808080ffff01ff018080ff0180ff8080ff8080808080ff018080ffff04ffff01a0e506255126ce71dccd6b5dac93d8950ecc863ba5f4aa68b123bfed59beccb03affff04ffff01a0bf00456f9fecf7fb57651b0c99ce13bd9d2858e9b190ec373ba158c9a9934e5affff04ffff0164ffff04ffff01a027a3681e800dd064316e74173577be23c9e514ded4b6cd55e4bb84e26a6a55f1ffff04ffff01b08049a7369adf936b3ad73c88fc6abd3d172d1ea1661f7d6597842152c2652966ac6a9b93653124cd93bd9a769a039275ffff04ffff01a0d82dd03f8a9ad2f84353cd953c4de6b21dbaaf7de3ba3f4ddd9abe31ecba80adffff04ffff01830493e0ff018080808080808080",
-      "solution": "0xff8600e8d4a51000ffa00000000000000000000000000000000000000000000000000000000000000000ff80ff8080"
-    }
-  ],
-  "aggregated_signature": "0xa43343c6777a5aced8cb90e38eed81dbf74d14511353fbc3b6f1e98892ccc54fe0047c40556cd891cf4af75a3b97bc5a0c243cee6f93653e900285104c1960805006a9726b4378c7f89fe6de4881c31d0207236959645c159012cfad50470aa3"
+  "parent_coin_info": "0x27387932fb360a2502ec6e4c06c1bb11ca48e50fd40ac2651db17f72bb34ccc3",
+  "puzzle_hash": "0x81966fee00e7dd9f6b7fec3e5116add8abd6865438b44513924c10450f8982c9",
+  "amount": 1000000000000
 }
 ```
 #### Parameters
 ```lisp
 (
   ; partial_coin_amount (1 XCH)
-  0x00e8d4a51000
+  0x00e8d4a51000 
+  ; coin_id
+  0x7c41e1d31f3a75e2ac282997162f589de56926d0552cf87c47e7978af59910cf
+  ; taken_mojos_or_clawback (0.2 XCH)
+  0x2e90edd000
+  ; clawback_fee_mojos (ignored for taken case)
+  ()
+)
+```
+#### Conditions
+```lisp
+; assert its own amount (1 XCH offered)
+(ASSERT_MY_AMOUNT  0x00e8d4a51000)
+; assert its own coin id (nonce for announcement payment)
+(ASSERT_MY_COIN_ID  0x7c41e1d31f3a75e2ac282997162f589de56926d0552cf87c47e7978af59910cf)
+; assert announcement from taker settlement coin
+(ASSERT_PUZZLE_ANNOUNCEMENT  0xaa2a4b4122c877569ed9b4b04f6ccd440f1718b8f606b26ffca9c3dd37a5be8d)
+; create a new partial offer coin (0.8 XCH)
+(CREATE_COIN  0x81966fee00e7dd9f6b7fec3e5116add8abd6865438b44513924c10450f8982c9 0x00ba43b74000)
+; create an ephemeral XCH settlement coin (pay to taker 0.198 XCH)
+(CREATE_COIN  0xcfbfdeed5c4ca2de3d0bf520b9cb4bb7743a359bd2e6a188d19ce7dffc21d3e7 0x2e19b83c00)
+; create a fee coin (0.002 XCH)
+(CREATE_COIN  0xbc1f6e34fbc556d279b2e2187f2b7271df540926f21f74e26ba212c78a56b9b9 0x77359400) 
+```
+
+- [XCH.events](https://xch.events/transactions/f05b585bd0620dacf6a851feaa7e917448a698817a31371bf114964c134e9c98)
+
+#### New Partial Offer Coin
+```bash
+❯ chia rpc full_node get_coin_records_by_puzzle_hash '{"puzzle_hash": "0x81966fee00e7dd9f6b7fec3e5116add8abd6865438b44513924c10450f8982c9"}' | jq
+{
+  "coin_records": [
+    {
+      "coin": {
+        "amount": 800000000000,
+        "parent_coin_info": "0x7c41e1d31f3a75e2ac282997162f589de56926d0552cf87c47e7978af59910cf",
+        "puzzle_hash": "0x81966fee00e7dd9f6b7fec3e5116add8abd6865438b44513924c10450f8982c9"
+      },
+      ...
+      "spent": false,
+    }
+  ],
+  ...
+}
+```
+
+### Clawback
+> 001.offer is an offer containing a new partial offer coin spend.
+```bash
+❯ partial show ./001.offer
+╭──────────────────────────┬────────────────────────────────────────────────────────────────────╮
+│ MOD_HASH:                │ 0xe506255126ce71dccd6b5dac93d8950ecc863ba5f4aa68b123bfed59beccb03a │
+│ Valid:                   │ Yes                                                                │
+│ Partial Offer Coin Name: │ 0x385bde4feb6930b3a9ef7718ddee7e95fc180adeb19b9141b34dd3c0126b352d │
+├──────────────────────────┼────────────────────────────────────────────────────────────────────┤
+│ Total Offer Amount:      │ 0.8 XCH                                                            │
+│ Total Request Amount:    │ 571.424 CATs                                                       │
+│ Request Tail Hash:       │ 0xdb1a9020d48d9d4ad22631b66ab4b9ebd3637ef7758ad38881348c5d24c38f20 │
+│ Rate (1 XCH):            │ 714.28 CATs                                                        │
+│ Fee Recipient:           │ xch1hs0kud8mc4tdy7djugv872mjw804gzfx7g0hfcnt5gfv0zjkhxus4ugkkf     │
+│ Fee Rate:                │ 1.0%                                                               │
+╰──────────────────────────┴────────────────────────────────────────────────────────────────────╯
+❯ partial clawback -f $partial_fp 001.offer
+{
+  "coin_spends": [
+    {
+      "coin": {
+        "parent_coin_info": "0x7c41e1d31f3a75e2ac282997162f589de56926d0552cf87c47e7978af59910cf",
+        "puzzle_hash": "0x81966fee00e7dd9f6b7fec3e5116add8abd6865438b44513924c10450f8982c9",
+        "amount": 800000000000
+      },
+      "puzzle_reveal": "0xff02ffff01ff02ffff01ff04ffff04ffff0149ffff04ff8202ffff808080ffff02ffff03ffff15ff820bffff8080ffff01ff02ff2cffff04ff02ffff04ffff04ffff04ffff0146ffff04ff8205ffff808080ffff04ffff02ff1affff04ff02ffff04ff2fffff04ff8200bfffff04ff8205ffffff04ffff02ff3cffff04ff02ffff04ff82017fffff04ff820bffff8080808080ff80808080808080ffff04ffff02ff16ffff04ff02ffff04ffff11ff820bffffff02ff12ffff04ff02ffff04ff17ffff04ff820bffff808080808080ff80808080ffff04ffff04ffff0133ffff04ff0bffff04ffff02ff12ffff04ff02ffff04ff17ffff04ff820bffff8080808080ff80808080ff8080808080ffff04ffff02ffff03ffff15ffff11ff8202ffff820bff80ff8080ffff01ff04ffff02ff2effff04ff02ffff04ff05ffff04ff0bffff04ff17ffff04ff2fffff04ff5fffff04ff8200bfffff04ff82017fffff04ffff11ff8202ffff820bff80ff8080808080808080808080ff8080ffff01ff018080ff0180ff8080808080ffff01ff02ff3effff04ff02ffff04ff2fffff04ff5fffff04ff8202ffffff04ff8217ffff8080808080808080ff018080ffff04ffff01ffffffff02ffff03ff05ffff01ff02ff10ffff04ff02ffff04ff0dffff04ffff0bffff0102ffff0bffff0101ffff010480ffff0bffff0102ffff0bffff0102ffff0bffff0101ffff010180ff0980ffff0bffff0102ff0bffff0bffff0101ff8080808080ff8080808080ffff010b80ff0180ff0bffff0102ffff0bffff0101ffff010280ffff0bffff0102ffff0bffff0102ffff0bffff0101ffff010180ff0580ffff0bffff0102ffff02ff10ffff04ff02ffff04ff07ffff04ffff0bffff0101ffff010180ff8080808080ffff0bffff0101ff8080808080ffff02ffff03ffff07ff0580ffff01ff0bffff0102ffff02ff14ffff04ff02ffff04ff09ff80808080ffff02ff14ffff04ff02ffff04ff0dff8080808080ffff01ff0bffff0101ff058080ff0180ffff02ffff03ff0bffff01ff02ff2cffff04ff02ffff04ffff02ffff03ff13ffff01ff04ff13ff0580ffff010580ff0180ffff04ff1bff8080808080ffff010580ff0180ff05ffff14ffff12ff05ff0b80ffff018600e8d4a510008080ffffff05ffff14ffff12ff05ff0b80ffff018227108080ff04ffff013fffff04ffff0bffff02ff18ffff04ff02ffff04ffff01a037bef360ee858133b69d595a906dc45d01af50379dad515eb9518abb7c1d2a7affff04ffff01a0cfbfdeed5c4ca2de3d0bf520b9cb4bb7743a359bd2e6a188d19ce7dffc21d3e7ffff04ffff0bffff0101ff0b80ffff04ffff0bffff0101ffff01a037bef360ee858133b69d595a906dc45d01af50379dad515eb9518abb7c1d2a7a80ff80808080808080ffff02ff14ffff04ff02ffff04ffff04ff17ffff04ffff04ff05ffff04ff2fffff04ffff04ff05ff8080ff80808080ff808080ff8080808080ff808080ffff04ffff0133ffff04ffff01a0cfbfdeed5c4ca2de3d0bf520b9cb4bb7743a359bd2e6a188d19ce7dffc21d3e7ffff04ff05ff80808080ffff04ffff0133ffff04ffff02ff18ffff04ff02ffff04ff05ffff04ffff0bffff0101ff82017f80ffff04ffff0bffff0101ff8200bf80ffff04ffff0bffff0101ff5f80ffff04ffff0bffff0101ff2f80ffff04ffff0bffff0101ff1780ffff04ffff0bffff0101ff0b80ffff04ffff0bffff0101ff0580ff8080808080808080808080ffff04ff8202ffff80808080ff02ff2cffff04ff02ffff04ffff04ffff04ffff0133ffff04ff05ffff04ffff11ff17ff2f80ff80808080ffff04ffff04ffff0132ffff04ff0bffff04ffff0bff1780ff80808080ff808080ffff04ffff04ffff02ffff03ffff15ff2fff8080ffff01ff04ffff0134ffff04ff2fff808080ffff01ff018080ff0180ff8080ff8080808080ff018080ffff04ffff01a0e506255126ce71dccd6b5dac93d8950ecc863ba5f4aa68b123bfed59beccb03affff04ffff01a0bc1f6e34fbc556d279b2e2187f2b7271df540926f21f74e26ba212c78a56b9b9ffff04ffff0164ffff04ffff01a0f3ef546a82ed460b966d72b2ca5d39711eb3daf1b3c372aa82d0071c21feffbcffff04ffff01b0854500d2d9b4519e5e4a763d659f0bef63c96afe8437230f5c90ae6915a5acf631f37ba5d599ac957a23b4da4b5c34d1ffff04ffff01a0db1a9020d48d9d4ad22631b66ab4b9ebd3637ef7758ad38881348c5d24c38f20ffff04ffff01830ae628ff018080808080808080",
+      "solution": "0xff8600ba43b74000ffa00000000000000000000000000000000000000000000000000000000000000000ff80ff8080"
+    }
+  ],
+  "aggregated_signature": "0x945a189a310e8663644df01aa75874c1ab659c45874b9639d4c57d403b399f0923863df93165d18697ba9e8fecc3a68e0212e6cfc5736545e5ccd003b2c6b33163ce885611f97edba102af4b63fed139328de1b8d9d4ffc486c84b73ffeb07b7"
+}
+```
+#### Parameters
+```lisp
+(
+  ; partial_coin_amount (0.8 XCH)
+  0x00ba43b74000
   ; partial offer coin id (ignored)
   0x0000000000000000000000000000000000000000000000000000000000000000
   ; taken_mojos_or_clawback (clawback case)
@@ -299,16 +295,17 @@ A dexie partial offer coin is a coin with a puzzle offering one asset (XCH only 
 )
 ```
 
-#### Conditions
+#### Conditions  
 ```lisp
-; assert its own amount (1 XCH offered)
-(ASSERT_MY_AMOUNT  0x00e8d4a51000)
-; create a clawback coin and send to the maker (1 XCH minus fee)
-(CREATE_COIN  0x27a3681e800dd064316e74173577be23c9e514ded4b6cd55e4bb84e26a6a55f1 0x00e8d4a51000)
+; assert its own amount (0.8 XCH offered)
+(ASSERT_MY_AMOUNT  0x00ba43b74000)
+; create a clawback coin and send to the maker (0.8 XCH minus fee)
+(CREATE_COIN  0xf3ef546a82ed460b966d72b2ca5d39711eb3daf1b3c372aa82d0071c21feffbc 0x00ba43b74000)
 ; signature for the clawback
-(AGG_SIG_ME  0x8049a7369adf936b3ad73c88fc6abd3d172d1ea1661f7d6597842152c2652966ac6a9b93653124cd93bd9a769a039275    
-0x19b6f428a262c387186c195922d543d88492ba7d83f204d5a03f2004d741b86c) 
+(AGG_SIG_ME  0x854500d2d9b4519e5e4a763d659f0bef63c96afe8437230f5c90ae6915a5acf631f37ba5d599ac957a23b4da4b5c34d1    
+0xcb6337aa606a2feebdbfe662b1d798e1b986ac5e11ea2295e62d806e6d79ef4f) 
 ```
+- [XCH.events](https://xch.events/transactions/9c20c7d0c8a715084a86d4e25ad3bfff734a4adc54f44371720f77ea4fae96fd)
 
 
 ```mermaid

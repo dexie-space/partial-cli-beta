@@ -20,6 +20,7 @@ full_node_rpc_port = chia_config["full_node"]["rpc_port"]
 wallet_rpc_port = chia_config["wallet"]["rpc_port"]
 
 selected_network = chia_config["selected_network"]
+prefix = chia_config["network_overrides"]["config"][selected_network]["address_prefix"]
 
 genesis_challenge = bytes.fromhex(
     os.path.expanduser(
@@ -39,7 +40,9 @@ FEE_PH = bytes32.from_hexstr(
     os.path.expanduser(
         os.environ.get(
             "DEXIE_PARTIAL_FEE_PH",
-            "bf00456f9fecf7fb57651b0c99ce13bd9d2858e9b190ec373ba158c9a9934e5a",  # sim
+            # default dexie treasury,
+            # xch1hs0kud8mc4tdy7djugv872mjw804gzfx7g0hfcnt5gfv0zjkhxus4ugkkf
+            "bc1f6e34fbc556d279b2e2187f2b7271df540926f21f74e26ba212c78a56b9b9",
         )
     )
 )
@@ -63,6 +66,7 @@ def config_cmd():
     table.add_row("full_node_rpc_port", f"{full_node_rpc_port}")
     table.add_row("wallet_rpc_port", f"{wallet_rpc_port}")
     table.add_row("genesis_challenge", f"0x{genesis_challenge.hex()}")
+    table.add_row("prefix", f"{prefix}")
     table.add_section()
     table.add_row("fee puzzle hash", f"0x{FEE_PH}")
     table.add_row("fee rate", f"{FEE_RATE}")
