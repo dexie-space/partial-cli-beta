@@ -228,7 +228,6 @@ A dexie partial offer coin is a coin with a puzzle offering one asset (XCH only 
 (CREATE_COIN  0xbc1f6e34fbc556d279b2e2187f2b7271df540926f21f74e26ba212c78a56b9b9 0x77359400) 
 ```
 
-- [XCH.events](https://xch.events/transactions/f05b585bd0620dacf6a851feaa7e917448a698817a31371bf114964c134e9c98)
 
 #### New Partial Offer Coin
 ```bash
@@ -305,7 +304,11 @@ A dexie partial offer coin is a coin with a puzzle offering one asset (XCH only 
 (AGG_SIG_ME  0x854500d2d9b4519e5e4a763d659f0bef63c96afe8437230f5c90ae6915a5acf631f37ba5d599ac957a23b4da4b5c34d1    
 0xcb6337aa606a2feebdbfe662b1d798e1b986ac5e11ea2295e62d806e6d79ef4f) 
 ```
-- [XCH.events](https://xch.events/transactions/9c20c7d0c8a715084a86d4e25ad3bfff734a4adc54f44371720f77ea4fae96fd)
+
+### XCH.events
+- [1st taken](https://xch.events/transactions/f05b585bd0620dacf6a851feaa7e917448a698817a31371bf114964c134e9c98)
+- [nth taken](https://xch.events/transactions/9db02d1665761c9af5ea1fbc19718bdb4ec5b8009075b2045b4d2bd783a89474)
+- [clawback](https://xch.events/transactions/9c20c7d0c8a715084a86d4e25ad3bfff734a4adc54f44371720f77ea4fae96fd)
 
 
 ```mermaid
