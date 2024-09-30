@@ -1,10 +1,14 @@
 (
     (include *standard-cl-23*)
     (include condition_codes.clib)
-    (include curry-and-treehash.clib)
 
-    (defconstant CAT_MOD_HASH 0x37bef360ee858133b69d595a906dc45d01af50379dad515eb9518abb7c1d2a7a)
     (defconstant OFFER_MOD_HASH 0xcfbfdeed5c4ca2de3d0bf520b9cb4bb7743a359bd2e6a188d19ce7dffc21d3e7)
+
+    ; takes a lisp tree and returns the hash of it
+    (defun sha256tree (TREE)
+        (if (l TREE)
+            (sha256 2 (sha256tree (f TREE)) (sha256tree (r TREE)))
+    (sha256 1 TREE)))
 
     (defun filter-empty (acc lst)
         (if lst
@@ -38,52 +42,24 @@
         (/ (* FEE_RATE taken_mojos) 10000)
     )
 
-    (defun assert-taker-announcement (MAKER_PH TAIL_HASH coin_id request_cat_mojos)
+    (defun assert-taker-announcement (MAKER_PH CAT_OFFER_HASH my_id request_cat_mojos)
         (let (
                 (msg 
                     (sha256tree 
                         (list
-                            coin_id ; use coin_id as nonce
+                            my_id ; use coin_id as nonce
                             (list MAKER_PH request_cat_mojos (list MAKER_PH))
                         )
                     )
-                )
-                (cat_offer_mod_hash
-                    (puzzle-hash-of-curried-function 
-                        CAT_MOD_HASH
-                        OFFER_MOD_HASH
-                        (sha256 ONE TAIL_HASH)
-                        (sha256 ONE CAT_MOD_HASH)
-                    )
-                )
+                ) 
             )
-            (list ASSERT_PUZZLE_ANNOUNCEMENT (sha256 cat_offer_mod_hash msg)) 
+            (list ASSERT_PUZZLE_ANNOUNCEMENT (sha256 CAT_OFFER_HASH msg)) 
         )
     )
 
     (defun create-settlement-coin (taken_mojos_minus_fee)
         (list CREATE_COIN OFFER_MOD_HASH taken_mojos_minus_fee)
-    )
-
-    (defun create-partial-coin (MOD_HASH FEE_PH FEE_RATE MAKER_PH MAKER_PK TAIL_HASH RATE new_partial_coin_amount) 
-        (let 
-            (
-                (new_puzzle_hash
-                    (puzzle-hash-of-curried-function 
-                        MOD_HASH
-                        (sha256 ONE RATE) 
-                        (sha256 ONE TAIL_HASH)
-                        (sha256 ONE MAKER_PK)
-                        (sha256 ONE MAKER_PH)
-                        (sha256 ONE FEE_RATE)
-                        (sha256 ONE FEE_PH)
-                        (sha256 ONE MOD_HASH)
-                    )
-                )
-            )
-            (list CREATE_COIN new_puzzle_hash new_partial_coin_amount)
-        )
-    )
+    ) 
 
     (defun clawback (MAKER_PH MAKER_PK partial_coin_amount clawback_fee_mojos)
         (filter-empty 

@@ -55,7 +55,7 @@ async def clawback_partial_offer(
 ):
     # create spend bundle
     p = partial_info.to_partial_puzzle()
-    s = Program.to([partial_coin.amount, ZERO_32, 0, clawback_fee_mojos])
+    s = Program.to([partial_coin.amount, ZERO_32, ZERO_32, 0, clawback_fee_mojos])
 
     eph_partial_cs: CoinSpend = make_spend(partial_coin, puzzle_reveal=p, solution=s)
 

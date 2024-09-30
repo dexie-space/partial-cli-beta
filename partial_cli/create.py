@@ -15,6 +15,8 @@ from chia.types.spend_bundle import SpendBundle
 from chia.util.ints import uint64
 
 import chia.wallet.conditions as conditions_lib
+from chia.wallet.payment import Payment
+from chia.wallet.puzzle_drivers import PuzzleInfo
 from chia.wallet.trading.offer import ZERO_32, Offer
 from chia.wallet.util.tx_config import DEFAULT_TX_CONFIG
 
@@ -145,12 +147,7 @@ async def create_offer(
         partial_ph = partial_puzzle.get_tree_hash()
 
         signed_txn_res = await wallet_rpc_client.create_signed_transactions(
-            additions=[
-                {
-                    "puzzle_hash": partial_ph,
-                    "amount": offer_mojos,
-                }
-            ],
+            additions=[{"puzzle_hash": partial_ph, "amount": offer_mojos}],
             coins=coins,
             tx_config=DEFAULT_TX_CONFIG,
             wallet_id=1,
@@ -173,7 +170,33 @@ async def create_offer(
         partial_sb = SpendBundle([partial_cs], G2Element())
         maker_sb: SpendBundle = SpendBundle.aggregate([sb, partial_sb])
 
-        offer = Offer.from_spend_bundle(maker_sb)
+        notarized_payments = Offer.notarize_payments(
+            {
+                tail_hash: [
+                    Payment(
+                        puzzle_hash=partial_info.maker_puzzle_hash,
+                        amount=request_cat_mojos,
+                        memos=[partial_info.maker_puzzle_hash],
+                    )
+                ]
+            },
+            coins=[partial_coin],
+        )
+
+        driver_dict = {
+            tail_hash: PuzzleInfo(
+                {
+                    "type": "CAT",
+                    "tail": f"0x{tail_hash.hex()}",
+                }
+            )
+        }
+
+        offer = Offer(
+            notarized_payments,
+            maker_sb,
+            driver_dict,
+        )
         offer_bech32 = offer.to_bech32()
         filepath = (
             filepath
