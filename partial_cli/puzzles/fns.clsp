@@ -61,18 +61,16 @@
         (list CREATE_COIN OFFER_MOD_HASH taken_mojos_minus_fee)
     ) 
 
-    (defun clawback (MAKER_PH MAKER_PK partial_coin_amount clawback_fee_mojos)
-        (filter-empty 
-            (list
-                (list CREATE_COIN MAKER_PH (- partial_coin_amount clawback_fee_mojos))
-                (list AGG_SIG_ME MAKER_PK (sha256 partial_coin_amount))
+    (defun clawback (MAKER_PH MAKER_PK my_amount clawback_fee_mojos)
+        (c
+            (if (> clawback_fee_mojos 0)
+                (list RESERVE_FEE clawback_fee_mojos)
+                (list REMARK)
             )
             (list
-                (if (> clawback_fee_mojos 0)
-                    (list RESERVE_FEE clawback_fee_mojos)
-                    ()
-                )
-            )
+                (list CREATE_COIN MAKER_PH (- my_amount clawback_fee_mojos))
+                (list AGG_SIG_ME MAKER_PK (sha256 my_amount))
+            ) 
         )
     )
 )
