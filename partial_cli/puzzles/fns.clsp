@@ -8,25 +8,7 @@
     (defun sha256tree (TREE)
         (if (l TREE)
             (sha256 2 (sha256tree (f TREE)) (sha256tree (r TREE)))
-    (sha256 1 TREE)))
-
-    (defun filter-empty (acc lst)
-        (if lst
-            (let
-                ((item (f lst)))
-                
-                (filter-empty
-                    (if item
-                        (c
-                            item
-                            acc
-                        )
-                        acc
-                    )
-                    (r lst) 
-                )
-            )
-            acc
+            (sha256 1 TREE)
         )
     )
 
@@ -56,10 +38,6 @@
             (list ASSERT_PUZZLE_ANNOUNCEMENT (sha256 CAT_OFFER_HASH msg)) 
         )
     )
-
-    (defun create-settlement-coin (taken_mojos_minus_fee)
-        (list CREATE_COIN OFFER_MOD_HASH taken_mojos_minus_fee)
-    ) 
 
     (defun clawback (MAKER_PH MAKER_PK my_amount clawback_fee_mojos)
         (c

@@ -19,6 +19,7 @@
         (c
             (list ASSERT_MY_AMOUNT my_amount)
             (if (> taken_mojos_or_clawback 0)
+                ; take
                 (let 
                     (
                         (new_partial_coin_amount (- my_amount taken_mojos_or_clawback))
@@ -26,22 +27,21 @@
                         (fee_mojos (calculate-fee-mojos FEE_RATE taken_mojos_or_clawback))
                     )
 
-                    (filter-empty
+                    (c
+                        ; if new_partial_coin_amount is greater than 0, create a new partial coin
+                        (if (> new_partial_coin_amount 0)
+                            (list CREATE_COIN my_puzzle_hash new_partial_coin_amount)
+                            (list REMARK)
+                        )
                         ; partial coin settlement conditions
                         (list
                             (list ASSERT_MY_COIN_ID my_id)
+                            (list ASSERT_MY_PUZZLEHASH my_puzzle_hash)
                             (assert-taker-announcement MAKER_PH CAT_OFFER_HASH my_id request_cat_mojos)
-                            (create-settlement-coin (- taken_mojos_or_clawback fee_mojos))
+                            (list CREATE_COIN OFFER_MOD_HASH (- taken_mojos_or_clawback fee_mojos))
                             (list CREATE_COIN FEE_PH fee_mojos) 
-                        )
-                        ; if new_partial_coin_amount is greater than 0, create a new partial coin
-                        (if (> new_partial_coin_amount 0)
-                            (list
-                                (list ASSERT_MY_PUZZLEHASH my_puzzle_hash)
-                                (list CREATE_COIN my_puzzle_hash new_partial_coin_amount)
-                            )
-                            ()
-                        )
+                        ) 
+
                     )
                 )
                 (clawback MAKER_PH MAKER_PK my_amount clawback_fee_mojos)
