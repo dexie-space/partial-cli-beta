@@ -58,6 +58,7 @@ class TestClawback:
             [
                 coin_amount,  # coin amount
                 ZERO_32,  # coin id
+                ZERO_32,  # puzzle hash
                 0,  # taken_mojos_or_clawback
                 0,  # clawback_fee_mojos
             ]
@@ -89,6 +90,7 @@ class TestClawback:
             [
                 clawback_amount,
                 ZERO_32,  # coin id
+                ZERO_32,  # puzzle hash
                 0,  # taken_mojos_or_clawback
                 0,  # clawback_fee_mojos
             ]
@@ -109,6 +111,7 @@ class TestClawback:
             [
                 clawback_amount,
                 ZERO_32,  # coin id
+                ZERO_32,  # puzzle hash
                 0,  # taken_mojos_or_clawback
                 0,  # clawback_fee_mojos
             ]
@@ -129,6 +132,7 @@ class TestClawback:
             [
                 coin_amount,
                 ZERO_32,  # coin id
+                ZERO_32,  # puzzle hash
                 0,  # taken_mojos_or_clawback
                 clawback_fee_mojos,  # clawback_fee_mojos
             ]
