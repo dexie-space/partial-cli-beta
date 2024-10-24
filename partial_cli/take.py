@@ -135,9 +135,17 @@ async def take_partial_offer(
 
     # create spend bundle
     p = partial_info.to_partial_puzzle()
-    s = Program.to([partial_coin.amount, partial_coin_id, request_mojos, 0])
+    s = Program.to(
+        [
+            partial_coin.amount,
+            partial_coin_id,
+            partial_coin.puzzle_hash,
+            request_mojos,
+            0,
+        ]
+    )
 
-    eph_partial_cs: CoinSpend = make_spend(partial_coin, puzzle_reveal=p, solution=s)
+    partial_cs: CoinSpend = make_spend(partial_coin, puzzle_reveal=p, solution=s)
 
     maker_request_payments = Program.to(
         [
@@ -157,10 +165,10 @@ async def take_partial_offer(
 
     partial_offer_sb = SpendBundle(
         [
-            eph_partial_cs,
+            partial_cs,
             make_spend(
                 Coin(
-                    parent_coin_info=eph_partial_cs.coin.name(),
+                    parent_coin_info=partial_cs.coin.name(),
                     puzzle_hash=OFFER_MOD_HASH,
                     amount=request_mojos_minus_fees,
                 ),
