@@ -1,6 +1,7 @@
 from rich import box
 from rich.console import Console
 from rich.table import Column, Table
+from rich.text import Text
 
 from chia.types.blockchain_format.coin import Coin
 from chia.util.bech32m import encode_puzzle_hash
@@ -20,8 +21,11 @@ def display_partial_info(partial_info: PartialInfo, partial_coin: Coin, is_valid
         show_header=False,
         box=box.ROUNDED,
     )
+    table.add_row(
+        "Valid:",
+        Text("Yes", style="bold green") if is_valid else Text("No", style="bold red"),
+    )
     table.add_row("MOD_HASH:", f"0x{MOD_HASH.hex()}")
-    table.add_row("Valid:", "Yes" if is_valid else "No")
     table.add_row("Partial Offer Coin Name:", f"0x{partial_coin.name().hex()}")
     table.add_section()
     table.add_row("Total Offer Amount:", f"{coin_amount/1e12} XCH")

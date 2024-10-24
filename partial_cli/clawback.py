@@ -16,6 +16,7 @@ from clvm.casts import int_to_bytes
 
 from partial_cli.config import genesis_challenge, wallet_rpc_port
 from partial_cli.puzzles import get_create_offer_coin_sb, get_partial_coin_spend
+from chia.rpc.wallet_request_types import GetPrivateKey, GetPrivateKeyResponse
 from partial_cli.types.partial_info import PartialInfo
 from partial_cli.utils.rpc import is_coin_spent
 
@@ -34,8 +35,10 @@ async def get_clawback_signature(
         config,
     ):
 
-        private_key_res = await wallet_rpc_client.get_private_key(fingerprint)
-        sk = PrivateKey.from_bytes(bytes.fromhex(private_key_res["sk"]))
+        private_key_res: GetPrivateKeyResponse = (
+            await wallet_rpc_client.get_private_key(GetPrivateKey(fingerprint))
+        )
+        sk: PrivateKey = private_key_res.private_key.sk
 
         if sk.get_g1() != partial_pk:
             return None

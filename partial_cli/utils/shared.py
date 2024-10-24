@@ -1,9 +1,9 @@
 import rich_click as click
 
 from chia.cmds.cmds_util import get_wallet_client
+from chia.rpc.wallet_request_types import GetPrivateKey, GetPrivateKeyResponse
 from chia.types.blockchain_format.program import Program
 from chia.types.blockchain_format.sized_bytes import bytes32
-from chia.wallet.cat_wallet.cat_utils import CAT_MOD
 
 from chia_rs import G1Element
 from partial_cli.config import wallet_rpc_port
@@ -48,6 +48,8 @@ async def get_public_key(fingerprint: int):
         fingerprint,
         config,
     ):
-        private_key_res = await wallet_rpc_client.get_private_key(fingerprint)
-        public_key = G1Element.from_bytes(bytes.fromhex(private_key_res["pk"]))
+        private_key_res: GetPrivateKeyResponse = (
+            await wallet_rpc_client.get_private_key(GetPrivateKey(fingerprint))
+        )
+        public_key = private_key_res.private_key.pk
         return public_key
