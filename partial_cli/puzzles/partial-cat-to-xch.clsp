@@ -1,0 +1,55 @@
+(mod (
+        MOD_HASH                ; self puzzle hash 
+        FEE_PH                  ; puzzle hash that will receive the fee (XCH puzzle hash)
+        FEE_RATE                ; fee rate (0-10000), e.g., 1% is represented as 100
+        MAKER_PH                ; maker puzzle hash (XCH puzzle hash used in both receive and clawback)
+        MAKER_PK                ; maker public key used in clawback case
+        OFFER_TAIL_HASH         ; offer CAT tail hash (0 if XCH)
+        RATE                    ; number of CAT per XCH, e.g., 1 XCH = 100 CATs, rate = 100000
+        my_amount               ; amount of partial offer coin
+        my_id                   ; coin id of the partial offer coin
+        my_puzzle_hash          ; puzzle hash of the partial offer coin
+        taken_mojos_or_clawback ; amount of XCH mojos taken, or 0 if clawback
+        clawback_fee_mojos      ; blockchain fee in mojos, used in clawback case
+    )
+        (include *standard-cl-23*)
+        (include "fns-cat-to-xch.clsp")
+
+        (c
+            (list ASSERT_MY_AMOUNT my_amount)
+            (if (> taken_mojos_or_clawback 0)
+                ; take cat
+                (let 
+                    (
+                        (new_partial_coin_amount (- my_amount taken_mojos_or_clawback))
+                        (request_xch_mojos (calculate-cat-to-xch-mojos RATE taken_mojos_or_clawback))
+                        (fee_mojos (calculate-fee-mojos FEE_RATE taken_mojos_or_clawback))
+                    )
+
+                    (c
+                        ; if new_partial_coin_amount is greater than 0, create a new partial coin
+                        (if (> new_partial_coin_amount 0)
+                            ; has to be XCH ph
+                            ; changed by CAT wrapper
+                            (list CREATE_COIN my_puzzle_hash new_partial_coin_amount)
+                            (list REMARK)
+                        )
+                        ; partial coin settlement conditions
+                        (list
+                            (list ASSERT_MY_COIN_ID my_id)
+                            ; change to CAT puzzle hash
+                            ; verify my_puzzle_hash
+                            (assert-my-puzzle-hash OFFER_TAIL_HASH my_puzzle_hash) 
+                            (assert-taker-announcement MAKER_PH my_id request_xch_mojos)
+                            (create-settlement-coin (- taken_mojos_or_clawback fee_mojos))
+                            (list CREATE_COIN FEE_PH fee_mojos) 
+                            ;(list ASSERT_MY_AMOUNT new_partial_coin_amount)
+                            ;(list ASSERT_MY_AMOUNT request_cat_mojos)
+                        ) 
+
+                    )
+                )
+                (clawback MAKER_PH MAKER_PK my_amount clawback_fee_mojos)
+            )
+        )
+)
