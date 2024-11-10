@@ -30,7 +30,22 @@ def display_partial_info(partial_info: PartialInfo, partial_coin: Coin, is_valid
     table.add_section()
     table.add_row("Total Offer Amount:", f"{coin_amount/1e12} XCH")
     table.add_row("Total Request Amount:", f"{total_request_cat_mojos/1e3} CATs")
-    table.add_row("Request Tail Hash:", f"0x{partial_info.tail_hash.hex()}")
+    table.add_row(
+        "Offer Asset Id:",
+        (
+            "XCH"
+            if partial_info.offer_asset_id == bytes(0)
+            else f"0x{partial_info.offer_asset_id.hex()}"
+        ),
+    )
+    table.add_row(
+        "Request Asset Id:",
+        (
+            "XCH"
+            if partial_info.request_asset_id == bytes(0)
+            else f"0x{partial_info.request_asset_id.hex()}"
+        ),
+    )
     table.add_row("Rate (1 XCH):", f"{partial_info.rate/1e3} CATs")
 
     table.add_row(
