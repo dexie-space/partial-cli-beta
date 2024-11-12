@@ -7,6 +7,7 @@ from typing import Any, Dict, List, Optional
 from chia.cmds.cmds_util import get_wallet_client
 from chia.types.blockchain_format.coin import Coin
 from chia.types.blockchain_format.program import Program
+from chia.types.blockchain_format.sized_bytes import bytes32
 from chia.types.coin_spend import CoinSpend, make_spend
 from chia.types.spend_bundle import SpendBundle
 from chia.util.ints import uint64
@@ -48,7 +49,7 @@ def process_taker_offer(taker_offer: Offer, maker_request_payments):
             notarized_payments_solutions.append(solutions)
 
     settlement_spendable_cats: List[SpendableCAT] = []  # settlement spendable CAT
-    for tail_hash, coins in taker_offer.get_offered_coins().items():
+    for asset_id, coins in taker_offer.get_offered_coins().items():
         for coin in coins:
             parent_cs = coin_spends[coin.parent_coin_info.hex()]
             matched_cat_puzzle = match_cat_puzzle(
@@ -71,7 +72,7 @@ def process_taker_offer(taker_offer: Offer, maker_request_payments):
 
             spendable_cat = SpendableCAT(
                 coin=coin,
-                limitations_program_hash=tail_hash,
+                limitations_program_hash=asset_id,
                 inner_puzzle=OFFER_MOD,
                 inner_solution=intermediary_token_reserve_coin_inner_solution,
                 lineage_proof=lineage_proof,
@@ -104,10 +105,20 @@ async def create_taker_offer(
         config,
     ):
 
-        tail_hash = partial_info.tail_hash.hex()
+        offer_asset_id = (
+            "1"
+            if partial_info.offer_asset_id == bytes(0)
+            else bytes32(partial_info.offer_asset_id).hex()
+        )
+
+        request_asset_id = (
+            "1"
+            if partial_info.request_asset_id == bytes(0)
+            else bytes32(partial_info.request_asset_id).hex()
+        )
         offer_dict = {
-            "1": request_mojos_minus_fees,
-            tail_hash: -1 * offer_cat_mojos,
+            offer_asset_id: request_mojos_minus_fees,
+            request_asset_id: -1 * offer_cat_mojos,
         }
 
         create_offer_res = await wallet_rpc_client.create_offer_for_ids(
