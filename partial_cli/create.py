@@ -24,7 +24,6 @@ from chia.wallet.util.tx_config import DEFAULT_TX_CONFIG
 from chia_rs import G2Element
 
 from partial_cli.config import FEE_PH, FEE_RATE, wallet_rpc_port
-from partial_cli.puzzles import RATE_MOD
 from partial_cli.types.partial_info import PartialInfo
 from partial_cli.utils.shared import get_public_key
 
@@ -144,14 +143,6 @@ async def create_offer(
             )
         )
 
-        rate = RATE_MOD.run(
-            Program.to([offer_asset_id, request_asset_id, offer_mojos, request_mojos])
-        ).as_int()
-
-        print(
-            f"Offering {offer_amount} {offer_wallet_name} for {request_amount} {request_wallet_name} with rate {rate}"
-        )
-
         # create_offer_for_ids to lock coins
         offer_dict = {
             offer_wallet: -1 * offer_mojos,
@@ -178,7 +169,6 @@ async def create_offer(
 
         print(maker_ph)
         print(public_key)
-        print(rate)
 
         partial_info = PartialInfo(
             fee_puzzle_hash=FEE_PH,
@@ -186,8 +176,13 @@ async def create_offer(
             maker_puzzle_hash=maker_ph,
             public_key=public_key,
             offer_asset_id=offer_asset_id,
+            offer_mojos=offer_mojos,
             request_asset_id=request_asset_id,
-            rate=rate,
+            request_mojos=request_mojos,
+        )
+
+        print(
+            f"Offering {offer_amount} {offer_wallet_name} for {request_amount} {request_wallet_name} with rate {partial_info.get_rate()}"
         )
 
         partial_puzzle = partial_info.to_partial_puzzle()

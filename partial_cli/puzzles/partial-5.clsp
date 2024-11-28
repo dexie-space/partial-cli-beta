@@ -5,8 +5,9 @@
         MAKER_PH                ; maker puzzle hash (XCH puzzle hash used in both receive and clawback)
         MAKER_PK                ; maker public key used in clawback case
         OFFER_TAIL_HASH         ; offer CAT tail hash (0 if XCH)
+        OFFER_MOJOS             ; amount of initial offer in mojos
         REQUEST_TAIL_HASH       ; request CAT tail hash (0 if XCH)
-        RATE                    ; number of CAT per XCH, e.g., 1 XCH = 100 CATs, rate = 100000
+        REQUEST_MOJOS           ; amount of initial request in mojos
         my_amount               ; amount of partial offer coin
         my_id                   ; coin id of the partial offer coin
         my_puzzle_hash          ; puzzle hash of the partial offer coin
@@ -19,11 +20,14 @@
         (c
             (list ASSERT_MY_AMOUNT my_amount)
             (if (> taken_mojos_or_clawback 0)
-                ; take cat
                 (let 
                     (
                         (new_partial_coin_amount (- my_amount taken_mojos_or_clawback))
-                        (request_mojos (calculate-request-mojos RATE OFFER_TAIL_HASH REQUEST_TAIL_HASH taken_mojos_or_clawback))
+                        (request_mojos (calculate-request-mojos 
+                                OFFER_MOJOS REQUEST_MOJOS 
+                                taken_mojos_or_clawback
+                            )
+                        )
                         (fee_mojos (calculate-fee-mojos FEE_RATE taken_mojos_or_clawback))
                     )
 

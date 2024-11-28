@@ -13,7 +13,7 @@ from partial_cli.types.partial_info import PartialInfo
 
 def display_partial_info(partial_info: PartialInfo, partial_coin: Coin, is_valid: bool):
     coin_amount = partial_coin.amount
-    total_request_cat_mojos = coin_amount * partial_info.rate * 1e-12
+    total_request_cat_mojos = coin_amount * partial_info.get_rate()
 
     table = Table(
         Column(justify="left"),
@@ -38,6 +38,7 @@ def display_partial_info(partial_info: PartialInfo, partial_coin: Coin, is_valid
             else f"0x{partial_info.offer_asset_id.hex()}"
         ),
     )
+    table.add_row("Initial Offer Mojos:", f"{partial_info.offer_mojos}")
     table.add_row(
         "Request Asset Id:",
         (
@@ -46,7 +47,9 @@ def display_partial_info(partial_info: PartialInfo, partial_coin: Coin, is_valid
             else f"0x{partial_info.request_asset_id.hex()}"
         ),
     )
-    table.add_row("Rate (1 XCH):", f"{partial_info.rate/1e3} CATs")
+    table.add_row("Initial Request Mojos:", f"{partial_info.request_mojos}")
+
+    table.add_row("Rate:", f"{partial_info.get_rate():.12f}")
 
     table.add_row(
         "Fee Recipient:", f"{encode_puzzle_hash(partial_info.fee_puzzle_hash, prefix)}"
