@@ -5,6 +5,7 @@ from rich.text import Text
 
 from chia.types.blockchain_format.coin import Coin
 from chia.util.bech32m import encode_puzzle_hash
+from chia.util.ints import uint64
 
 from partial_cli.config import prefix
 from partial_cli.puzzles import MOD_HASH
@@ -13,7 +14,7 @@ from partial_cli.types.partial_info import PartialInfo
 
 def display_partial_info(partial_info: PartialInfo, partial_coin: Coin, is_valid: bool):
     coin_amount = partial_coin.amount
-    total_request_cat_mojos = coin_amount * partial_info.get_rate()
+    request_amount = partial_info.get_output_mojos(coin_amount)
 
     table = Table(
         Column(justify="left"),
@@ -28,8 +29,8 @@ def display_partial_info(partial_info: PartialInfo, partial_coin: Coin, is_valid
     table.add_row("MOD_HASH:", f"0x{MOD_HASH.hex()}")
     table.add_row("Partial Offer Coin Name:", f"0x{partial_coin.name().hex()}")
     table.add_section()
-    table.add_row("Total Offer Amount:", f"{coin_amount/1e12} XCH")
-    table.add_row("Total Request Amount:", f"{total_request_cat_mojos/1e3} CATs")
+    table.add_row("Offer Amount:", f"{coin_amount} mojos")
+    table.add_row("Request Amount:", f"{request_amount} mojos")
     table.add_row(
         "Offer Asset Id:",
         (

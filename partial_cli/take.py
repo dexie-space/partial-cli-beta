@@ -96,7 +96,7 @@ async def create_taker_offer(
     partial_info: PartialInfo,
     fingerprint: int,
     request_mojos_minus_fees: uint64,
-    offer_cat_mojos: uint64,
+    taker_offer_mojos: uint64,
     blockchain_fee_mojos: uint64,
 ):
     async with get_wallet_client(wallet_rpc_port, fingerprint) as (
@@ -118,7 +118,7 @@ async def create_taker_offer(
         )
         offer_dict = {
             offer_asset_id: request_mojos_minus_fees,
-            request_asset_id: -1 * offer_cat_mojos,
+            request_asset_id: -1 * taker_offer_mojos,
         }
 
         create_offer_res = await wallet_rpc_client.create_offer_for_ids(
@@ -137,7 +137,7 @@ async def take_partial_offer(
     partial_info: PartialInfo,
     request_mojos: uint64,
     fee_mojos: uint64,
-    offer_cat_mojos: uint64,
+    taker_offer_mojos: uint64,
 ):
     # partial coin id (nonce) for puzzle announcement
     partial_coin_id = partial_coin.name()
@@ -163,7 +163,7 @@ async def take_partial_offer(
             partial_coin_id,
             [
                 partial_info.maker_puzzle_hash,
-                offer_cat_mojos,
+                taker_offer_mojos,
                 [partial_info.maker_puzzle_hash],
             ],
         ]
@@ -203,8 +203,8 @@ async def take_partial_offer(
 
 def get_offer_values(partial_info: PartialInfo, request_mojos: uint64):
     fee_mojos = FEE_MOD.run(Program.to([partial_info.fee_rate, request_mojos])).as_int()
-    offer_cat_mojos = uint64(request_mojos * partial_info.rate * 1e-12)
-    return fee_mojos, offer_cat_mojos
+    taker_offer_mojos = partial_info.get_output_mojos(request_mojos)
+    return fee_mojos, taker_offer_mojos
 
 
 async def take_cmd_async(
@@ -214,7 +214,7 @@ async def take_cmd_async(
     fingerprint: int,
     request_mojos: uint64,
     fee_mojos: uint64,
-    offer_cat_mojos: uint64,
+    taker_offer_mojos: uint64,
     blockchain_fee_mojos: uint64,
     taker_offer: Optional[Offer] = None,
 ):
@@ -224,7 +224,7 @@ async def take_cmd_async(
                 partial_info,
                 fingerprint,
                 request_mojos - fee_mojos,
-                offer_cat_mojos,
+                taker_offer_mojos,
                 blockchain_fee_mojos,
             )
         if taker_offer is None:
@@ -238,7 +238,7 @@ async def take_cmd_async(
             partial_info=partial_info,
             request_mojos=request_mojos,
             fee_mojos=fee_mojos,
-            offer_cat_mojos=offer_cat_mojos,
+            taker_offer_mojos=taker_offer_mojos,
         )
 
         async with get_wallet_client(wallet_rpc_port, fingerprint) as (
@@ -344,7 +344,7 @@ def take_cmd(
             request_mojos_minus_fees / (1 - (partial_info.fee_rate / 1e4))
         )
         fee_mojos = int(request_mojos - request_mojos_minus_fees)
-        offer_cat_mojos = uint64(request_mojos * partial_info.rate * 1e-12)
+        taker_offer_mojos = partial_info.get_output_mojosuint64(request_mojos)
     else:
         if partial_coin.amount < request_mojos:
             print(
@@ -352,13 +352,13 @@ def take_cmd(
             )
             return
 
-        fee_mojos, offer_cat_mojos = get_offer_values(partial_info, request_mojos)
+        fee_mojos, taker_offer_mojos = get_offer_values(partial_info, request_mojos)
         request_mojos_minus_fees = request_mojos - fee_mojos
 
     display_partial_info(partial_info, partial_coin, is_valid=not is_partial_coin_spent)
     print("")
-    print(f" {offer_cat_mojos/1e3} CATs -> {request_mojos/1e12} XCH")
-    print(f" Sending {offer_cat_mojos/1e3} CATs")
+    print(f" {taker_offer_mojos} mojos -> {request_mojos} XCH")
+    print(f" Sending {taker_offer_mojos} mojos")
     print(f" Paying {fee_mojos/1e12} XCH in fees")
     print(f" Receiving {request_mojos_minus_fees/1e12} XCH")
 
@@ -379,7 +379,7 @@ def take_cmd(
                 fingerprint=fingerprint,
                 request_mojos=request_mojos,
                 fee_mojos=fee_mojos,
-                offer_cat_mojos=offer_cat_mojos,
+                taker_offer_mojos=taker_offer_mojos,
                 blockchain_fee_mojos=blockchain_fee_mojos,
                 taker_offer=taker_offer if taker_offer_file is not None else None,
             )

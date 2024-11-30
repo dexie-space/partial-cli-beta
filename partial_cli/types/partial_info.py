@@ -42,6 +42,9 @@ class PartialInfo:
     def get_rate(self):
         return self.request_mojos / self.offer_mojos
 
+    def get_output_mojos(self, input_mojos: uint64) -> uint64:
+        return uint64(input_mojos * self.get_rate())
+
     def to_json_dict(self):
         return {
             "fee_puzzle_hash": self.fee_puzzle_hash.hex(),
