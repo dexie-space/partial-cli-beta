@@ -3,7 +3,7 @@ from decimal import Decimal
 import json
 import pathlib
 import rich_click as click
-from typing import Optional
+from typing import Optional, Tuple
 
 from chia.cmds.cmds_util import get_wallet_client
 from chia.cmds.units import units
@@ -16,10 +16,18 @@ from chia.types.spend_bundle import SpendBundle
 from chia.util.ints import uint64
 
 import chia.wallet.conditions as conditions_lib
+from chia.wallet.cat_wallet.cat_utils import (
+    CAT_MOD,
+    SpendableCAT,
+    match_cat_puzzle,
+    unsigned_spend_bundle_for_spendable_cats,
+)
+from chia.wallet.lineage_proof import LineageProof
 from chia.wallet.payment import Payment
 from chia.wallet.puzzle_drivers import PuzzleInfo
 from chia.wallet.trading.offer import ZERO_32, Offer
 from chia.wallet.util.tx_config import DEFAULT_TX_CONFIG
+from chia.wallet.uncurried_puzzle import uncurry_puzzle
 
 from chia_rs import G2Element
 
@@ -67,27 +75,34 @@ def create_cmd(
     asyncio.run(create_offer(fingerprint, offer, request, filepath))
 
 
-def get_launcher_coin(
-    sb: SpendBundle, partial_ph: bytes32, offer_mojos: uint64
-) -> Coin:
+def get_launcher_coin_spend(
+    sb: SpendBundle,
+    partial_ph: bytes32,
+    offer_mojos: uint64,
+) -> Optional[CoinSpend]:
     for cs in sb.coin_spends:
         result = cs.puzzle_reveal.to_program().run(cs.solution.to_program())
         conditions_list = conditions_lib.parse_conditions_non_consensus(
             result.as_iter(), abstractions=False
         )
         for c in conditions_list:
-            if c == conditions_lib.CreateCoin(
-                puzzle_hash=partial_ph, amount=offer_mojos
-            ):
-                return cs.coin
+            if type(c) is conditions_lib.CreateCoin:
+                cc: conditions_lib.CreateCoin = c
+                if (cc.puzzle_hash == partial_ph and cc.amount == offer_mojos) or (
+                    cc.amount == offer_mojos and cc.memos == [partial_ph]
+                ):
+                    return cs
     return None
 
 
-async def get_wallet_name(wallet_rpc_client: WalletRpcClient, asset_id: bytes32) -> str:
-    wallet_name_res = await wallet_rpc_client.cat_asset_id_to_name(asset_id)
-    if wallet_name_res is None:
+async def get_wallet(
+    wallet_rpc_client: WalletRpcClient, asset_id: bytes32
+) -> Tuple[int, str]:
+    wallet_res = await wallet_rpc_client.cat_asset_id_to_name(asset_id)
+    print(wallet_res)
+    if wallet_res is None:
         raise Exception(f"Unknown wallet or asset id: {asset_id.hex()}")
-    return wallet_name_res[1]
+    return wallet_res
 
 
 async def create_offer(
@@ -109,10 +124,10 @@ async def create_offer(
             if offer_wallet == "1"
             else bytes(bytes32.from_hexstr(offer_wallet))
         )
-        offer_wallet_name = (
-            "XCH"
+        offer_wallet_id, offer_wallet_name = (
+            (1, "XCH")
             if offer_asset_id == bytes(0)
-            else await get_wallet_name(wallet_rpc_client, offer_asset_id)
+            else await get_wallet(wallet_rpc_client, offer_asset_id)
         )
         offer_mojos = uint64(
             abs(
@@ -129,10 +144,10 @@ async def create_offer(
             else bytes(bytes32.from_hexstr(request_wallet))
         )
 
-        request_wallet_name = (
-            "XCH"
+        request_wallet_id, request_wallet_name = (
+            (1, "XCH")
             if request_asset_id == bytes(0)
-            else await get_wallet_name(wallet_rpc_client, request_asset_id)
+            else await get_wallet(wallet_rpc_client, request_asset_id)
         )
         request_mojos = uint64(
             abs(
@@ -188,22 +203,25 @@ async def create_offer(
         partial_puzzle = partial_info.to_partial_puzzle()
         partial_ph = partial_puzzle.get_tree_hash()
 
+        print(partial_ph)
+
+        signed_txn_res = await wallet_rpc_client.create_signed_transactions(
+            additions=[{"puzzle_hash": partial_ph, "amount": offer_mojos}],
+            coins=coins,
+            tx_config=DEFAULT_TX_CONFIG,
+            wallet_id=offer_wallet_id,
+        )
+        # find launcher coin
+        sb = signed_txn_res.signed_tx.spend_bundle
+        launcher_cs = get_launcher_coin_spend(sb, partial_ph, offer_mojos)
+
+        assert launcher_cs is not None
+
+        launcher_coin = launcher_cs.coin
+
+        partial_coin = Coin(launcher_coin.name(), partial_ph, offer_mojos)
+
         if offer_asset_id == bytes(0) and bytes32(request_asset_id):
-            signed_txn_res = await wallet_rpc_client.create_signed_transactions(
-                additions=[{"puzzle_hash": partial_ph, "amount": offer_mojos}],
-                coins=coins,
-                tx_config=DEFAULT_TX_CONFIG,
-                wallet_id=1,
-            )
-
-            # find launcher coin
-            sb = signed_txn_res.signed_tx.spend_bundle
-            launcher_coin = get_launcher_coin(sb, partial_ph, offer_mojos)
-
-            assert launcher_coin is not None
-
-            partial_coin = Coin(launcher_coin.name(), partial_ph, offer_mojos)
-
             # eph partial coin spend
             partial_cs: CoinSpend = make_spend(
                 coin=partial_coin,
@@ -255,4 +273,85 @@ async def create_offer(
             ret["offer"] = offer_bech32
             print(json.dumps(ret, indent=2))
         else:
+            print(partial_coin)
+            print(launcher_cs)
+            matched_cat_puzzle = match_cat_puzzle(
+                uncurry_puzzle(launcher_cs.puzzle_reveal.to_program())
+            )
+
+            if matched_cat_puzzle is None:
+                raise Exception("Failed to match CAT puzzle")
+
+            launcher_inner_puzzle_hash = list(matched_cat_puzzle)[2].get_tree_hash()
+            # eph partial coin cat spend
+
+            lineage_proof = LineageProof(
+                launcher_coin.parent_coin_info,
+                launcher_inner_puzzle_hash,
+                launcher_coin.amount,
+            )
+
+            partial_sc = SpendableCAT(
+                coin=partial_coin,
+                limitations_program_hash=offer_asset_id,
+                inner_puzzle=partial_puzzle,
+                inner_solution=Program.to(
+                    [
+                        partial_coin.amount,
+                        partial_coin.name(),
+                        ZERO_32,
+                        ZERO_32,
+                        uint64(0),
+                        uint64(0),
+                    ]
+                ),
+                lineage_proof=lineage_proof,
+            )
+            partial_cs = unsigned_spend_bundle_for_spendable_cats(
+                CAT_MOD, [partial_sc]
+            ).coin_spends[0]
+            partial_sb = SpendBundle([partial_cs], G2Element())
+            maker_sb: SpendBundle = SpendBundle.aggregate([sb, partial_sb])
+
+            notarized_payments = Offer.notarize_payments(
+                {
+                    None: [
+                        Payment(
+                            puzzle_hash=partial_info.maker_puzzle_hash,
+                            amount=request_mojos,
+                            memos=[partial_info.maker_puzzle_hash],
+                        )
+                    ]
+                },
+                coins=[partial_coin],
+            )
+
+            driver_dict = {
+                bytes32(offer_asset_id): PuzzleInfo(
+                    {
+                        "type": "CAT",
+                        "tail": f"0x{request_asset_id.hex()}",
+                    }
+                )
+            }
+
+            offer = Offer(
+                notarized_payments,
+                maker_sb,
+                driver_dict,
+            )
+            offer_bech32 = offer.to_bech32()
+            filepath = (
+                filepath
+                if filepath is not None
+                else pathlib.Path.cwd() / f"launcher-{offer.name().hex()}.offer"
+            )
+            with filepath.open(mode="w") as file:
+                file.write(offer_bech32)
+
+            ret = {"partial_info": PartialInfo.to_json_dict(partial_info)}
+            ret["partial_coin"] = partial_coin.to_json_dict()
+            ret["launcher_coin"] = launcher_coin.to_json_dict()
+            ret["offer"] = offer_bech32
+            print(json.dumps(ret, indent=2))
             raise Exception("Not implemented")
