@@ -9,7 +9,6 @@ from chia.cmds.cmds_util import get_wallet_client
 from chia.cmds.units import units
 from chia.rpc.wallet_rpc_client import WalletRpcClient
 from chia.types.blockchain_format.coin import Coin
-from chia.types.blockchain_format.program import Program
 from chia.types.blockchain_format.sized_bytes import bytes32
 from chia.types.coin_spend import CoinSpend, make_spend
 from chia.types.spend_bundle import SpendBundle
@@ -32,6 +31,7 @@ from chia.wallet.uncurried_puzzle import uncurry_puzzle
 from chia_rs import G2Element
 
 from partial_cli.config import FEE_PH, FEE_RATE, wallet_rpc_port
+from partial_cli.puzzles import get_partial_coin_solution
 from partial_cli.types.partial_info import PartialInfo
 from partial_cli.utils.shared import get_public_key
 
@@ -226,7 +226,9 @@ async def create_offer(
             partial_cs: CoinSpend = make_spend(
                 coin=partial_coin,
                 puzzle_reveal=partial_puzzle,
-                solution=Program.to(["dexie_partial"]),
+                solution=get_partial_coin_solution(
+                    partial_coin.amount, partial_coin.name()
+                ),
             )
             partial_sb = SpendBundle([partial_cs], G2Element())
             maker_sb: SpendBundle = SpendBundle.aggregate([sb, partial_sb])
@@ -295,15 +297,8 @@ async def create_offer(
                 coin=partial_coin,
                 limitations_program_hash=offer_asset_id,
                 inner_puzzle=partial_puzzle,
-                inner_solution=Program.to(
-                    [
-                        partial_coin.amount,
-                        partial_coin.name(),
-                        ZERO_32,
-                        ZERO_32,
-                        uint64(0),
-                        uint64(0),
-                    ]
+                inner_solution=get_partial_coin_solution(
+                    partial_coin.amount, partial_coin.name()
                 ),
                 lineage_proof=lineage_proof,
             )

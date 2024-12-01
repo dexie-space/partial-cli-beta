@@ -7,6 +7,10 @@ from chia.types.blockchain_format.sized_bytes import bytes32
 from chia.types.coin_spend import CoinSpend, make_spend
 from chia.types.spend_bundle import SpendBundle
 from chia.util.ints import uint16, uint64
+from chia.wallet.cat_wallet.cat_utils import (
+    match_cat_puzzle,
+    get_innerpuzzle_from_puzzle,
+)
 from chia.wallet.trading.offer import Offer
 from chia.wallet.uncurried_puzzle import uncurry_puzzle
 
@@ -100,7 +104,18 @@ class PartialInfo:
 
     @staticmethod
     def from_coin_spend(cs: CoinSpend) -> Optional["PartialInfo"]:
-        uncurried_puzzle = uncurry_puzzle(cs.puzzle_reveal.to_program())
+        # check if it's CAT spend
+        matched_cat_puzzle = match_cat_puzzle(
+            uncurry_puzzle(cs.puzzle_reveal.to_program())
+        )
+
+        puzzle = (
+            cs.puzzle_reveal.to_program()
+            if matched_cat_puzzle is None
+            else get_innerpuzzle_from_puzzle(cs.puzzle_reveal.to_program())
+        )
+
+        uncurried_puzzle = uncurry_puzzle(puzzle)
 
         # check if the uncurried puzzle is the same as the partial puzzle
         if uncurried_puzzle.mod.get_tree_hash() != MOD_HASH:

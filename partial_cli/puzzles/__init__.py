@@ -1,10 +1,13 @@
 from typing import List, Optional
 
 from chia.types.blockchain_format.program import Program
+from chia.types.blockchain_format.sized_bytes import bytes32
 from chia.types.coin_spend import CoinSpend
 from chia.types.spend_bundle import SpendBundle
+from chia.util.ints import uint64
+from chia.wallet.cat_wallet.cat_utils import match_cat_puzzle
 from chia.wallet.trading.offer import ZERO_32
-
+from chia.wallet.uncurried_puzzle import uncurry_puzzle
 from chia_rs import G2Element
 
 from partial_cli.utils.rpc import is_coin_spent
@@ -26,15 +29,36 @@ RATE_MOD = Program.fromhex(
 )
 
 
-def get_partial_coin_spend(coin_spends: List[CoinSpend]) -> Optional[CoinSpend]:
-    return next(
-        (
-            cs
-            for cs in coin_spends
-            if cs.solution.to_program() == Program.to(["dexie_partial"])
-        ),
-        None,
+def get_partial_coin_solution(my_amount: uint64, my_id: bytes32) -> Program:
+    return Program.to(
+        [
+            my_amount,
+            my_id,
+            ZERO_32,
+            uint64(0),
+            uint64(0),
+        ]
     )
+
+
+def get_partial_coin_spend(coin_spends: List[CoinSpend]) -> Optional[CoinSpend]:
+    for cs in coin_spends:
+        # check if it's CAT spend
+        matched_cat_puzzle = match_cat_puzzle(
+            uncurry_puzzle(cs.puzzle_reveal.to_program())
+        )
+        solution_python = (
+            cs.solution.to_program()
+            if matched_cat_puzzle is None
+            else cs.solution.to_program().first()
+        ).as_python()
+
+        if len(solution_python) == 5 and solution_python == get_partial_coin_solution(
+            cs.coin.amount, cs.coin.name()
+        ):
+            return cs
+
+    return None
 
 
 def get_non_partial_coin_spends(coin_spends: List[CoinSpend]) -> List[CoinSpend]:
