@@ -41,21 +41,23 @@ def get_partial_coin_solution(my_amount: uint64, my_id: bytes32) -> Program:
     )
 
 
+def is_partial_coin_spend(cs: CoinSpend) -> bool:
+    # check if it's CAT spend
+    matched_cat_puzzle = match_cat_puzzle(uncurry_puzzle(cs.puzzle_reveal.to_program()))
+    solution_python = (
+        cs.solution.to_program()
+        if matched_cat_puzzle is None
+        else cs.solution.to_program().first()
+    ).as_python()
+
+    return len(solution_python) == 5 and solution_python == get_partial_coin_solution(
+        cs.coin.amount, cs.coin.name()
+    )
+
+
 def get_partial_coin_spend(coin_spends: List[CoinSpend]) -> Optional[CoinSpend]:
     for cs in coin_spends:
-        # check if it's CAT spend
-        matched_cat_puzzle = match_cat_puzzle(
-            uncurry_puzzle(cs.puzzle_reveal.to_program())
-        )
-        solution_python = (
-            cs.solution.to_program()
-            if matched_cat_puzzle is None
-            else cs.solution.to_program().first()
-        ).as_python()
-
-        if len(solution_python) == 5 and solution_python == get_partial_coin_solution(
-            cs.coin.amount, cs.coin.name()
-        ):
+        if is_partial_coin_spend(cs):
             return cs
 
     return None
@@ -65,8 +67,7 @@ def get_non_partial_coin_spends(coin_spends: List[CoinSpend]) -> List[CoinSpend]
     return list(
         filter(
             lambda cs: (
-                cs.solution.to_program() != Program.to(["dexie_partial"])
-                and cs.coin.parent_coin_info != ZERO_32
+                not is_partial_coin_spend(cs) and cs.coin.parent_coin_info != ZERO_32
             ),
             coin_spends,
         )
