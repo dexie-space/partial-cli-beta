@@ -30,7 +30,7 @@ class PartialInfo:
     request_asset_id: bytes
     request_mojos: uint64  # initial request mojos
 
-    def to_partial_puzzle(self):
+    def to_partial_puzzle(self) -> Program:
         return MOD.curry(
             MOD_HASH,
             self.fee_puzzle_hash,

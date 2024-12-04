@@ -9,6 +9,7 @@ from chia.cmds.cmds_util import get_wallet_client
 from chia.cmds.units import units
 from chia.rpc.wallet_rpc_client import WalletRpcClient
 from chia.types.blockchain_format.coin import Coin
+from chia.types.blockchain_format.program import Program
 from chia.types.blockchain_format.sized_bytes import bytes32
 from chia.types.coin_spend import CoinSpend, make_spend
 from chia.types.spend_bundle import SpendBundle
@@ -105,25 +106,59 @@ async def get_wallet(
     return wallet_res
 
 
+def get_partial_spendable_cat(
+    asset_id: bytes32,
+    partial_coin: Coin,
+    partial_puzzle: Program,
+    parent_coin: Coin,
+    parent_inner_puzzle_hash: bytes32,
+) -> SpendableCAT:
+
+    return SpendableCAT(
+        coin=partial_coin,
+        limitations_program_hash=asset_id,
+        inner_puzzle=partial_puzzle,
+        inner_solution=get_partial_coin_solution(
+            partial_coin.amount, partial_coin.name()
+        ),
+        lineage_proof=LineageProof(
+            parent_coin.parent_coin_info,
+            parent_inner_puzzle_hash,
+            parent_coin.amount,
+        ),
+    )
+
+
 async def create_offer(
     fingerprint: int, offer: str, request: str, filepath: Optional[pathlib.Path]
 ):
+    result = {}
+
+    offer_wallet, offer_amount = tuple(offer.split(":")[0:2])
+    request_wallet, request_amount = tuple(request.split(":")[0:2])
+    assert offer_wallet != request_wallet
+
+    driver_dict = {}
+
     async with get_wallet_client(wallet_rpc_port, fingerprint) as (
         wallet_rpc_client,
         fingerprint,
         config,
     ):
-        offer_wallet, offer_amount = tuple(offer.split(":")[0:2])
-        request_wallet, request_amount = tuple(request.split(":")[0:2])
-
-        # can't offer and request same wallet
-        assert offer_wallet != request_wallet
-
         offer_asset_id = (
             bytes(0)
             if offer_wallet == "1"
             else bytes(bytes32.from_hexstr(offer_wallet))
         )
+
+        if offer_asset_id != bytes(0):
+            driver_dict[bytes32(offer_asset_id)] = PuzzleInfo(
+                {
+                    "type": "CAT",
+                    "tail": f"0x{offer_asset_id.hex()}",
+                }
+            )
+
         offer_wallet_id, offer_wallet_name = (
             (1, "XCH")
             if offer_asset_id == bytes(0)
@@ -143,6 +178,13 @@ async def create_offer(
             if request_wallet == "1"
             else bytes(bytes32.from_hexstr(request_wallet))
         )
+        if request_asset_id != bytes(0):
+            driver_dict[bytes32(request_asset_id)] = PuzzleInfo(
+                {
+                    "type": "CAT",
+                    "tail": f"0x{request_asset_id.hex()}",
+                }
+            )
 
         request_wallet_id, request_wallet_name = (
             (1, "XCH")
@@ -182,9 +224,6 @@ async def create_offer(
 
         public_key = await get_public_key(fingerprint)
 
-        print(maker_ph)
-        print(public_key)
-
         partial_info = PartialInfo(
             fee_puzzle_hash=FEE_PH,
             fee_rate=FEE_RATE,
@@ -195,6 +234,7 @@ async def create_offer(
             request_asset_id=request_asset_id,
             request_mojos=request_mojos,
         )
+        result["partial_info"] = PartialInfo.to_json_dict(partial_info)
 
         print(
             f"Offering {offer_amount} {offer_wallet_name} for {request_amount} {request_wallet_name} with rate {partial_info.get_rate()}"
@@ -202,8 +242,6 @@ async def create_offer(
 
         partial_puzzle = partial_info.to_partial_puzzle()
         partial_ph = partial_puzzle.get_tree_hash()
-
-        print(partial_ph)
 
         signed_txn_res = await wallet_rpc_client.create_signed_transactions(
             additions=[{"puzzle_hash": partial_ph, "amount": offer_mojos}],
@@ -218,9 +256,13 @@ async def create_offer(
         assert launcher_cs is not None
 
         launcher_coin = launcher_cs.coin
+        result["launcher_coin"] = launcher_coin.to_json_dict()
 
         partial_coin = Coin(launcher_coin.name(), partial_ph, offer_mojos)
+        result["partial_coin"] = partial_coin.to_json_dict()
 
+        notarized_payments = None
+        partial_cs = None
         if offer_asset_id == bytes(0) and bytes32(request_asset_id):
             # eph partial coin spend
             partial_cs: CoinSpend = make_spend(
@@ -230,8 +272,6 @@ async def create_offer(
                     partial_coin.amount, partial_coin.name()
                 ),
             )
-            partial_sb = SpendBundle([partial_cs], G2Element())
-            maker_sb: SpendBundle = SpendBundle.aggregate([sb, partial_sb])
 
             notarized_payments = Offer.notarize_payments(
                 {
@@ -245,38 +285,7 @@ async def create_offer(
                 },
                 coins=[partial_coin],
             )
-
-            driver_dict = {
-                bytes32(request_asset_id): PuzzleInfo(
-                    {
-                        "type": "CAT",
-                        "tail": f"0x{request_asset_id.hex()}",
-                    }
-                )
-            }
-
-            offer = Offer(
-                notarized_payments,
-                maker_sb,
-                driver_dict,
-            )
-            offer_bech32 = offer.to_bech32()
-            filepath = (
-                filepath
-                if filepath is not None
-                else pathlib.Path.cwd() / f"launcher-{offer.name().hex()}.offer"
-            )
-            with filepath.open(mode="w") as file:
-                file.write(offer_bech32)
-
-            ret = {"partial_info": PartialInfo.to_json_dict(partial_info)}
-            ret["partial_coin"] = partial_coin.to_json_dict()
-            ret["launcher_coin"] = launcher_coin.to_json_dict()
-            ret["offer"] = offer_bech32
-            print(json.dumps(ret, indent=2))
-        else:
-            print(partial_coin)
-            print(launcher_cs)
+        elif bytes32(offer_asset_id) and request_asset_id == bytes(0):
             matched_cat_puzzle = match_cat_puzzle(
                 uncurry_puzzle(launcher_cs.puzzle_reveal.to_program())
             )
@@ -287,26 +296,17 @@ async def create_offer(
             launcher_inner_puzzle_hash = list(matched_cat_puzzle)[2].get_tree_hash()
             # eph partial coin cat spend
 
-            lineage_proof = LineageProof(
-                launcher_coin.parent_coin_info,
-                launcher_inner_puzzle_hash,
-                launcher_coin.amount,
+            partial_sc = get_partial_spendable_cat(
+                asset_id=offer_asset_id,
+                partial_coin=partial_coin,
+                partial_puzzle=partial_puzzle,
+                parent_coin=launcher_coin,
+                parent_inner_puzzle_hash=launcher_inner_puzzle_hash,
             )
 
-            partial_sc = SpendableCAT(
-                coin=partial_coin,
-                limitations_program_hash=offer_asset_id,
-                inner_puzzle=partial_puzzle,
-                inner_solution=get_partial_coin_solution(
-                    partial_coin.amount, partial_coin.name()
-                ),
-                lineage_proof=lineage_proof,
-            )
             partial_cs = unsigned_spend_bundle_for_spendable_cats(
                 CAT_MOD, [partial_sc]
             ).coin_spends[0]
-            partial_sb = SpendBundle([partial_cs], G2Element())
-            maker_sb: SpendBundle = SpendBundle.aggregate([sb, partial_sb])
 
             notarized_payments = Offer.notarize_payments(
                 {
@@ -321,32 +321,27 @@ async def create_offer(
                 coins=[partial_coin],
             )
 
-            driver_dict = {
-                bytes32(offer_asset_id): PuzzleInfo(
-                    {
-                        "type": "CAT",
-                        "tail": f"0x{request_asset_id.hex()}",
-                    }
-                )
-            }
-
-            offer = Offer(
-                notarized_payments,
-                maker_sb,
-                driver_dict,
-            )
-            offer_bech32 = offer.to_bech32()
-            filepath = (
-                filepath
-                if filepath is not None
-                else pathlib.Path.cwd() / f"launcher-{offer.name().hex()}.offer"
-            )
-            with filepath.open(mode="w") as file:
-                file.write(offer_bech32)
-
-            ret = {"partial_info": PartialInfo.to_json_dict(partial_info)}
-            ret["partial_coin"] = partial_coin.to_json_dict()
-            ret["launcher_coin"] = launcher_coin.to_json_dict()
-            ret["offer"] = offer_bech32
-            print(json.dumps(ret, indent=2))
+        elif bytes32(offer_asset_id) and bytes32(request_asset_id):
             raise Exception("Not implemented")
+        else:
+            raise Exception("Invalid asset id")
+    partial_sb = SpendBundle([partial_cs], G2Element())
+    maker_sb: SpendBundle = SpendBundle.aggregate([sb, partial_sb])
+
+    offer = Offer(
+        notarized_payments,
+        maker_sb,
+        driver_dict,
+    )
+    offer_bech32 = offer.to_bech32()
+    filepath = (
+        filepath
+        if filepath is not None
+        else pathlib.Path.cwd() / f"launcher-{offer.name().hex()}.offer"
+    )
+    with filepath.open(mode="w") as file:
+        file.write(offer_bech32)
+
+    result["offer"] = offer_bech32
+
+    print(json.dumps(result, indent=2))
