@@ -81,6 +81,4 @@ def show_cmd(ctx, as_json, offer_file):
                     ret["launcher_coin"] = launcher_cs.coin.to_json_dict()
             print(json.dumps(ret, indent=2))
         else:
-            display_partial_info(
-                partial_info, partial_coin, is_valid=not is_partial_coin_spent
-            )
+            display_partial_info(partial_info, partial_coin, is_valid=is_valid)
