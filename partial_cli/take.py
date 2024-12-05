@@ -31,6 +31,7 @@ from partial_cli.puzzles import (
 from partial_cli.types.partial_info import PartialInfo
 from partial_cli.utils.partial import display_partial_info
 from partial_cli.utils.rpc import is_coin_spent
+from partial_cli.utils.shared import get_wallet
 
 
 def process_taker_offer(taker_offer: Offer, maker_request_payments):
@@ -98,7 +99,7 @@ async def create_taker_offer(
     request_mojos_minus_fees: uint64,
     taker_offer_mojos: uint64,
     blockchain_fee_mojos: uint64,
-):
+) -> Offer:
     async with get_wallet_client(wallet_rpc_port, fingerprint) as (
         wallet_rpc_client,
         fingerprint,
@@ -127,6 +128,7 @@ async def create_taker_offer(
             validate_only=False,
             fee=blockchain_fee_mojos,
         )
+
         return create_offer_res.offer
 
 
@@ -156,49 +158,57 @@ async def take_partial_offer(
         ]
     )
 
-    partial_cs: CoinSpend = make_spend(partial_coin, puzzle_reveal=p, solution=s)
+    if partial_info.offer_asset_id == bytes(0) and partial_info.request_asset_id:
 
-    maker_request_payments = Program.to(
-        [
-            partial_coin_id,
+        partial_cs: CoinSpend = make_spend(partial_coin, puzzle_reveal=p, solution=s)
+
+        maker_request_payments = Program.to(
             [
-                partial_info.maker_puzzle_hash,
-                taker_offer_mojos,
-                [partial_info.maker_puzzle_hash],
-            ],
-        ]
-    )
-    (
-        taker_coin_spends,
-        taker_request_payments,
-        taker_offer_sig,
-    ) = process_taker_offer(taker_offer, maker_request_payments)
+                partial_coin_id,
+                [
+                    partial_info.maker_puzzle_hash,
+                    taker_offer_mojos,
+                    [partial_info.maker_puzzle_hash],
+                ],
+            ]
+        )
+        (
+            taker_coin_spends,
+            taker_request_payments,
+            taker_offer_sig,
+        ) = process_taker_offer(taker_offer, maker_request_payments)
 
-    partial_offer_sb = SpendBundle(
-        [
-            partial_cs,
-            make_spend(
-                Coin(
-                    parent_coin_info=partial_cs.coin.name(),
-                    puzzle_hash=OFFER_MOD_HASH,
-                    amount=request_mojos_minus_fees,
+        partial_offer_sb = SpendBundle(
+            [
+                partial_cs,
+                make_spend(
+                    Coin(
+                        parent_coin_info=partial_cs.coin.name(),
+                        puzzle_hash=OFFER_MOD_HASH,
+                        amount=request_mojos_minus_fees,
+                    ),
+                    OFFER_MOD,
+                    taker_request_payments,
                 ),
-                OFFER_MOD,
-                taker_request_payments,
-            ),
-        ]
-        + taker_coin_spends,
-        taker_offer_sig,
-    )
+            ]
+            + taker_coin_spends,
+            taker_offer_sig,
+        )
 
-    sb = (
-        SpendBundle.aggregate([create_offer_coin_sb, partial_offer_sb])
-        if create_offer_coin_sb
-        else partial_offer_sb
-    )
+        sb = (
+            SpendBundle.aggregate([create_offer_coin_sb, partial_offer_sb])
+            if create_offer_coin_sb
+            else partial_offer_sb
+        )
 
-    next_offer = partial_info.get_next_partial_offer(partial_coin, request_mojos)
-    return sb, next_offer
+        next_offer = partial_info.get_next_partial_offer(partial_coin, request_mojos)
+        return sb, next_offer
+    elif partial_info.offer_asset_id and partial_info.request_asset_id == bytes(0):
+        raise Exception("Not implemented")
+    elif partial_info.offer_asset_id and partial_info.request_asset_id:
+        raise Exception("Not implemented")
+    else:
+        raise Exception("Invalid offer and request asset ids")
 
 
 def get_offer_values(partial_info: PartialInfo, request_mojos: uint64):
@@ -258,6 +268,47 @@ async def take_cmd_async(
         print(json.dumps(ret, indent=2))
     except Exception as e:
         print(f"Error: {e}")
+
+
+async def confirm_take_offer(
+    fingerprint: int,
+    partial_info: PartialInfo,
+    request_mojos,
+    request_mojos_minus_fees,
+    fee_mojos,
+    taker_offer_mojos,
+):
+    print("")
+
+    async with get_wallet_client(wallet_rpc_port, fingerprint) as (
+        wallet_rpc_client,
+        fingerprint,
+        config,
+    ):
+        offer_wallet_id, offer_wallet_name, offer_unit = await get_wallet(
+            wallet_rpc_client, partial_info.offer_asset_id
+        )
+        request_wallet_id, request_wallet_name, request_unit = await get_wallet(
+            wallet_rpc_client, partial_info.request_asset_id
+        )
+
+        if partial_info.offer_asset_id == bytes(0) and partial_info.request_asset_id:
+            print(
+                f" {taker_offer_mojos/request_unit} {request_wallet_name} -> {request_mojos/offer_unit} {offer_wallet_name}"
+            )
+            print(f" Sending {taker_offer_mojos/request_unit} {request_wallet_name}")
+            print(f" Paying {fee_mojos/offer_unit} XCH in fees")
+            print(
+                f" Receiving {request_mojos_minus_fees/offer_unit} {offer_wallet_name}"
+            )
+        elif partial_info.offer_asset_id and partial_info.request_asset_id == bytes(0):
+            print("Not implemented")
+        elif partial_info.offer_asset_id and partial_info.request_asset_id:
+            print("Not implemented")
+        else:
+            print("Invalid offer and request asset ids")
+
+    return Confirm.ask("\n Would you like to take this offer?")
 
 
 # take
@@ -356,13 +407,17 @@ def take_cmd(
         request_mojos_minus_fees = request_mojos - fee_mojos
 
     display_partial_info(partial_info, partial_coin, is_valid=not is_partial_coin_spent)
-    print("")
-    print(f" {taker_offer_mojos} mojos -> {request_mojos} XCH")
-    print(f" Sending {taker_offer_mojos} mojos")
-    print(f" Paying {fee_mojos/1e12} XCH in fees")
-    print(f" Receiving {request_mojos_minus_fees/1e12} XCH")
 
-    is_confirmed = Confirm.ask("\n Would you like to take this offer?")
+    is_confirmed = asyncio.run(
+        confirm_take_offer(
+            fingerprint,
+            partial_info,
+            request_mojos,
+            request_mojos_minus_fees,
+            fee_mojos,
+            taker_offer_mojos,
+        )
+    )
 
     create_offer_coin_sb = asyncio.run(
         get_create_offer_coin_sb(sb.coin_spends, sb.aggregated_signature)

@@ -34,7 +34,8 @@ from chia_rs import G2Element
 from partial_cli.config import FEE_PH, FEE_RATE, wallet_rpc_port
 from partial_cli.puzzles import get_partial_coin_solution
 from partial_cli.types.partial_info import PartialInfo
-from partial_cli.utils.shared import get_public_key
+from partial_cli.utils.partial import display_partial_info
+from partial_cli.utils.shared import get_public_key, get_wallet
 
 
 # create
@@ -96,16 +97,6 @@ def get_launcher_coin_spend(
     return None
 
 
-async def get_wallet(
-    wallet_rpc_client: WalletRpcClient, asset_id: bytes32
-) -> Tuple[int, str]:
-    wallet_res = await wallet_rpc_client.cat_asset_id_to_name(asset_id)
-    print(wallet_res)
-    if wallet_res is None:
-        raise Exception(f"Unknown wallet or asset id: {asset_id.hex()}")
-    return wallet_res
-
-
 def get_partial_spendable_cat(
     asset_id: bytes32,
     partial_coin: Coin,
@@ -132,8 +123,6 @@ def get_partial_spendable_cat(
 async def create_offer(
     fingerprint: int, offer: str, request: str, filepath: Optional[pathlib.Path]
 ):
-    result = {}
-
     offer_wallet, offer_amount = tuple(offer.split(":")[0:2])
     request_wallet, request_amount = tuple(request.split(":")[0:2])
     assert offer_wallet != request_wallet
@@ -159,19 +148,10 @@ async def create_offer(
                 }
             )
 
-        offer_wallet_id, offer_wallet_name = (
-            (1, "XCH")
-            if offer_asset_id == bytes(0)
-            else await get_wallet(wallet_rpc_client, offer_asset_id)
+        offer_wallet_id, offer_wallet_name, offer_unit = await get_wallet(
+            wallet_rpc_client, offer_asset_id
         )
-        offer_mojos = uint64(
-            abs(
-                int(
-                    Decimal(offer_amount)
-                    * (units["chia"] if offer_wallet_name == "XCH" else units["cat"])
-                )
-            )
-        )
+        offer_mojos = uint64(abs(int(Decimal(offer_amount) * offer_unit)))
 
         request_asset_id = (
             bytes(0)
@@ -186,19 +166,11 @@ async def create_offer(
                 }
             )
 
-        request_wallet_id, request_wallet_name = (
-            (1, "XCH")
-            if request_asset_id == bytes(0)
-            else await get_wallet(wallet_rpc_client, request_asset_id)
+        request_wallet_id, request_wallet_name, request_unit = await get_wallet(
+            wallet_rpc_client, request_asset_id
         )
-        request_mojos = uint64(
-            abs(
-                int(
-                    Decimal(request_amount)
-                    * (units["chia"] if request_wallet_name == "XCH" else units["cat"])
-                )
-            )
-        )
+
+        request_mojos = uint64(abs(int(Decimal(request_amount) * request_unit)))
 
         # create_offer_for_ids to lock coins
         offer_dict = {
@@ -234,11 +206,6 @@ async def create_offer(
             request_asset_id=request_asset_id,
             request_mojos=request_mojos,
         )
-        result["partial_info"] = PartialInfo.to_json_dict(partial_info)
-
-        print(
-            f"Offering {offer_amount} {offer_wallet_name} for {request_amount} {request_wallet_name} with rate {partial_info.get_rate()}"
-        )
 
         partial_puzzle = partial_info.to_partial_puzzle()
         partial_ph = partial_puzzle.get_tree_hash()
@@ -256,10 +223,8 @@ async def create_offer(
         assert launcher_cs is not None
 
         launcher_coin = launcher_cs.coin
-        result["launcher_coin"] = launcher_coin.to_json_dict()
 
         partial_coin = Coin(launcher_coin.name(), partial_ph, offer_mojos)
-        result["partial_coin"] = partial_coin.to_json_dict()
 
         notarized_payments = None
         partial_cs = None
@@ -342,6 +307,5 @@ async def create_offer(
     with filepath.open(mode="w") as file:
         file.write(offer_bech32)
 
-    result["offer"] = offer_bech32
-
-    print(json.dumps(result, indent=2))
+    display_partial_info(partial_info, partial_coin, True)
+    print(f"\nThe partial offer file is {filepath}")
