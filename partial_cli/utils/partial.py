@@ -2,6 +2,7 @@ from rich import box
 from rich.console import Console
 from rich.table import Column, Table
 from rich.text import Text
+from typing import Optional
 
 from chia.types.blockchain_format.coin import Coin
 from chia.util.bech32m import encode_puzzle_hash
@@ -12,7 +13,24 @@ from partial_cli.puzzles import MOD_HASH
 from partial_cli.types.partial_info import PartialInfo
 
 
-def display_partial_info(partial_info: PartialInfo, partial_coin: Coin, is_valid: bool):
+def get_amount_str(
+    amount_mojos: uint64, wallet_name: Optional[str] = None, unit: int = 1
+):
+    if wallet_name is not None:
+        return f"{amount_mojos / unit} {wallet_name}"
+
+    return f"{amount_mojos} mojos"
+
+
+def display_partial_info(
+    partial_info: PartialInfo,
+    partial_coin: Coin,
+    is_valid: bool,
+    offer_wallet_name: Optional[str] = None,
+    offer_unit: int = 1,
+    request_wallet_name: Optional[str] = None,
+    request_unit: int = 1,
+):
     coin_amount = partial_coin.amount
     request_amount = partial_info.get_output_mojos(coin_amount)
 
@@ -29,8 +47,13 @@ def display_partial_info(partial_info: PartialInfo, partial_coin: Coin, is_valid
     table.add_row("MOD_HASH:", f"0x{MOD_HASH.hex()}")
     table.add_row("Partial Offer Coin Name:", f"0x{partial_coin.name().hex()}")
     table.add_section()
-    table.add_row("Offer Amount:", f"{coin_amount} mojos")
-    table.add_row("Request Amount:", f"{request_amount} mojos")
+    table.add_row(
+        "Offer Amount:", get_amount_str(coin_amount, offer_wallet_name, offer_unit)
+    )
+    table.add_row(
+        "Request Amount:",
+        get_amount_str(request_amount, request_wallet_name, request_unit),
+    )
     table.add_row(
         "Offer Asset Id:",
         (
@@ -39,7 +62,10 @@ def display_partial_info(partial_info: PartialInfo, partial_coin: Coin, is_valid
             else f"0x{partial_info.offer_asset_id.hex()}"
         ),
     )
-    table.add_row("Initial Offer Mojos:", f"{partial_info.offer_mojos}")
+    table.add_row(
+        "Initial Offer Mojos:",
+        get_amount_str(partial_info.offer_mojos, offer_wallet_name, offer_unit),
+    )
     table.add_row(
         "Request Asset Id:",
         (
@@ -48,9 +74,12 @@ def display_partial_info(partial_info: PartialInfo, partial_coin: Coin, is_valid
             else f"0x{partial_info.request_asset_id.hex()}"
         ),
     )
-    table.add_row("Initial Request Mojos:", f"{partial_info.request_mojos}")
+    table.add_row(
+        "Initial Request Mojos:",
+        get_amount_str(partial_info.request_mojos, request_wallet_name, request_unit),
+    )
 
-    table.add_row("Rate:", f"{partial_info.get_rate():.12f}")
+    table.add_row("Rate:", f"{partial_info.get_rate():.24f}")
 
     table.add_row(
         "Fee Recipient:", f"{encode_puzzle_hash(partial_info.fee_puzzle_hash, prefix)}"

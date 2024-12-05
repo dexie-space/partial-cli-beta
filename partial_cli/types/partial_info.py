@@ -16,7 +16,7 @@ from chia.wallet.uncurried_puzzle import uncurry_puzzle
 
 from chia_rs import G1Element, G2Element
 
-from partial_cli.puzzles import MOD, MOD_HASH
+from partial_cli.puzzles import MOD, MOD_HASH, get_partial_coin_solution
 
 
 @dataclass
@@ -47,7 +47,7 @@ class PartialInfo:
         return self.request_mojos / self.offer_mojos
 
     def get_output_mojos(self, input_mojos: uint64) -> uint64:
-        return uint64(input_mojos * self.get_rate())
+        return uint64(input_mojos * self.request_mojos / self.offer_mojos)
 
     def to_json_dict(self):
         return {
@@ -70,14 +70,15 @@ class PartialInfo:
         # create next offer if there is mojos left
         if new_amount > 0:
             puzzle = self.to_partial_puzzle()
+            new_partial_coin = Coin(
+                parent_coin_info=partial_coin.name(),
+                puzzle_hash=puzzle.get_tree_hash(),
+                amount=new_amount,
+            )
             next_offer_cs = make_spend(
-                coin=Coin(
-                    parent_coin_info=partial_coin.name(),
-                    puzzle_hash=puzzle.get_tree_hash(),
-                    amount=new_amount,
-                ),
+                coin=new_partial_coin,
                 puzzle_reveal=puzzle,
-                solution=Program.to(["dexie_partial"]),
+                solution=get_partial_coin_solution(new_amount, new_partial_coin.name()),
             )
 
             next_offer_sb = SpendBundle([next_offer_cs], G2Element())

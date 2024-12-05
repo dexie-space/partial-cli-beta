@@ -55,6 +55,26 @@ def is_partial_coin_spend(cs: CoinSpend) -> bool:
     )
 
 
+def get_launcher_coin_spend(
+    coin_spends: List[CoinSpend], partial_cs: Optional[CoinSpend] = None
+) -> Optional[CoinSpend]:
+    partial_cs = (
+        get_partial_coin_spend(coin_spends) if partial_cs is None else partial_cs
+    )
+    if partial_cs is not None:
+        for cs in coin_spends:
+            name = cs.coin.name()
+            if (
+                name != partial_cs.coin.name()  # not the same coin
+                and name == partial_cs.coin.parent_coin_info  # parent coin
+                and cs.coin.puzzle_hash
+                != partial_cs.coin.puzzle_hash  # not the same puzzle hash
+            ):
+                return cs
+
+    return None
+
+
 def get_partial_coin_spend(coin_spends: List[CoinSpend]) -> Optional[CoinSpend]:
     for cs in coin_spends:
         if is_partial_coin_spend(cs):

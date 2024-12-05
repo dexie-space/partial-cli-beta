@@ -226,6 +226,16 @@ async def create_offer(
 
         partial_coin = Coin(launcher_coin.name(), partial_ph, offer_mojos)
 
+        display_partial_info(
+            partial_info,
+            partial_coin,
+            True,
+            offer_wallet_name=offer_wallet_name,
+            offer_unit=offer_unit,
+            request_wallet_name=request_wallet_name,
+            request_unit=request_unit,
+        )
+
         notarized_payments = None
         partial_cs = None
         if offer_asset_id == bytes(0) and bytes32(request_asset_id):
@@ -307,5 +317,4 @@ async def create_offer(
     with filepath.open(mode="w") as file:
         file.write(offer_bech32)
 
-    display_partial_info(partial_info, partial_coin, True)
     print(f"\nThe partial offer file is {filepath}")
