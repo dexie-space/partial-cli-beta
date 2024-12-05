@@ -234,6 +234,7 @@ async def create_offer(
             offer_unit=offer_unit,
             request_wallet_name=request_wallet_name,
             request_unit=request_unit,
+            show_initial=False,
         )
 
         notarized_payments = None

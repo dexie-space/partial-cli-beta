@@ -29,7 +29,7 @@ from partial_cli.puzzles import (
     get_partial_coin_spend,
 )
 from partial_cli.types.partial_info import PartialInfo
-from partial_cli.utils.partial import display_partial_info
+from partial_cli.utils.partial import display_partial_info, get_amount_str
 from partial_cli.utils.rpc import is_coin_spent
 from partial_cli.utils.shared import get_wallet
 
@@ -294,12 +294,15 @@ async def confirm_take_offer(
 
         if partial_info.offer_asset_id == bytes(0) and partial_info.request_asset_id:
             print(
-                f" {taker_offer_mojos/request_unit} {request_wallet_name} -> {request_mojos/offer_unit} {offer_wallet_name}"
+                f" {get_amount_str(taker_offer_mojos, request_wallet_name, request_unit)} -> {get_amount_str(request_mojos, offer_wallet_name, offer_unit)}"
             )
-            print(f" Sending {taker_offer_mojos/request_unit} {request_wallet_name}")
+
+            print(
+                f" Sending {get_amount_str(taker_offer_mojos, request_wallet_name, request_unit)}"
+            )
             print(f" Paying {fee_mojos/offer_unit} XCH in fees")
             print(
-                f" Receiving {request_mojos_minus_fees/offer_unit} {offer_wallet_name}"
+                f" Receiving {get_amount_str(request_mojos_minus_fees, offer_wallet_name, offer_unit)}"
             )
         elif partial_info.offer_asset_id and partial_info.request_asset_id == bytes(0):
             print("Not implemented")
