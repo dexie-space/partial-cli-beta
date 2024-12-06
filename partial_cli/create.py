@@ -1,15 +1,11 @@
 import asyncio
 from decimal import Decimal
-import json
 import pathlib
 import rich_click as click
-from typing import Optional, Tuple
+from typing import Optional
 
 from chia.cmds.cmds_util import get_wallet_client
-from chia.cmds.units import units
-from chia.rpc.wallet_rpc_client import WalletRpcClient
 from chia.types.blockchain_format.coin import Coin
-from chia.types.blockchain_format.program import Program
 from chia.types.blockchain_format.sized_bytes import bytes32
 from chia.types.coin_spend import CoinSpend, make_spend
 from chia.types.spend_bundle import SpendBundle
@@ -18,11 +14,9 @@ from chia.util.ints import uint64
 import chia.wallet.conditions as conditions_lib
 from chia.wallet.cat_wallet.cat_utils import (
     CAT_MOD,
-    SpendableCAT,
     match_cat_puzzle,
     unsigned_spend_bundle_for_spendable_cats,
 )
-from chia.wallet.lineage_proof import LineageProof
 from chia.wallet.payment import Payment
 from chia.wallet.puzzle_drivers import PuzzleInfo
 from chia.wallet.trading.offer import ZERO_32, Offer
@@ -32,7 +26,7 @@ from chia.wallet.uncurried_puzzle import uncurry_puzzle
 from chia_rs import G2Element
 
 from partial_cli.config import FEE_PH, FEE_RATE, wallet_rpc_port
-from partial_cli.puzzles import get_partial_coin_solution
+from partial_cli.puzzles import get_partial_coin_solution, get_partial_spendable_cat
 from partial_cli.types.partial_info import PartialInfo
 from partial_cli.utils.partial import display_partial_info
 from partial_cli.utils.shared import get_public_key, get_wallet
@@ -95,29 +89,6 @@ def get_launcher_coin_spend(
                 ):
                     return cs
     return None
-
-
-def get_partial_spendable_cat(
-    asset_id: bytes32,
-    partial_coin: Coin,
-    partial_puzzle: Program,
-    parent_coin: Coin,
-    parent_inner_puzzle_hash: bytes32,
-) -> SpendableCAT:
-
-    return SpendableCAT(
-        coin=partial_coin,
-        limitations_program_hash=asset_id,
-        inner_puzzle=partial_puzzle,
-        inner_solution=get_partial_coin_solution(
-            partial_coin.amount, partial_coin.name()
-        ),
-        lineage_proof=LineageProof(
-            parent_coin.parent_coin_info,
-            parent_inner_puzzle_hash,
-            parent_coin.amount,
-        ),
-    )
 
 
 async def create_offer(

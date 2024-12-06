@@ -1,16 +1,19 @@
 from typing import List, Optional
 
+from chia.types.blockchain_format.coin import Coin
 from chia.types.blockchain_format.program import Program
 from chia.types.blockchain_format.sized_bytes import bytes32
 from chia.types.coin_spend import CoinSpend
 from chia.types.spend_bundle import SpendBundle
 from chia.util.ints import uint64
+from chia.wallet.cat_wallet.cat_utils import SpendableCAT
 from chia.wallet.cat_wallet.cat_utils import match_cat_puzzle
+from chia.wallet.lineage_proof import LineageProof
 from chia.wallet.trading.offer import ZERO_32
 from chia.wallet.uncurried_puzzle import uncurry_puzzle
 from chia_rs import G2Element
 
-from partial_cli.utils.rpc import is_coin_spent
+from partial_cli.utils.rpc import is_coin_spent, get_coin_spend_from_name
 
 # partial.clsp
 MOD = Program.fromhex(
@@ -41,6 +44,32 @@ def get_partial_coin_solution(my_amount: uint64, my_id: bytes32) -> Program:
     )
 
 
+def get_partial_spendable_cat(
+    asset_id: bytes32,
+    partial_coin: Coin,
+    partial_puzzle: Program,
+    parent_coin: Coin,
+    parent_inner_puzzle_hash: bytes32,
+    partial_solution: Program = None,
+) -> SpendableCAT:
+
+    return SpendableCAT(
+        coin=partial_coin,
+        limitations_program_hash=asset_id,
+        inner_puzzle=partial_puzzle,
+        inner_solution=(
+            get_partial_coin_solution(partial_coin.amount, partial_coin.name())
+            if partial_solution is None
+            else partial_solution
+        ),
+        lineage_proof=LineageProof(
+            parent_coin.parent_coin_info,
+            parent_inner_puzzle_hash,
+            parent_coin.amount,
+        ),
+    )
+
+
 def is_partial_coin_spend(cs: CoinSpend) -> bool:
     # check if it's CAT spend
     matched_cat_puzzle = match_cat_puzzle(uncurry_puzzle(cs.puzzle_reveal.to_program()))
@@ -56,19 +85,20 @@ def is_partial_coin_spend(cs: CoinSpend) -> bool:
 
 
 def get_launcher_coin_spend(
-    coin_spends: List[CoinSpend], partial_cs: Optional[CoinSpend] = None
+    coin_spends: List[CoinSpend], partial_coin: Optional[Coin] = None
 ) -> Optional[CoinSpend]:
-    partial_cs = (
-        get_partial_coin_spend(coin_spends) if partial_cs is None else partial_cs
-    )
-    if partial_cs is not None:
+    if partial_coin is None:
+        partial_cs = get_partial_coin_spend(coin_spends)
+        partial_coin = partial_cs.coin if partial_cs is not None else None
+
+    if partial_coin is not None:
         for cs in coin_spends:
             name = cs.coin.name()
             if (
-                name != partial_cs.coin.name()  # not the same coin
-                and name == partial_cs.coin.parent_coin_info  # parent coin
+                name != partial_coin.name()  # not the same coin
+                and name == partial_coin.parent_coin_info  # parent coin
                 and cs.coin.puzzle_hash
-                != partial_cs.coin.puzzle_hash  # not the same puzzle hash
+                != partial_coin.puzzle_hash  # not the same puzzle hash
             ):
                 return cs
 
@@ -92,6 +122,18 @@ def get_non_partial_coin_spends(coin_spends: List[CoinSpend]) -> List[CoinSpend]
             coin_spends,
         )
     )
+
+
+async def get_partial_coin_parent_coin_spend(
+    coin_spends: List[CoinSpend], partial_coin: Coin
+) -> Optional[CoinSpend]:
+    launcher_cs = get_launcher_coin_spend(coin_spends, partial_coin)
+
+    if launcher_cs is not None:
+        return launcher_cs
+    else:
+        # get parent coin spend which is also a partial coin spend
+        return await get_coin_spend_from_name(partial_coin.parent_coin_info)
 
 
 async def get_create_offer_coin_sb(

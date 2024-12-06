@@ -26,7 +26,9 @@ from partial_cli.config import wallet_rpc_port
 from partial_cli.puzzles import (
     FEE_MOD,
     get_create_offer_coin_sb,
+    get_partial_coin_parent_coin_spend,
     get_partial_coin_spend,
+    get_partial_spendable_cat,
 )
 from partial_cli.types.partial_info import PartialInfo
 from partial_cli.utils.partial import display_partial_info, get_amount_str
@@ -140,6 +142,7 @@ async def take_partial_offer(
     request_mojos: uint64,
     fee_mojos: uint64,
     taker_offer_mojos: uint64,
+    coin_spends: List[CoinSpend],
 ):
     # partial coin id (nonce) for puzzle announcement
     partial_coin_id = partial_coin.name()
@@ -204,6 +207,30 @@ async def take_partial_offer(
         next_offer = partial_info.get_next_partial_offer(partial_coin, request_mojos)
         return sb, next_offer
     elif partial_info.offer_asset_id and partial_info.request_asset_id == bytes(0):
+        parent_cs = await get_partial_coin_parent_coin_spend(coin_spends, partial_coin)
+        matched_cat_puzzle = match_cat_puzzle(
+            uncurry_puzzle(parent_cs.puzzle_reveal.to_program())
+        )
+
+        if matched_cat_puzzle is None:
+            raise Exception("Failed to match CAT puzzle")
+
+        parent_inner_puzzle_hash = list(matched_cat_puzzle)[2].get_tree_hash()
+
+        partial_sc = get_partial_spendable_cat(
+            asset_id=partial_info.offer_asset_id,
+            partial_coin=partial_coin,
+            partial_puzzle=p,
+            parent_coin=parent_cs.coin,
+            parent_inner_puzzle_hash=parent_inner_puzzle_hash,
+            partial_solution=s,
+        )
+
+        partial_cs = unsigned_spend_bundle_for_spendable_cats(
+            CAT_MOD, [partial_sc]
+        ).coin_spends[0]
+        print(partial_cs)
+
         raise Exception("Not implemented")
     elif partial_info.offer_asset_id and partial_info.request_asset_id:
         raise Exception("Not implemented")
@@ -226,6 +253,7 @@ async def take_cmd_async(
     fee_mojos: uint64,
     taker_offer_mojos: uint64,
     blockchain_fee_mojos: uint64,
+    coin_spends: List[CoinSpend],
     taker_offer: Optional[Offer] = None,
 ):
     try:
@@ -249,6 +277,7 @@ async def take_cmd_async(
             request_mojos=request_mojos,
             fee_mojos=fee_mojos,
             taker_offer_mojos=taker_offer_mojos,
+            coin_spends=coin_spends,
         )
 
         async with get_wallet_client(wallet_rpc_port, fingerprint) as (
@@ -292,7 +321,11 @@ async def confirm_take_offer(
             wallet_rpc_client, partial_info.request_asset_id
         )
 
-        if partial_info.offer_asset_id == bytes(0) and partial_info.request_asset_id:
+        if (
+            partial_info.offer_asset_id == bytes(0) and partial_info.request_asset_id
+        ) or (
+            partial_info.offer_asset_id and partial_info.request_asset_id == bytes(0)
+        ):
             print(
                 f" {get_amount_str(taker_offer_mojos, request_wallet_name, request_unit)} -> {get_amount_str(request_mojos, offer_wallet_name, offer_unit)}"
             )
@@ -300,12 +333,12 @@ async def confirm_take_offer(
             print(
                 f" Sending {get_amount_str(taker_offer_mojos, request_wallet_name, request_unit)}"
             )
-            print(f" Paying {fee_mojos/offer_unit} XCH in fees")
+            print(
+                f" Paying {get_amount_str(fee_mojos, offer_wallet_name, offer_unit)} in fees"
+            )
             print(
                 f" Receiving {get_amount_str(request_mojos_minus_fees, offer_wallet_name, offer_unit)}"
             )
-        elif partial_info.offer_asset_id and partial_info.request_asset_id == bytes(0):
-            print("Not implemented")
         elif partial_info.offer_asset_id and partial_info.request_asset_id:
             print("Not implemented")
         else:
@@ -387,6 +420,7 @@ def take_cmd(
 
     # calculate request amounts and fees
     if taker_offer_file is not None:
+        raise Exception("Not implemented")
         taker_offer_bech32 = taker_offer_file.read()
         taker_offer: Offer = Offer.from_bech32(taker_offer_bech32)
         request_amounts = taker_offer.get_requested_amounts()
@@ -440,5 +474,6 @@ def take_cmd(
                 taker_offer_mojos=taker_offer_mojos,
                 blockchain_fee_mojos=blockchain_fee_mojos,
                 taker_offer=taker_offer if taker_offer_file is not None else None,
+                coin_spends=sb.coin_spends,
             )
         )
