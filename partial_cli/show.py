@@ -52,7 +52,7 @@ def show_cmd(ctx, as_json, offer_file):
     # partial coin does not exist
     # check if launcher coin is valid and not spent
     if not is_partial_coin_valid:
-        launcher_cs = get_launcher_coin_spend(coin_spends, partial_cs=partial_cs)
+        launcher_cs = get_launcher_coin_spend(coin_spends, partial_coin=partial_coin)
         is_valid = (
             False
             if launcher_cs is None

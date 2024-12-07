@@ -42,7 +42,9 @@ FEE_PH = bytes32.from_hexstr(
             "DEXIE_PARTIAL_FEE_PH",
             # default dexie treasury,
             # xch1hs0kud8mc4tdy7djugv872mjw804gzfx7g0hfcnt5gfv0zjkhxus4ugkkf
-            "bc1f6e34fbc556d279b2e2187f2b7271df540926f21f74e26ba212c78a56b9b9",
+            # "bc1f6e34fbc556d279b2e2187f2b7271df540926f21f74e26ba212c78a56b9b9",
+            # chia-sim
+            "bf00456f9fecf7fb57651b0c99ce13bd9d2858e9b190ec373ba158c9a9934e5a",
         )
     )
 )

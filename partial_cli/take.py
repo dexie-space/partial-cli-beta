@@ -36,7 +36,55 @@ from partial_cli.utils.rpc import is_coin_spent
 from partial_cli.utils.shared import get_wallet
 
 
-def process_taker_offer(taker_offer: Offer, maker_request_payments):
+# taking CAT offer
+# taker sends XCH to the maker
+def take_cat_to_xch_offer(
+    taker_offer: Offer, maker_request_payments: Program, partial_info: PartialInfo
+):
+    offer_asset_id = partial_info.offer_asset_id
+    parent_inner_puzzle_hash = partial_info.to_partial_puzzle().get_tree_hash()
+
+    sb = taker_offer.to_spend_bundle()
+    taker_offer_coin_spends = sb.coin_spends
+
+    # print(taker_offer.to_bech32())
+    # print(json.dumps(sb.to_json_dict(), indent=2))
+
+    # partial_taker coin spends & notarized payments
+    coin_spends: Dict[str, CoinSpend] = {}  # offer input CAT coins
+    notarized_payments_solutions: List[Any] = []  # request XCH payments
+    settlement_coin_spends: List[CoinSpend] = []  # settlement coin spends (XCH)
+
+    for cs in taker_offer_coin_spends:
+        if cs.coin.parent_coin_info != ZERO_32:
+            coin_name = cs.coin.name().hex()
+            coin_spends[coin_name] = cs
+        else:
+            solutions = cs.solution.to_program().as_python()
+            notarized_payments_solutions.append(solutions)
+
+    for asset_id, coins in taker_offer.get_offered_coins().items():
+        for coin in coins:
+            parent_cs = coin_spends[coin.parent_coin_info.hex()]
+            settlement_cs = make_spend(
+                coin=parent_cs.coin,
+                puzzle_reveal=OFFER_MOD,
+                solution=Program.to([maker_request_payments]),
+            )
+            settlement_coin_spends.append(settlement_cs)
+
+    taker_coin_spends = list(coin_spends.values()) + settlement_coin_spends
+
+    return (
+        taker_coin_spends,
+        Program.to(notarized_payments_solutions[0]),
+        sb.aggregated_signature,
+    )
+
+
+# taking xch offer
+# taker sends CAT to the maker
+def take_xch_to_cat_offer(taker_offer: Offer, maker_request_payments: Program):
     sb = taker_offer.to_spend_bundle()
     taker_offer_coin_spends = sb.coin_spends
     # partial_taker coin spends & notarized payments
@@ -70,14 +118,11 @@ def process_taker_offer(taker_offer: Offer, maker_request_payments):
                 uint64(parent_cs.coin.amount),
             )
 
-            # payment to maker
-            intermediary_token_reserve_coin_inner_solution = [maker_request_payments]
-
             spendable_cat = SpendableCAT(
                 coin=coin,
                 limitations_program_hash=asset_id,
                 inner_puzzle=OFFER_MOD,
-                inner_solution=intermediary_token_reserve_coin_inner_solution,
+                inner_solution=[maker_request_payments],
                 lineage_proof=lineage_proof,
             )
             settlement_spendable_cats.append(spendable_cat)
@@ -160,10 +205,11 @@ async def take_partial_offer(
             0,
         ]
     )
+    partial_ph = p.get_tree_hash()
+    # print(f"partial_ph: {partial_ph}")
+    # print(f"partial_coin: {partial_coin}")
 
     if partial_info.offer_asset_id == bytes(0) and partial_info.request_asset_id:
-
-        partial_cs: CoinSpend = make_spend(partial_coin, puzzle_reveal=p, solution=s)
 
         maker_request_payments = Program.to(
             [
@@ -179,14 +225,15 @@ async def take_partial_offer(
             taker_coin_spends,
             taker_request_payments,
             taker_offer_sig,
-        ) = process_taker_offer(taker_offer, maker_request_payments)
+        ) = take_xch_to_cat_offer(taker_offer, maker_request_payments)
 
+        partial_cs: CoinSpend = make_spend(partial_coin, puzzle_reveal=p, solution=s)
         partial_offer_sb = SpendBundle(
             [
                 partial_cs,
                 make_spend(
                     Coin(
-                        parent_coin_info=partial_cs.coin.name(),
+                        parent_coin_info=partial_coin.name(),
                         puzzle_hash=OFFER_MOD_HASH,
                         amount=request_mojos_minus_fees,
                     ),
@@ -207,6 +254,36 @@ async def take_partial_offer(
         next_offer = partial_info.get_next_partial_offer(partial_coin, request_mojos)
         return sb, next_offer
     elif partial_info.offer_asset_id and partial_info.request_asset_id == bytes(0):
+        # prepare taker coin spends
+        # - taker spends XCH to create settlement
+        # - settlement is spent to maker
+
+        # maker requests XCH
+        # taker_offer_mojos = partial_info.get_output_mojos(request_mojos)
+        maker_request_payments = Program.to(
+            [
+                partial_coin_id,
+                [
+                    partial_info.maker_puzzle_hash,
+                    taker_offer_mojos,
+                    [partial_info.maker_puzzle_hash],
+                ],
+            ]
+        )
+        (
+            taker_coin_spends,
+            taker_request_payments,
+            taker_offer_sig,
+        ) = take_cat_to_xch_offer(
+            taker_offer, maker_request_payments, partial_info=partial_info
+        )
+
+        # prepare maker coin spends
+        # - launcher CAT coin spend if exists
+        # - partial CAT coin spend
+        # - maker settlement CAT coin spend
+
+        # parent can be either launcher or partial coin
         parent_cs = await get_partial_coin_parent_coin_spend(coin_spends, partial_coin)
         matched_cat_puzzle = match_cat_puzzle(
             uncurry_puzzle(parent_cs.puzzle_reveal.to_program())
@@ -225,11 +302,60 @@ async def take_partial_offer(
             parent_inner_puzzle_hash=parent_inner_puzzle_hash,
             partial_solution=s,
         )
+        # print(partial_sc)
 
         partial_cs = unsigned_spend_bundle_for_spendable_cats(
             CAT_MOD, [partial_sc]
         ).coin_spends[0]
-        print(partial_cs)
+
+        # print(json.dumps(partial_cs.to_json_dict(), indent=2))
+
+        cat_settlement_ph = CAT_MOD.curry(
+            CAT_MOD.get_tree_hash(), partial_info.offer_asset_id, partial_ph
+        ).get_tree_hash_precalc(partial_ph)
+
+        # print(f"cat_settlement_ph: {cat_settlement_ph}")
+
+        cat_settlement_coin = Coin(
+            parent_coin_info=partial_coin.name(),
+            puzzle_hash=cat_settlement_ph,
+            amount=request_mojos_minus_fees,
+        )
+        # print(cat_settlement_coin)
+        lineage_proof = LineageProof(
+            partial_cs.coin.parent_coin_info,
+            partial_ph,
+            uint64(partial_cs.coin.amount),
+        )
+
+        cat_settlement_sc = SpendableCAT(
+            coin=cat_settlement_coin,
+            limitations_program_hash=partial_info.offer_asset_id,
+            inner_puzzle=OFFER_MOD,
+            inner_solution=taker_request_payments,
+            lineage_proof=lineage_proof,
+        )
+
+        settlement_coin_spends = unsigned_spend_bundle_for_spendable_cats(
+            CAT_MOD, [cat_settlement_sc]
+        ).coin_spends
+        # print(settlement_coin_spends)
+
+        partial_offer_sb = SpendBundle(
+            [
+                partial_cs,
+            ]
+            + settlement_coin_spends
+            + taker_coin_spends,
+            taker_offer_sig,
+        )
+
+        sb = (
+            SpendBundle.aggregate([create_offer_coin_sb, partial_offer_sb])
+            if create_offer_coin_sb
+            else partial_offer_sb
+        )
+        # print(json.dumps(sb.to_json_dict(), indent=2))
 
         raise Exception("Not implemented")
     elif partial_info.offer_asset_id and partial_info.request_asset_id:

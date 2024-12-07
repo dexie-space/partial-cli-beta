@@ -71,12 +71,12 @@ def create_cmd(
     asyncio.run(create_offer(fingerprint, offer, request, filepath))
 
 
-def get_launcher_coin_spend(
-    sb: SpendBundle,
+def get_launcher_coin_spend_from_launcher_coin_spends(
+    launcher_coin_spends: SpendBundle,
     partial_ph: bytes32,
     offer_mojos: uint64,
 ) -> Optional[CoinSpend]:
-    for cs in sb.coin_spends:
+    for cs in launcher_coin_spends.coin_spends:
         result = cs.puzzle_reveal.to_program().run(cs.solution.to_program())
         conditions_list = conditions_lib.parse_conditions_non_consensus(
             result.as_iter(), abstractions=False
@@ -189,13 +189,18 @@ async def create_offer(
         )
         # find launcher coin
         sb = signed_txn_res.signed_tx.spend_bundle
-        launcher_cs = get_launcher_coin_spend(sb, partial_ph, offer_mojos)
+        launcher_cs = get_launcher_coin_spend_from_launcher_coin_spends(
+            sb, partial_ph, offer_mojos
+        )
 
         assert launcher_cs is not None
 
         launcher_coin = launcher_cs.coin
 
-        partial_coin = Coin(launcher_coin.name(), partial_ph, offer_mojos)
+        cat_settlement_ph = CAT_MOD.curry(
+            CAT_MOD.get_tree_hash(), partial_info.offer_asset_id, partial_ph
+        ).get_tree_hash_precalc(partial_ph)
+        partial_coin = Coin(launcher_coin.name(), cat_settlement_ph, offer_mojos)
 
         display_partial_info(
             partial_info,
