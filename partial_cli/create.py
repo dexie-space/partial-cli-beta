@@ -205,7 +205,6 @@ async def create_offer(
         )
 
         partial_coin = Coin(launcher_coin.name(), partial_coin_ph, offer_mojos)
-        print(partial_coin, partial_ph.hex())
 
         display_partial_info(
             partial_info,
@@ -242,7 +241,7 @@ async def create_offer(
                 },
                 coins=[partial_coin],
             )
-        elif bytes32(offer_asset_id) and request_asset_id == bytes(0):
+        elif bytes32(offer_asset_id):
             launcher_inner_puzzle_hash = get_innerpuzzle_from_puzzle(
                 launcher_cs.puzzle_reveal.to_program()
             ).get_tree_hash()
@@ -272,9 +271,6 @@ async def create_offer(
                 },
                 coins=[partial_coin],
             )
-        elif bytes32(offer_asset_id) and bytes32(request_asset_id):
-
-            raise Exception("Not implemented")
         else:
             raise Exception("Invalid asset id")
     partial_sb = SpendBundle([partial_cs], G2Element())
