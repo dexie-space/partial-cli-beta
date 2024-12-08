@@ -1,15 +1,14 @@
 import rich_click as click
 from typing import Tuple
 
-from chia.cmds.cmds_util import get_wallet_client
 from chia.cmds.units import units
 from chia.rpc.wallet_request_types import GetPrivateKey, GetPrivateKeyResponse
 from chia.rpc.wallet_rpc_client import WalletRpcClient
 from chia.types.blockchain_format.program import Program
 from chia.types.blockchain_format.sized_bytes import bytes32
+from chia.util.bech32m import decode_puzzle_hash
 
 from chia_rs import G1Element
-from partial_cli.config import wallet_rpc_port
 
 
 class Bytes32ParamType(click.ParamType):
@@ -45,17 +44,17 @@ class ProgramParamType(click.ParamType):
             self.fail(f"Invalid Program: {value}", param, ctx)
 
 
-async def get_public_key(fingerprint: int):
-    async with get_wallet_client(wallet_rpc_port, fingerprint) as (
-        wallet_rpc_client,
-        fingerprint,
-        config,
-    ):
-        private_key_res: GetPrivateKeyResponse = (
-            await wallet_rpc_client.get_private_key(GetPrivateKey(fingerprint))
-        )
-        public_key = private_key_res.private_key.pk
-        return public_key
+async def get_public_key(wallet_rpc_client: WalletRpcClient, fingerprint: int):
+    private_key_res: GetPrivateKeyResponse = await wallet_rpc_client.get_private_key(
+        GetPrivateKey(fingerprint)
+    )
+    public_key = private_key_res.private_key.pk
+    return public_key
+
+
+async def get_puzzle_hash(wallet_rpc_client: WalletRpcClient, fingerprint: int):
+    address = await wallet_rpc_client.get_next_address(1, False)
+    return decode_puzzle_hash(address)
 
 
 async def get_wallet(

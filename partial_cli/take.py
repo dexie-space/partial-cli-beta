@@ -20,9 +20,8 @@ from chia.wallet.cat_wallet.cat_utils import (
 from chia.wallet.lineage_proof import LineageProof
 from chia.wallet.trading.offer import OFFER_MOD, OFFER_MOD_HASH, ZERO_32, Offer
 from chia.wallet.uncurried_puzzle import uncurry_puzzle
-from chia.wallet.util.tx_config import DEFAULT_TX_CONFIG
 
-from partial_cli.config import wallet_rpc_port
+from partial_cli.config import partial_tx_config, wallet_rpc_port
 from partial_cli.puzzles import (
     FEE_MOD,
     get_create_offer_coin_sb,
@@ -41,14 +40,8 @@ from partial_cli.utils.shared import get_wallet
 def take_cat_to_xch_offer(
     taker_offer: Offer, maker_request_payments: Program, partial_info: PartialInfo
 ):
-    offer_asset_id = partial_info.offer_asset_id
-    parent_inner_puzzle_hash = partial_info.to_partial_puzzle().get_tree_hash()
-
     sb = taker_offer.to_spend_bundle()
     taker_offer_coin_spends = sb.coin_spends
-
-    # print(taker_offer.to_bech32())
-    # print(json.dumps(sb.to_json_dict(), indent=2))
 
     # partial_taker coin spends & notarized payments
     coin_spends: Dict[str, CoinSpend] = {}  # offer input CAT coins
@@ -65,9 +58,8 @@ def take_cat_to_xch_offer(
 
     for asset_id, coins in taker_offer.get_offered_coins().items():
         for coin in coins:
-            parent_cs = coin_spends[coin.parent_coin_info.hex()]
             settlement_cs = make_spend(
-                coin=parent_cs.coin,
+                coin=coin,
                 puzzle_reveal=OFFER_MOD,
                 solution=Program.to([maker_request_payments]),
             )
@@ -171,7 +163,7 @@ async def create_taker_offer(
 
         create_offer_res = await wallet_rpc_client.create_offer_for_ids(
             offer_dict=offer_dict,
-            tx_config=DEFAULT_TX_CONFIG,
+            tx_config=partial_tx_config,
             validate_only=False,
             fee=blockchain_fee_mojos,
         )
@@ -196,16 +188,8 @@ async def take_partial_offer(
 
     # create spend bundle
     p = partial_info.to_partial_puzzle()
-    s = Program.to(
-        [
-            partial_coin.amount,
-            partial_coin_id,
-            partial_coin.puzzle_hash,
-            request_mojos,
-            0,
-        ]
-    )
     partial_ph = p.get_tree_hash()
+
     # print(f"partial_ph: {partial_ph}")
     # print(f"partial_coin: {partial_coin}")
 
@@ -227,6 +211,15 @@ async def take_partial_offer(
             taker_offer_sig,
         ) = take_xch_to_cat_offer(taker_offer, maker_request_payments)
 
+        s = Program.to(
+            [
+                partial_coin.amount,
+                partial_coin_id,
+                partial_coin.puzzle_hash,
+                request_mojos,
+                0,
+            ]
+        )
         partial_cs: CoinSpend = make_spend(partial_coin, puzzle_reveal=p, solution=s)
         partial_offer_sb = SpendBundle(
             [
@@ -251,12 +244,14 @@ async def take_partial_offer(
             else partial_offer_sb
         )
 
+        print(json.dumps(sb.to_json_dict(), indent=2))
+        # raise Exception("DEBUG")
         next_offer = partial_info.get_next_partial_offer(partial_coin, request_mojos)
         return sb, next_offer
     elif partial_info.offer_asset_id and partial_info.request_asset_id == bytes(0):
         # prepare taker coin spends
-        # - taker spends XCH to create settlement
-        # - settlement is spent to maker
+        # taker spends XCH to create settlement
+        # + settlement is spent to maker
 
         # maker requests XCH
         # taker_offer_mojos = partial_info.get_output_mojos(request_mojos)
@@ -275,13 +270,20 @@ async def take_partial_offer(
             taker_request_payments,
             taker_offer_sig,
         ) = take_cat_to_xch_offer(
-            taker_offer, maker_request_payments, partial_info=partial_info
+            taker_offer=taker_offer,
+            maker_request_payments=maker_request_payments,
+            partial_info=partial_info,
         )
 
+        taker_sb = SpendBundle(taker_coin_spends, taker_offer_sig)
+        # print(json.dumps(taker_sb.to_json_dict(), indent=2))
+        # print(taker_request_payments)
+        # raise Exception("DEBUG")
+
         # prepare maker coin spends
-        # - launcher CAT coin spend if exists
-        # - partial CAT coin spend
-        # - maker settlement CAT coin spend
+        # launcher CAT coin spend if exists (create_offer_coin_sb)
+        # + partial CAT coin spend
+        # + maker settlement CAT coin spend
 
         # parent can be either launcher or partial coin
         parent_cs = await get_partial_coin_parent_coin_spend(coin_spends, partial_coin)
@@ -294,6 +296,15 @@ async def take_partial_offer(
 
         parent_inner_puzzle_hash = list(matched_cat_puzzle)[2].get_tree_hash()
 
+        s = Program.to(
+            [
+                partial_coin.amount,
+                partial_coin_id,
+                partial_ph,
+                request_mojos,
+                0,
+            ]
+        )
         partial_sc = get_partial_spendable_cat(
             asset_id=partial_info.offer_asset_id,
             partial_coin=partial_coin,
@@ -311,10 +322,10 @@ async def take_partial_offer(
         # print(json.dumps(partial_cs.to_json_dict(), indent=2))
 
         cat_settlement_ph = CAT_MOD.curry(
-            CAT_MOD.get_tree_hash(), partial_info.offer_asset_id, partial_ph
-        ).get_tree_hash_precalc(partial_ph)
+            CAT_MOD.get_tree_hash(), partial_info.offer_asset_id, OFFER_MOD_HASH
+        ).get_tree_hash_precalc(OFFER_MOD_HASH)
 
-        # print(f"cat_settlement_ph: {cat_settlement_ph}")
+        print(f"cat_settlement_ph: {cat_settlement_ph}")
 
         cat_settlement_coin = Coin(
             parent_coin_info=partial_coin.name(),
@@ -336,16 +347,16 @@ async def take_partial_offer(
             lineage_proof=lineage_proof,
         )
 
-        settlement_coin_spends = unsigned_spend_bundle_for_spendable_cats(
+        cat_settlement_coin_spends = unsigned_spend_bundle_for_spendable_cats(
             CAT_MOD, [cat_settlement_sc]
         ).coin_spends
-        # print(settlement_coin_spends)
+        # print(cat_settlement_coin_spends)
 
         partial_offer_sb = SpendBundle(
             [
                 partial_cs,
             ]
-            + settlement_coin_spends
+            + cat_settlement_coin_spends
             + taker_coin_spends,
             taker_offer_sig,
         )
@@ -355,9 +366,12 @@ async def take_partial_offer(
             if create_offer_coin_sb
             else partial_offer_sb
         )
+        next_offer = partial_info.get_next_partial_offer(partial_coin, request_mojos)
         # print(json.dumps(sb.to_json_dict(), indent=2))
+        # print(next_offer.to_bech32())
+        # raise Exception("DEBUG")
+        return sb, next_offer
 
-        raise Exception("Not implemented")
     elif partial_info.offer_asset_id and partial_info.request_asset_id:
         raise Exception("Not implemented")
     else:
@@ -394,6 +408,9 @@ async def take_cmd_async(
         if taker_offer is None:
             print("Failed to create taker offer")
             return
+
+        # print(taker_offer.to_bech32())
+        # raise Exception("DEBUG")
 
         sb, next_offer = await take_partial_offer(
             taker_offer=taker_offer,
@@ -582,13 +599,12 @@ def take_cmd(
         )
     )
 
-    create_offer_coin_sb = asyncio.run(
-        get_create_offer_coin_sb(sb.coin_spends, sb.aggregated_signature)
-    )
-
     if not is_confirmed:
         return
     else:
+        create_offer_coin_sb = asyncio.run(
+            get_create_offer_coin_sb(sb.coin_spends, sb.aggregated_signature)
+        )
         asyncio.run(
             take_cmd_async(
                 create_offer_coin_sb=create_offer_coin_sb,

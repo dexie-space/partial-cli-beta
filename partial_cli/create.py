@@ -20,16 +20,15 @@ from chia.wallet.cat_wallet.cat_utils import (
 from chia.wallet.payment import Payment
 from chia.wallet.puzzle_drivers import PuzzleInfo
 from chia.wallet.trading.offer import ZERO_32, Offer
-from chia.wallet.util.tx_config import DEFAULT_TX_CONFIG
 from chia.wallet.uncurried_puzzle import uncurry_puzzle
 
 from chia_rs import G2Element
 
-from partial_cli.config import FEE_PH, FEE_RATE, wallet_rpc_port
+from partial_cli.config import FEE_PH, FEE_RATE, partial_tx_config, wallet_rpc_port
 from partial_cli.puzzles import get_partial_coin_solution, get_partial_spendable_cat
 from partial_cli.types.partial_info import PartialInfo
 from partial_cli.utils.partial import display_partial_info
-from partial_cli.utils.shared import get_public_key, get_wallet
+from partial_cli.utils.shared import get_public_key, get_puzzle_hash, get_wallet
 
 
 # create
@@ -149,7 +148,7 @@ async def create_offer(
             request_wallet: request_mojos,
         }
         create_offer_res = await wallet_rpc_client.create_offer_for_ids(
-            offer_dict=offer_dict, tx_config=DEFAULT_TX_CONFIG, validate_only=False
+            offer_dict=offer_dict, tx_config=partial_tx_config, validate_only=False
         )
 
         offer = create_offer_res.offer
@@ -163,9 +162,10 @@ async def create_offer(
             if cs.coin.parent_coin_info != ZERO_32
         ]
 
-        maker_ph = coins[0].puzzle_hash
+        maker_ph = await get_puzzle_hash(wallet_rpc_client, fingerprint)
+        # print(coins[0].puzzle_hash.hex(), maker_ph.hex())
 
-        public_key = await get_public_key(fingerprint)
+        public_key = await get_public_key(wallet_rpc_client, fingerprint)
 
         partial_info = PartialInfo(
             fee_puzzle_hash=FEE_PH,
@@ -184,11 +184,12 @@ async def create_offer(
         signed_txn_res = await wallet_rpc_client.create_signed_transactions(
             additions=[{"puzzle_hash": partial_ph, "amount": offer_mojos}],
             coins=coins,
-            tx_config=DEFAULT_TX_CONFIG,
+            tx_config=partial_tx_config,
             wallet_id=offer_wallet_id,
         )
         # find launcher coin
         sb = signed_txn_res.signed_tx.spend_bundle
+
         launcher_cs = get_launcher_coin_spend_from_launcher_coin_spends(
             sb, partial_ph, offer_mojos
         )
@@ -196,11 +197,16 @@ async def create_offer(
         assert launcher_cs is not None
 
         launcher_coin = launcher_cs.coin
+        partial_coin_ph = (
+            partial_ph
+            if partial_info.offer_asset_id == bytes(0)
+            else CAT_MOD.curry(
+                CAT_MOD.get_tree_hash(), partial_info.offer_asset_id, partial_ph
+            ).get_tree_hash_precalc(partial_ph)
+        )
 
-        cat_settlement_ph = CAT_MOD.curry(
-            CAT_MOD.get_tree_hash(), partial_info.offer_asset_id, partial_ph
-        ).get_tree_hash_precalc(partial_ph)
-        partial_coin = Coin(launcher_coin.name(), cat_settlement_ph, offer_mojos)
+        partial_coin = Coin(launcher_coin.name(), partial_coin_ph, offer_mojos)
+        print(partial_coin, partial_ph.hex())
 
         display_partial_info(
             partial_info,
@@ -279,6 +285,12 @@ async def create_offer(
             raise Exception("Invalid asset id")
     partial_sb = SpendBundle([partial_cs], G2Element())
     maker_sb: SpendBundle = SpendBundle.aggregate([sb, partial_sb])
+
+    # import json
+
+    # print(json.dumps(sb.to_json_dict(), indent=2))
+    # print(json.dumps(maker_sb.to_json_dict(), indent=2))
+    # raise Exception("DEBUG")
 
     offer = Offer(
         notarized_payments,

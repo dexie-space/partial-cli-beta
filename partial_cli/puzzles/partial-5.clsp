@@ -11,7 +11,7 @@
         my_amount               ; amount of partial offer coin
         my_id                   ; coin id of the partial offer coin
         my_puzzle_hash          ; puzzle hash of the partial offer coin
-        taken_mojos_or_clawback ; amount of XCH mojos taken, or 0 if clawback
+        taken_mojos_or_clawback ; amount of mojos taken, or 0 if clawback
         clawback_fee_mojos      ; blockchain fee in mojos, used in clawback case
     )
         (include *standard-cl-23*)

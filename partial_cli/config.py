@@ -10,6 +10,7 @@ from chia.types.blockchain_format.sized_bytes import bytes32
 from chia.util.config import load_config
 from chia.util.default_root import DEFAULT_ROOT_PATH
 from chia.util.ints import uint16
+from chia.wallet.util.tx_config import DEFAULT_TX_CONFIG
 
 chia_root = pathlib.Path(
     os.path.expanduser(os.environ.get("CHIA_ROOT", DEFAULT_ROOT_PATH))
@@ -33,6 +34,7 @@ genesis_challenge = bytes.fromhex(
     )
 )
 
+partial_tx_config = DEFAULT_TX_CONFIG.override(reuse_puzhash=True)
 
 # configurable
 # dexie should also check it

@@ -38,7 +38,7 @@ def get_partial_coin_solution(my_amount: uint64, my_id: bytes32) -> Program:
             my_amount,
             my_id,
             ZERO_32,
-            uint64(0),
+            uint64(1),
             uint64(0),
         ]
     )

@@ -4,6 +4,7 @@ from typing import Optional
 from chia.types.blockchain_format.coin import Coin
 from chia.types.blockchain_format.program import Program
 from chia.types.blockchain_format.sized_bytes import bytes32
+from chia.wallet.cat_wallet.cat_utils import CAT_MOD
 from chia.types.coin_spend import CoinSpend, make_spend
 from chia.types.spend_bundle import SpendBundle
 from chia.util.ints import uint16, uint64
@@ -66,9 +67,17 @@ class PartialInfo:
         # create next offer if there is mojos left
         if new_amount > 0:
             puzzle = self.to_partial_puzzle()
+            partial_ph = puzzle.get_tree_hash()
+            new_partial_coin_ph = (
+                partial_ph
+                if self.offer_asset_id == bytes(0)
+                else CAT_MOD.curry(
+                    CAT_MOD.get_tree_hash(), self.offer_asset_id, partial_ph
+                ).get_tree_hash_precalc(partial_ph)
+            )
             new_partial_coin = Coin(
                 parent_coin_info=partial_coin.name(),
-                puzzle_hash=puzzle.get_tree_hash(),
+                puzzle_hash=new_partial_coin_ph,
                 amount=new_amount,
             )
             next_offer_cs = make_spend(
