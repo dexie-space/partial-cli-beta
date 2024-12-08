@@ -14,13 +14,12 @@ from chia.util.ints import uint64
 import chia.wallet.conditions as conditions_lib
 from chia.wallet.cat_wallet.cat_utils import (
     CAT_MOD,
-    match_cat_puzzle,
+    get_innerpuzzle_from_puzzle,
     unsigned_spend_bundle_for_spendable_cats,
 )
 from chia.wallet.payment import Payment
 from chia.wallet.puzzle_drivers import PuzzleInfo
 from chia.wallet.trading.offer import ZERO_32, Offer
-from chia.wallet.uncurried_puzzle import uncurry_puzzle
 
 from chia_rs import G2Element
 
@@ -244,16 +243,11 @@ async def create_offer(
                 coins=[partial_coin],
             )
         elif bytes32(offer_asset_id) and request_asset_id == bytes(0):
-            matched_cat_puzzle = match_cat_puzzle(
-                uncurry_puzzle(launcher_cs.puzzle_reveal.to_program())
-            )
+            launcher_inner_puzzle_hash = get_innerpuzzle_from_puzzle(
+                launcher_cs.puzzle_reveal.to_program()
+            ).get_tree_hash()
 
-            if matched_cat_puzzle is None:
-                raise Exception("Failed to match CAT puzzle")
-
-            launcher_inner_puzzle_hash = list(matched_cat_puzzle)[2].get_tree_hash()
             # eph partial coin cat spend
-
             partial_sc = get_partial_spendable_cat(
                 asset_id=offer_asset_id,
                 partial_coin=partial_coin,
@@ -278,8 +272,8 @@ async def create_offer(
                 },
                 coins=[partial_coin],
             )
-
         elif bytes32(offer_asset_id) and bytes32(request_asset_id):
+
             raise Exception("Not implemented")
         else:
             raise Exception("Invalid asset id")

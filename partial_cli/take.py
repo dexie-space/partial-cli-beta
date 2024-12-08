@@ -14,6 +14,7 @@ from chia.util.ints import uint64
 from chia.wallet.cat_wallet.cat_utils import (
     CAT_MOD,
     SpendableCAT,
+    get_innerpuzzle_from_puzzle,
     match_cat_puzzle,
     unsigned_spend_bundle_for_spendable_cats,
 )
@@ -95,15 +96,10 @@ def take_xch_to_cat_offer(taker_offer: Offer, maker_request_payments: Program):
     for asset_id, coins in taker_offer.get_offered_coins().items():
         for coin in coins:
             parent_cs = coin_spends[coin.parent_coin_info.hex()]
-            matched_cat_puzzle = match_cat_puzzle(
-                uncurry_puzzle(parent_cs.puzzle_reveal.to_program())
-            )
+            parent_inner_puzzle_hash = get_innerpuzzle_from_puzzle(
+                parent_cs.puzzle_reveal.to_program()
+            ).get_tree_hash()
 
-            if matched_cat_puzzle is None:
-                # TODO: raise error?
-                continue
-
-            parent_inner_puzzle_hash = list(matched_cat_puzzle)[2].get_tree_hash()
             lineage_proof = LineageProof(
                 parent_cs.coin.parent_coin_info,
                 parent_inner_puzzle_hash,
