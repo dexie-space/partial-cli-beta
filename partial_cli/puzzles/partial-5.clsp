@@ -35,7 +35,7 @@
                         ; if new_partial_coin_amount is greater than 0, create a new partial coin
                         (if (> new_partial_coin_amount 0)
                             ; changed by CAT wrapper
-                            (list CREATE_COIN my_puzzle_hash new_partial_coin_amount)
+                            (list CREATE_COIN my_puzzle_hash new_partial_coin_amount (list my_puzzle_hash))
                             (list REMARK)
                         )
                         ; partial coin settlement conditions
@@ -44,7 +44,7 @@
                             (assert-my-puzzle-hash OFFER_TAIL_HASH my_puzzle_hash) 
                             (assert-taker-announcement MAKER_PH REQUEST_TAIL_HASH my_id request_mojos)
                             (create-settlement-coin (- taken_mojos_or_clawback fee_mojos))
-                            (list CREATE_COIN FEE_PH fee_mojos) 
+                            (list CREATE_COIN FEE_PH fee_mojos (list FEE_PH)) 
                         ) 
 
                     )

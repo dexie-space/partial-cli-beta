@@ -61,7 +61,7 @@
 
     (defun create-settlement-coin (amount)
         ; changed by CAT wrapper if it's CAT
-        (list CREATE_COIN OFFER_MOD_HASH amount)
+        (list CREATE_COIN OFFER_MOD_HASH amount (list OFFER_MOD_HASH))
     )
 
     (defun clawback (MAKER_PH MAKER_PK my_amount clawback_fee_mojos)
@@ -71,7 +71,7 @@
                 (list REMARK)
             )
             (list
-                (list CREATE_COIN MAKER_PH my_amount)
+                (list CREATE_COIN MAKER_PH my_amount (list MAKER_PH))
                 (list AGG_SIG_ME MAKER_PK (sha256 my_amount))
             ) 
         )
