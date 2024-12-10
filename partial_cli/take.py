@@ -353,7 +353,7 @@ async def take_partial_offer(
             CAT_MOD.get_tree_hash(), partial_info.offer_asset_id, OFFER_MOD_HASH
         ).get_tree_hash_precalc(OFFER_MOD_HASH)
 
-        print(f"cat_settlement_ph: {cat_settlement_ph}")
+        # print(f"cat_settlement_ph: {cat_settlement_ph}")
 
         cat_settlement_coin = Coin(
             parent_coin_info=partial_coin.name(),
@@ -397,7 +397,7 @@ async def take_partial_offer(
     if sb is None:
         raise Exception("Failed to take partial offer")
 
-    print(json.dumps(sb.to_json_dict(), indent=2))
+    # print(json.dumps(sb.to_json_dict(), indent=2))
     next_offer = partial_info.get_next_partial_offer(partial_coin, request_mojos)
     return sb, next_offer
 

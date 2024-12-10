@@ -9,10 +9,11 @@ from chia.types.coin_spend import CoinSpend, make_spend
 from chia.types.spend_bundle import SpendBundle
 from chia.util.ints import uint16, uint64
 from chia.wallet.cat_wallet.cat_utils import (
+    construct_cat_puzzle,
     match_cat_puzzle,
     get_innerpuzzle_from_puzzle,
 )
-from chia.wallet.trading.offer import Offer
+from chia.wallet.trading.offer import OFFER_MOD_HASH, Offer
 from chia.wallet.uncurried_puzzle import uncurry_puzzle
 
 from chia_rs import G1Element, G2Element
@@ -32,6 +33,13 @@ class PartialInfo:
     request_mojos: uint64  # initial request mojos
 
     def to_partial_puzzle(self) -> Program:
+        request_settlement_hash = (
+            OFFER_MOD_HASH
+            if self.request_asset_id == bytes(0)
+            else construct_cat_puzzle(
+                CAT_MOD, self.request_asset_id, inner_puzzle_or_hash=OFFER_MOD_HASH
+            ).get_tree_hash_precalc(OFFER_MOD_HASH)
+        )
         return MOD.curry(
             MOD_HASH,
             self.fee_puzzle_hash,
@@ -42,6 +50,7 @@ class PartialInfo:
             self.offer_mojos,
             self.request_asset_id,
             self.request_mojos,
+            request_settlement_hash,
         )
 
     def get_output_mojos(self, input_mojos: uint64) -> uint64:

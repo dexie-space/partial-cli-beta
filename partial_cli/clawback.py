@@ -9,12 +9,14 @@ from chia.types.blockchain_format.program import Program
 from chia.types.blockchain_format.sized_bytes import bytes32
 from chia.types.coin_spend import CoinSpend, make_spend
 from chia.types.spend_bundle import SpendBundle
+from chia.rpc.wallet_rpc_client import WalletRpcClient
 from chia.util.hash import std_hash
 from chia.util.ints import uint64
+import chia.wallet.conditions as conditions_lib
 from chia.wallet.trading.offer import ZERO_32, Offer
 from clvm.casts import int_to_bytes
 
-from partial_cli.config import genesis_challenge, wallet_rpc_port
+from partial_cli.config import genesis_challenge, partial_tx_config, wallet_rpc_port
 from partial_cli.puzzles import get_create_offer_coin_sb, get_partial_coin_spend
 from chia.rpc.wallet_request_types import GetPrivateKey, GetPrivateKeyResponse
 from partial_cli.types.partial_info import PartialInfo
@@ -24,29 +26,58 @@ from chia_rs import AugSchemeMPL, G1Element, G2Element, PrivateKey
 
 
 async def get_clawback_signature(
+    wallet_rpc_client: WalletRpcClient,
     fingerprint: int,
     partial_coin_name: bytes32,
     partial_pk: G1Element,
     coin_amount: uint64,
 ) -> Optional[G2Element]:
-    async with get_wallet_client(wallet_rpc_port, fingerprint) as (
-        wallet_rpc_client,
-        fingerprint,
-        config,
-    ):
 
-        private_key_res: GetPrivateKeyResponse = (
-            await wallet_rpc_client.get_private_key(GetPrivateKey(fingerprint))
-        )
-        sk: PrivateKey = private_key_res.private_key.sk
+    private_key_res: GetPrivateKeyResponse = await wallet_rpc_client.get_private_key(
+        GetPrivateKey(fingerprint)
+    )
+    sk: PrivateKey = private_key_res.private_key.sk
 
-        if sk.get_g1() != partial_pk:
-            return None
+    if sk.get_g1() != partial_pk:
+        return None
 
-        return AugSchemeMPL.sign(
-            sk,
-            std_hash(int_to_bytes(coin_amount)) + partial_coin_name + genesis_challenge,
-        )
+    return AugSchemeMPL.sign(
+        sk,
+        std_hash(int_to_bytes(coin_amount)) + partial_coin_name + genesis_challenge,
+    )
+
+
+async def get_clawback_fee_spend_bundle(
+    wallet_rpc_client: WalletRpcClient,
+    clawback_fee_mojos: uint64,
+    partial_coin_name: bytes32,
+    maker_puzzle_hash: bytes32,
+):
+    coins = await wallet_rpc_client.select_coins(
+        amount=clawback_fee_mojos,
+        wallet_id=1,
+        coin_selection_config=partial_tx_config.coin_selection_config,
+    )
+
+    if len(coins) == 0:
+        raise Exception("Not enough coins to pay the clawback fee")
+
+    total_amount = sum([coin.amount for coin in coins])
+    fee_txn_res = await wallet_rpc_client.create_signed_transactions(
+        additions=[
+            {
+                "puzzle_hash": maker_puzzle_hash,
+                "amount": total_amount - clawback_fee_mojos,
+            }
+        ],
+        coins=coins,
+        extra_conditions=[conditions_lib.AssertConcurrentSpend(partial_coin_name)],
+        fee=clawback_fee_mojos,
+        tx_config=partial_tx_config,
+        wallet_id=1,
+    )
+
+    return fee_txn_res.signed_tx.spend_bundle
 
 
 async def clawback_partial_offer(
@@ -62,32 +93,50 @@ async def clawback_partial_offer(
 
     eph_partial_cs: CoinSpend = make_spend(partial_coin, puzzle_reveal=p, solution=s)
 
-    cb_signature = await get_clawback_signature(
-        fingerprint,
-        partial_coin_name=partial_coin.name(),
-        partial_pk=partial_info.public_key,
-        coin_amount=partial_coin.amount,
-    )
-    if cb_signature is None:
-        print(
-            f"Failed to get clawback signature for public key {bytes(partial_info.public_key).hex()}"
-        )
-        return
-
-    paritial_offer_sb = SpendBundle([eph_partial_cs], cb_signature)
-
-    sb = (
-        SpendBundle.aggregate([create_offer_coin_sb, paritial_offer_sb])
-        if create_offer_coin_sb is not None
-        else paritial_offer_sb
-    )
     async with get_wallet_client(wallet_rpc_port, fingerprint) as (
         wallet_rpc_client,
         fingerprint,
         config,
     ):
+
+        cb_signature = await get_clawback_signature(
+            wallet_rpc_client=wallet_rpc_client,
+            fingerprint=fingerprint,
+            partial_coin_name=partial_coin.name(),
+            partial_pk=partial_info.public_key,
+            coin_amount=partial_coin.amount,
+        )
+        if cb_signature is None:
+            print(
+                f"Failed to get clawback signature for public key {bytes(partial_info.public_key).hex()}"
+            )
+            return
+
+        paritial_offer_sb = SpendBundle([eph_partial_cs], cb_signature)
+
+        # blockchain fee
+        fee_sb = (
+            None
+            if clawback_fee_mojos <= 0
+            else await get_clawback_fee_spend_bundle(
+                wallet_rpc_client=wallet_rpc_client,
+                clawback_fee_mojos=clawback_fee_mojos,
+                partial_coin_name=partial_coin.name(),
+                maker_puzzle_hash=partial_info.maker_puzzle_hash,
+            )
+        )
+
+        sb = SpendBundle.aggregate(
+            list(
+                filter(
+                    lambda sb: sb is not None,
+                    [create_offer_coin_sb, paritial_offer_sb, fee_sb],
+                )
+            )
+        )
+
         await wallet_rpc_client.push_tx(sb)
-    print(json.dumps(sb.to_json_dict(), indent=2))
+        print(json.dumps(sb.to_json_dict(), indent=2))
 
 
 @click.command("clawback", help="clawback the partial offer coin.")
