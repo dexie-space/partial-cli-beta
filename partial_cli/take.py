@@ -293,7 +293,6 @@ async def take_partial_offer(
                 partial_coin_id,
                 partial_coin.puzzle_hash,
                 request_mojos,
-                0,
             ]
         )
         partial_cs: CoinSpend = make_spend(partial_coin, puzzle_reveal=p, solution=s)
@@ -333,7 +332,6 @@ async def take_partial_offer(
                 partial_coin_id,
                 partial_ph,
                 request_mojos,
-                0,
             ]
         )
         partial_sc = get_partial_spendable_cat(
