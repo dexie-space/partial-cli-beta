@@ -1,7 +1,7 @@
 import asyncio
 import json
 import rich_click as click
-from typing import Optional
+from typing import List, Optional
 
 from chia.cmds.cmds_util import get_wallet_client
 from chia.types.blockchain_format.coin import Coin
@@ -12,12 +12,22 @@ from chia.types.spend_bundle import SpendBundle
 from chia.rpc.wallet_rpc_client import WalletRpcClient
 from chia.util.hash import std_hash
 from chia.util.ints import uint64
+from chia.wallet.cat_wallet.cat_utils import (
+    CAT_MOD,
+    get_innerpuzzle_from_puzzle,
+    unsigned_spend_bundle_for_spendable_cats,
+)
 import chia.wallet.conditions as conditions_lib
 from chia.wallet.trading.offer import ZERO_32, Offer
 from clvm.casts import int_to_bytes
 
 from partial_cli.config import genesis_challenge, partial_tx_config, wallet_rpc_port
-from partial_cli.puzzles import get_create_offer_coin_sb, get_partial_coin_spend
+from partial_cli.puzzles import (
+    get_create_offer_coin_sb,
+    get_partial_coin_parent_coin_spend,
+    get_partial_coin_spend,
+    get_partial_spendable_cat,
+)
 from chia.rpc.wallet_request_types import GetPrivateKey, GetPrivateKeyResponse
 from partial_cli.types.partial_info import PartialInfo
 from partial_cli.utils.rpc import is_coin_spent
@@ -86,12 +96,79 @@ async def clawback_cat_partial_offer(
     partial_info: PartialInfo,
     fingerprint: int,
     clawback_fee_mojos: uint64,
+    coin_spends: List[CoinSpend],
 ):
-    # TODO: spendable cat
-    pass
+
+    p = partial_info.to_partial_puzzle()
+    partial_ph = p.get_tree_hash()
+
+    parent_cs = await get_partial_coin_parent_coin_spend(coin_spends, partial_coin)
+    parent_inner_puzzle_hash = get_innerpuzzle_from_puzzle(
+        parent_cs.puzzle_reveal.to_program()
+    ).get_tree_hash()
+
+    s = Program.to([partial_coin.amount, partial_coin.name(), partial_ph, 0])
+    partial_sc = get_partial_spendable_cat(
+        asset_id=partial_info.offer_asset_id,
+        partial_coin=partial_coin,
+        partial_puzzle=p,
+        parent_coin=parent_cs.coin,
+        parent_inner_puzzle_hash=parent_inner_puzzle_hash,
+        partial_solution=s,
+    )
+
+    partial_cs = unsigned_spend_bundle_for_spendable_cats(
+        CAT_MOD, [partial_sc]
+    ).coin_spends[0]
+
+    async with get_wallet_client(wallet_rpc_port, fingerprint) as (
+        wallet_rpc_client,
+        fingerprint,
+        config,
+    ):
+
+        clawback_signature = await get_clawback_signature(
+            wallet_rpc_client=wallet_rpc_client,
+            fingerprint=fingerprint,
+            partial_coin_name=partial_coin.name(),
+            partial_pk=partial_info.public_key,
+            coin_amount=partial_coin.amount,
+        )
+
+        if clawback_signature is None:
+            print(
+                f"Failed to get clawback signature for public key {bytes(partial_info.public_key).hex()}"
+            )
+            return
+
+        paritial_offer_sb = SpendBundle([partial_cs], clawback_signature)
+
+        # blockchain fee
+        fee_sb = (
+            None
+            if clawback_fee_mojos <= 0
+            else await get_clawback_fee_spend_bundle(
+                wallet_rpc_client=wallet_rpc_client,
+                clawback_fee_mojos=clawback_fee_mojos,
+                partial_coin_name=partial_coin.name(),
+                maker_puzzle_hash=partial_info.maker_puzzle_hash,
+            )
+        )
+
+        sb = SpendBundle.aggregate(
+            list(
+                filter(
+                    lambda sb: sb is not None,
+                    [create_offer_coin_sb, paritial_offer_sb, fee_sb],
+                )
+            )
+        )
+
+        await wallet_rpc_client.push_tx(sb)
+        print(json.dumps(sb.to_json_dict(), indent=2))
 
 
-async def clawback_partial_offer(
+async def clawback_xch_partial_offer(
     create_offer_coin_sb: SpendBundle,
     partial_coin: Coin,
     partial_info: PartialInfo,
@@ -194,12 +271,24 @@ def clawback_cmd(ctx, fingerprint, clawback_fee_mojos, offer_file):
     create_offer_coin_sb = asyncio.run(
         get_create_offer_coin_sb(sb.coin_spends, sb.aggregated_signature)
     )
-    asyncio.run(
-        clawback_partial_offer(
-            create_offer_coin_sb=create_offer_coin_sb,
-            partial_coin=partial_coin,
-            partial_info=partial_info,
-            fingerprint=fingerprint,
-            clawback_fee_mojos=clawback_fee_mojos,
+    if partial_info.offer_asset_id == bytes(0):
+        asyncio.run(
+            clawback_xch_partial_offer(
+                create_offer_coin_sb=create_offer_coin_sb,
+                partial_coin=partial_coin,
+                partial_info=partial_info,
+                fingerprint=fingerprint,
+                clawback_fee_mojos=clawback_fee_mojos,
+            )
         )
-    )
+    else:
+        asyncio.run(
+            clawback_cat_partial_offer(
+                create_offer_coin_sb=create_offer_coin_sb,
+                partial_coin=partial_coin,
+                partial_info=partial_info,
+                fingerprint=fingerprint,
+                clawback_fee_mojos=clawback_fee_mojos,
+                coin_spends=sb.coin_spends,
+            )
+        )
