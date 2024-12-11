@@ -26,11 +26,6 @@ FEE_MOD = Program.fromhex(
     "0xff02ffff01ff02ff02ffff04ff02ffff04ff05ffff04ff0bff8080808080ffff04ffff01ff05ffff14ffff12ff05ff0b80ffff018227108080ff018080"
 )
 
-# rate.clsp
-RATE_MOD = Program.fromhex(
-    "0xff02ffff01ff02ff02ffff04ff02ffff04ff05ffff04ff0bffff04ff17ffff04ff2fff80808080808080ffff04ffff01ff02ffff03ff05ffff01ff02ffff03ff0bffff01ff0880ffff01ff05ffff14ff2fff17808080ff0180ffff01ff05ffff14ffff12ff2fffff018600e8d4a5100080ff17808080ff0180ff018080"
-)
-
 
 def get_partial_coin_solution(my_amount: uint64, my_id: bytes32) -> Program:
     return Program.to(

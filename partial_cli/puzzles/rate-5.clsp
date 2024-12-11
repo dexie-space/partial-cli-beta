@@ -1,6 +1,0 @@
-(mod (OFFER_TAIL_HASH REQUEST_TAIL_HASH offer_mojos request_mojos)
-    (include *standard-cl-23*)
-    (include "fns-5.clsp")
-
-    (calculate-rate OFFER_TAIL_HASH REQUEST_TAIL_HASH offer_mojos request_mojos)
-)
