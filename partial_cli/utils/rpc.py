@@ -76,3 +76,26 @@ def get_wallet_rpc(self_hostname, wallet_rpc_port, chia_root, chia_config):
 async def is_coin_spent(full_node_rpc_client: FullNodeRpcClient, coin_name: bytes32):
     coin_record = await full_node_rpc_client.get_coin_record_by_name(coin_name)
     return coin_record is not None and coin_record.spent
+
+
+@with_full_node_rpc_client(self_hostname, full_node_rpc_port, chia_root, chia_config)
+async def is_coin_valid(full_node_rpc_client: FullNodeRpcClient, coin_name: bytes32):
+    coin_record = await full_node_rpc_client.get_coin_record_by_name(coin_name)
+    if coin_record is not None and not coin_record.spent:
+        return True
+
+    return False
+
+
+@with_full_node_rpc_client(self_hostname, full_node_rpc_port, chia_root, chia_config)
+async def get_coin_spend_from_name(
+    full_node_rpc_client: FullNodeRpcClient, coin_name: bytes32
+):
+    cr = await full_node_rpc_client.get_coin_record_by_name(coin_name)
+    if cr is not None and cr.spent:
+        cs = await full_node_rpc_client.get_puzzle_and_solution(
+            coin_name, cr.spent_block_index
+        )
+        return cs
+
+    return None
