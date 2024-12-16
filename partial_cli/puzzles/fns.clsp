@@ -56,10 +56,10 @@
         (list CREATE_COIN OFFER_MOD_HASH amount (list OFFER_MOD_HASH))
     )
 
-    (defun clawback (MAKER_PH MAKER_PK my_amount)
-        (list
-            (list CREATE_COIN MAKER_PH my_amount (list MAKER_PH))
-            (list AGG_SIG_ME MAKER_PK (sha256 my_amount))
+    (defun clawback (CLAWBACK_MOD_HASH clawback_mod my_amount)
+        (if (= CLAWBACK_MOD_HASH (sha256tree clawback_mod))
+            (a clawback_mod (list my_amount)) 
+            (x)
         )
     )
 )
