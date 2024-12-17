@@ -16,7 +16,7 @@ from chia.wallet.cat_wallet.cat_utils import (
 from chia.wallet.trading.offer import OFFER_MOD_HASH, Offer
 from chia.wallet.uncurried_puzzle import uncurry_puzzle
 
-from chia_rs import G1Element, G2Element
+from chia_rs import G2Element
 
 from partial_cli.puzzles import MOD, MOD_HASH, get_partial_coin_solution
 
@@ -26,7 +26,7 @@ class PartialInfo:
     fee_puzzle_hash: bytes32
     fee_rate: uint16  # e.g., 3% is represented as 300
     maker_puzzle_hash: bytes32
-    public_key: G1Element
+    clawback_mod_hash: bytes32
     offer_asset_id: bytes
     offer_mojos: uint64  # initial offer mojos
     request_asset_id: bytes
@@ -45,7 +45,7 @@ class PartialInfo:
             self.fee_puzzle_hash,
             self.fee_rate,
             self.maker_puzzle_hash,
-            self.public_key,
+            self.clawback_mod_hash,
             self.offer_asset_id,
             self.offer_mojos,
             self.request_asset_id,
@@ -61,7 +61,7 @@ class PartialInfo:
             "fee_puzzle_hash": self.fee_puzzle_hash.hex(),
             "fee_rate": self.fee_rate,
             "maker_puzzle_hash": self.maker_puzzle_hash.hex(),
-            "public_key": str(self.public_key),
+            "clawback_mod_hash": self.clawback_mod_hash.hex(),
             "offer_asset_id": self.offer_asset_id.hex(),
             "offer_mojos": self.offer_mojos,
             "request_asset_id": self.request_asset_id.hex(),
@@ -108,7 +108,7 @@ class PartialInfo:
                 bytes32.from_hexstr(data["fee_puzzle_hash"]),
                 uint16(data["fee_rate"]),
                 bytes32.from_hexstr(data["maker_puzzle_hash"]),
-                G1Element.from_bytes(bytes.fromhex(data["public_key"])),
+                bytes32.from_hexstr(data["clawback_mod_hash"]),
                 bytes.fromhex(data["offer_asset_id"]),
                 uint64(data["offer_mojos"]),
                 bytes.fromhex(data["request_asset_id"]),
@@ -141,7 +141,7 @@ class PartialInfo:
             fee_puzzle_hash=bytes32.from_bytes(curried_args[1].as_atom()),
             fee_rate=uint16(curried_args[2].as_int()),
             maker_puzzle_hash=bytes32.from_bytes(curried_args[3].as_atom()),
-            public_key=G1Element.from_bytes(curried_args[4].as_atom()),
+            clawback_mod_hash=bytes32.from_bytes(curried_args[4].as_atom()),
             offer_asset_id=curried_args[5].as_atom(),
             offer_mojos=uint64(curried_args[6].as_int()),
             request_asset_id=curried_args[7].as_atom(),

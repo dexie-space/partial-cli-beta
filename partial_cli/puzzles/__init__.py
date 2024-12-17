@@ -11,7 +11,7 @@ from chia.wallet.cat_wallet.cat_utils import match_cat_puzzle
 from chia.wallet.lineage_proof import LineageProof
 from chia.wallet.trading.offer import ZERO_32
 from chia.wallet.uncurried_puzzle import uncurry_puzzle
-from chia_rs import G2Element
+from chia_rs import G1Element, G2Element
 
 from partial_cli.utils.rpc import is_coin_spent, get_coin_spend_from_name
 
@@ -27,21 +27,17 @@ FEE_MOD = Program.fromhex(
 )
 
 # standard_partial_clawback.clsp
-CLAWBACK_MOD = Program.fromhex(
+STD_CLAWBACK_MOD = Program.fromhex(
     "0xff02ffff01ff04ffff04ff04ffff04ff0bffff04ffff0bff1780ff80808080ffff04ffff04ff06ffff04ff05ffff04ff17ffff04ffff04ff05ff8080ff8080808080ff808080ffff04ffff01ff3233ff018080"
 )
 
 
+def get_clawback_puzzle(maker_ph: bytes32, maker_pk: G1Element) -> Program:
+    return STD_CLAWBACK_MOD.curry(maker_ph, maker_pk)
+
+
 def get_partial_coin_solution(my_amount: uint64, my_id: bytes32) -> Program:
-    return Program.to(
-        [
-            my_amount,
-            my_id,
-            ZERO_32,
-            uint64(1),
-            uint64(0),
-        ]
-    )
+    return Program.to([my_amount, my_id, ZERO_32, uint64(1)])
 
 
 def get_partial_spendable_cat(
@@ -79,7 +75,7 @@ def is_partial_coin_spend(cs: CoinSpend) -> bool:
         else cs.solution.to_program().first()
     ).as_python()
 
-    return len(solution_python) == 5 and solution_python == get_partial_coin_solution(
+    return len(solution_python) == 4 and solution_python == get_partial_coin_solution(
         cs.coin.amount, cs.coin.name()
     )
 
