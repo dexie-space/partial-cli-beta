@@ -123,7 +123,16 @@ async def clawback_cat_partial_offer(
             wallet_rpc_client, fingerprint, partial_info.maker_puzzle_hash
         )
 
-        s = Program.to([partial_coin.amount, partial_coin.name(), partial_ph, 0])
+        s = Program.to(
+            [
+                partial_coin.amount,
+                partial_coin.name(),
+                partial_ph,
+                0,
+                clawback_mod,
+                partial_coin.amount,
+            ]
+        )
         partial_sc = get_partial_spendable_cat(
             asset_id=partial_info.offer_asset_id,
             partial_coin=partial_coin,
@@ -136,8 +145,6 @@ async def clawback_cat_partial_offer(
         partial_cs = unsigned_spend_bundle_for_spendable_cats(
             CAT_MOD, [partial_sc]
         ).coin_spends[0]
-
-        s = Program.to([partial_coin.amount, ZERO_32, ZERO_32, 0, clawback_mod])
 
         clawback_signature = await get_clawback_signature(
             wallet_rpc_client=wallet_rpc_client,
@@ -197,7 +204,16 @@ async def clawback_xch_partial_offer(
             wallet_rpc_client, fingerprint, partial_info.maker_puzzle_hash
         )
 
-        s = Program.to([partial_coin.amount, ZERO_32, ZERO_32, 0, clawback_mod])
+        s = Program.to(
+            [
+                partial_coin.amount,
+                ZERO_32,
+                ZERO_32,
+                0,
+                clawback_mod,
+                partial_coin.amount,
+            ]
+        )
 
         eph_partial_cs: CoinSpend = make_spend(
             partial_coin, puzzle_reveal=p, solution=s

@@ -14,24 +14,24 @@
         my_puzzle_hash          ; puzzle hash of the partial offer coin
         taken_mojos_or_clawback ; amount of mojos taken, or 0 if clawback
         clawback_mod            ; clawback puzzle
+        . clawback_solution     ; optional clawback mod solution
     )
         (include *standard-cl-23*)
         (include "fns.clsp")
 
-        (c
-            (list ASSERT_MY_AMOUNT my_amount)
-            (if (> taken_mojos_or_clawback 0)
-                (let 
-                    (
-                        (new_partial_coin_amount (- my_amount taken_mojos_or_clawback))
-                        (request_mojos (calculate-request-mojos 
-                                OFFER_MOJOS REQUEST_MOJOS 
-                                taken_mojos_or_clawback
-                            )
+        (if (> taken_mojos_or_clawback 0)
+            (let 
+                (
+                    (new_partial_coin_amount (- my_amount taken_mojos_or_clawback))
+                    (request_mojos (calculate-request-mojos 
+                            OFFER_MOJOS REQUEST_MOJOS 
+                            taken_mojos_or_clawback
                         )
-                        (fee_mojos (calculate-fee-mojos FEE_RATE taken_mojos_or_clawback))
                     )
-
+                    (fee_mojos (calculate-fee-mojos FEE_RATE taken_mojos_or_clawback))
+                )
+                (c
+                    (list ASSERT_MY_AMOUNT my_amount)
                     (c
                         ; if new_partial_coin_amount is greater than 0, create a new partial coin
                         (if (> new_partial_coin_amount 0)
@@ -47,10 +47,10 @@
                             (create-settlement-coin (- taken_mojos_or_clawback fee_mojos))
                             (list CREATE_COIN FEE_PH fee_mojos (list FEE_PH)) 
                         ) 
-
                     )
                 )
-                (clawback CLAWBACK_MOD_HASH clawback_mod my_amount)
             )
+            (clawback CLAWBACK_MOD_HASH clawback_mod clawback_solution)
         )
+        
 )
