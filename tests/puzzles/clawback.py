@@ -55,7 +55,7 @@ class TestClawback:
         fee_puzzle_hash=FEE_PH,
         fee_rate=FEE_RATE,
         maker_puzzle_hash=MAKER_PH,
-        clawback_mod_hash=clawback_mod.get_tree_hash(),
+        clawback_mod=clawback_mod,
         offer_asset_id=OFFER_TAIL_HASH,
         offer_mojos=uint64(1e12),
         request_asset_id=REQUEST_TAIL_HASH,
@@ -70,7 +70,7 @@ class TestClawback:
                 coin_id,  # coin id
                 ZERO_32,  # puzzle hash
                 0,  # taken_mojos_or_clawback
-                clawback_mod,
+                coin_amount,
             ]
         )
 
@@ -103,7 +103,7 @@ class TestClawback:
                 ZERO_32,  # coin id
                 ZERO_32,  # puzzle hash
                 0,  # taken_mojos_or_clawback
-                clawback_mod,
+                clawback_amount,
             ]
         )
 
@@ -124,7 +124,7 @@ class TestClawback:
                 coin_id,  # coin id
                 ZERO_32,  # puzzle hash
                 0,  # taken_mojos_or_clawback
-                clawback_mod,
+                clawback_amount,
             ]
         )
 

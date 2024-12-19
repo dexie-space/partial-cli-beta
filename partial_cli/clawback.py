@@ -119,17 +119,12 @@ async def clawback_cat_partial_offer(
         fingerprint,
         config,
     ):
-        clawback_mod = await get_clawback_mod(
-            wallet_rpc_client, fingerprint, partial_info.maker_puzzle_hash
-        )
-
         s = Program.to(
             [
                 partial_coin.amount,
                 partial_coin.name(),
                 partial_ph,
                 0,
-                clawback_mod,
                 partial_coin.amount,
             ]
         )
@@ -200,17 +195,12 @@ async def clawback_xch_partial_offer(
         config,
     ):
 
-        clawback_mod = await get_clawback_mod(
-            wallet_rpc_client, fingerprint, partial_info.maker_puzzle_hash
-        )
-
         s = Program.to(
             [
                 partial_coin.amount,
                 ZERO_32,
                 ZERO_32,
                 0,
-                clawback_mod,
                 partial_coin.amount,
             ]
         )

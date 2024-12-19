@@ -169,13 +169,13 @@ async def create_offer(
         # print(coins[0].puzzle_hash.hex(), maker_ph.hex())
 
         public_key: G1Element = await get_public_key(wallet_rpc_client, fingerprint)
-        clawback_mod_hash = get_clawback_puzzle(maker_ph, public_key).get_tree_hash()
+        clawback_mod = get_clawback_puzzle(maker_ph, public_key)
 
         partial_info = PartialInfo(
             fee_puzzle_hash=FEE_PH,
             fee_rate=FEE_RATE,
             maker_puzzle_hash=maker_ph,
-            clawback_mod_hash=clawback_mod_hash,
+            clawback_mod=clawback_mod,
             offer_asset_id=offer_asset_id,
             offer_mojos=offer_mojos,
             request_asset_id=request_asset_id,

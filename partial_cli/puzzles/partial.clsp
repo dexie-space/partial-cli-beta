@@ -3,7 +3,7 @@
         FEE_PH                  ; puzzle hash that will receive the fee (XCH puzzle hash)
         FEE_RATE                ; fee rate (0-10000), e.g., 1% is represented as 100
         MAKER_PH                ; maker puzzle hash (XCH puzzle hash used in both receive and clawback)
-        CLAWBACK_MOD_HASH       ; clawback mod hash
+        CLAWBACK_MOD            ; clawback puzzle
         OFFER_TAIL_HASH         ; offer CAT tail hash (0 if XCH)
         OFFER_MOJOS             ; amount of initial offer in mojos
         REQUEST_TAIL_HASH       ; request CAT tail hash (0 if XCH)
@@ -13,7 +13,6 @@
         my_id                   ; coin id of the partial offer coin
         my_puzzle_hash          ; puzzle hash of the partial offer coin
         taken_mojos_or_clawback ; amount of mojos taken, or 0 if clawback
-        clawback_mod            ; clawback puzzle
         . clawback_solution     ; optional clawback mod solution
     )
         (include *standard-cl-23*)
@@ -50,7 +49,7 @@
                     )
                 )
             )
-            (clawback CLAWBACK_MOD_HASH clawback_mod clawback_solution)
+            (a CLAWBACK_MOD clawback_solution) 
         )
         
 )

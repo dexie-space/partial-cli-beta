@@ -55,11 +55,4 @@
         ; changed by CAT wrapper if it's CAT
         (list CREATE_COIN OFFER_MOD_HASH amount (list OFFER_MOD_HASH))
     )
-
-    (defun clawback (CLAWBACK_MOD_HASH clawback_mod clawback_solution)
-        (if (= CLAWBACK_MOD_HASH (sha256tree clawback_mod))
-            (a clawback_mod clawback_solution) 
-            (x)
-        )
-    )
 )
