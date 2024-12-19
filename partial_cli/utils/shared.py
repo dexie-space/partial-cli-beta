@@ -44,12 +44,13 @@ class ProgramParamType(click.ParamType):
             self.fail(f"Invalid Program: {value}", param, ctx)
 
 
-async def get_public_key(wallet_rpc_client: WalletRpcClient, fingerprint: int):
+async def get_public_key(
+    wallet_rpc_client: WalletRpcClient, fingerprint: int
+) -> G1Element:
     private_key_res: GetPrivateKeyResponse = await wallet_rpc_client.get_private_key(
         GetPrivateKey(fingerprint)
     )
-    public_key = private_key_res.private_key.pk
-    return public_key
+    return private_key_res.private_key.pk
 
 
 async def get_puzzle_hash(wallet_rpc_client: WalletRpcClient, fingerprint: int):

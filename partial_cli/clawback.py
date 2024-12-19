@@ -23,6 +23,7 @@ from clvm.casts import int_to_bytes
 
 from partial_cli.config import genesis_challenge, partial_tx_config, wallet_rpc_port
 from partial_cli.puzzles import (
+    get_clawback_puzzle,
     get_create_offer_coin_sb,
     get_partial_coin_parent_coin_spend,
     get_partial_coin_spend,
@@ -31,15 +32,24 @@ from partial_cli.puzzles import (
 from chia.rpc.wallet_request_types import GetPrivateKey, GetPrivateKeyResponse
 from partial_cli.types.partial_info import PartialInfo
 from partial_cli.utils.rpc import is_coin_spent
+from partial_cli.utils.shared import get_public_key
 
 from chia_rs import AugSchemeMPL, G1Element, G2Element, PrivateKey
+
+
+async def get_clawback_mod(
+    wallet_rpc_client: WalletRpcClient,
+    fingerprint: int,
+    maker_ph: bytes32,
+) -> Program:
+    public_key: G1Element = await get_public_key(wallet_rpc_client, fingerprint)
+    return get_clawback_puzzle(maker_ph, public_key)
 
 
 async def get_clawback_signature(
     wallet_rpc_client: WalletRpcClient,
     fingerprint: int,
     partial_coin_name: bytes32,
-    partial_pk: G1Element,
     coin_amount: uint64,
 ) -> Optional[G2Element]:
 
@@ -47,9 +57,6 @@ async def get_clawback_signature(
         GetPrivateKey(fingerprint)
     )
     sk: PrivateKey = private_key_res.private_key.sk
-
-    if sk.get_g1() != partial_pk:
-        return None
 
     return AugSchemeMPL.sign(
         sk,
@@ -107,38 +114,42 @@ async def clawback_cat_partial_offer(
         parent_cs.puzzle_reveal.to_program()
     ).get_tree_hash()
 
-    s = Program.to([partial_coin.amount, partial_coin.name(), partial_ph, 0])
-    partial_sc = get_partial_spendable_cat(
-        asset_id=partial_info.offer_asset_id,
-        partial_coin=partial_coin,
-        partial_puzzle=p,
-        parent_coin=parent_cs.coin,
-        parent_inner_puzzle_hash=parent_inner_puzzle_hash,
-        partial_solution=s,
-    )
-
-    partial_cs = unsigned_spend_bundle_for_spendable_cats(
-        CAT_MOD, [partial_sc]
-    ).coin_spends[0]
-
     async with get_wallet_client(wallet_rpc_port, fingerprint) as (
         wallet_rpc_client,
         fingerprint,
         config,
     ):
+        s = Program.to(
+            [
+                partial_coin.amount,
+                partial_coin.name(),
+                partial_ph,
+                0,
+                partial_coin.amount,
+            ]
+        )
+        partial_sc = get_partial_spendable_cat(
+            asset_id=partial_info.offer_asset_id,
+            partial_coin=partial_coin,
+            partial_puzzle=p,
+            parent_coin=parent_cs.coin,
+            parent_inner_puzzle_hash=parent_inner_puzzle_hash,
+            partial_solution=s,
+        )
+
+        partial_cs = unsigned_spend_bundle_for_spendable_cats(
+            CAT_MOD, [partial_sc]
+        ).coin_spends[0]
 
         clawback_signature = await get_clawback_signature(
             wallet_rpc_client=wallet_rpc_client,
             fingerprint=fingerprint,
             partial_coin_name=partial_coin.name(),
-            partial_pk=partial_info.public_key,
             coin_amount=partial_coin.amount,
         )
 
         if clawback_signature is None:
-            print(
-                f"Failed to get clawback signature for public key {bytes(partial_info.public_key).hex()}"
-            )
+            print("Failed to get clawback signature")
             return
 
         paritial_offer_sb = SpendBundle([partial_cs], clawback_signature)
@@ -177,9 +188,6 @@ async def clawback_xch_partial_offer(
 ):
     # create spend bundle
     p = partial_info.to_partial_puzzle()
-    s = Program.to([partial_coin.amount, ZERO_32, ZERO_32, 0])
-
-    eph_partial_cs: CoinSpend = make_spend(partial_coin, puzzle_reveal=p, solution=s)
 
     async with get_wallet_client(wallet_rpc_port, fingerprint) as (
         wallet_rpc_client,
@@ -187,17 +195,28 @@ async def clawback_xch_partial_offer(
         config,
     ):
 
+        s = Program.to(
+            [
+                partial_coin.amount,
+                ZERO_32,
+                ZERO_32,
+                0,
+                partial_coin.amount,
+            ]
+        )
+
+        eph_partial_cs: CoinSpend = make_spend(
+            partial_coin, puzzle_reveal=p, solution=s
+        )
+
         cb_signature = await get_clawback_signature(
             wallet_rpc_client=wallet_rpc_client,
             fingerprint=fingerprint,
             partial_coin_name=partial_coin.name(),
-            partial_pk=partial_info.public_key,
             coin_amount=partial_coin.amount,
         )
         if cb_signature is None:
-            print(
-                f"Failed to get clawback signature for public key {bytes(partial_info.public_key).hex()}"
-            )
+            print("Failed to get clawback signature")
             return
 
         paritial_offer_sb = SpendBundle([eph_partial_cs], cb_signature)

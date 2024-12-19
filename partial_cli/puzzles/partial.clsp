@@ -3,7 +3,7 @@
         FEE_PH                  ; puzzle hash that will receive the fee (XCH puzzle hash)
         FEE_RATE                ; fee rate (0-10000), e.g., 1% is represented as 100
         MAKER_PH                ; maker puzzle hash (XCH puzzle hash used in both receive and clawback)
-        MAKER_PK                ; maker public key used in clawback case
+        CLAWBACK_MOD            ; clawback puzzle
         OFFER_TAIL_HASH         ; offer CAT tail hash (0 if XCH)
         OFFER_MOJOS             ; amount of initial offer in mojos
         REQUEST_TAIL_HASH       ; request CAT tail hash (0 if XCH)
@@ -13,24 +13,24 @@
         my_id                   ; coin id of the partial offer coin
         my_puzzle_hash          ; puzzle hash of the partial offer coin
         taken_mojos_or_clawback ; amount of mojos taken, or 0 if clawback
+        . clawback_solution     ; optional clawback mod solution
     )
         (include *standard-cl-23*)
         (include "fns.clsp")
 
-        (c
-            (list ASSERT_MY_AMOUNT my_amount)
-            (if (> taken_mojos_or_clawback 0)
-                (let 
-                    (
-                        (new_partial_coin_amount (- my_amount taken_mojos_or_clawback))
-                        (request_mojos (calculate-request-mojos 
-                                OFFER_MOJOS REQUEST_MOJOS 
-                                taken_mojos_or_clawback
-                            )
+        (if (> taken_mojos_or_clawback 0)
+            (let 
+                (
+                    (new_partial_coin_amount (- my_amount taken_mojos_or_clawback))
+                    (request_mojos (calculate-request-mojos 
+                            OFFER_MOJOS REQUEST_MOJOS 
+                            taken_mojos_or_clawback
                         )
-                        (fee_mojos (calculate-fee-mojos FEE_RATE taken_mojos_or_clawback))
                     )
-
+                    (fee_mojos (calculate-fee-mojos FEE_RATE taken_mojos_or_clawback))
+                )
+                (c
+                    (list ASSERT_MY_AMOUNT my_amount)
                     (c
                         ; if new_partial_coin_amount is greater than 0, create a new partial coin
                         (if (> new_partial_coin_amount 0)
@@ -46,10 +46,10 @@
                             (create-settlement-coin (- taken_mojos_or_clawback fee_mojos))
                             (list CREATE_COIN FEE_PH fee_mojos (list FEE_PH)) 
                         ) 
-
                     )
                 )
-                (clawback MAKER_PH MAKER_PK my_amount)
             )
+            (a CLAWBACK_MOD clawback_solution) 
         )
+        
 )
