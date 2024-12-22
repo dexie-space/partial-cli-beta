@@ -21,10 +21,14 @@ from chia.wallet.payment import Payment
 from chia.wallet.puzzle_drivers import PuzzleInfo
 from chia.wallet.trading.offer import ZERO_32, Offer
 
-from chia_rs import G2Element
+from chia_rs import G1Element, G2Element
 
 from partial_cli.config import FEE_PH, FEE_RATE, partial_tx_config, wallet_rpc_port
-from partial_cli.puzzles import get_partial_coin_solution, get_partial_spendable_cat
+from partial_cli.puzzles import (
+    get_clawback_puzzle,
+    get_partial_coin_solution,
+    get_partial_spendable_cat,
+)
 from partial_cli.types.partial_info import PartialInfo
 from partial_cli.utils.partial import display_partial_info
 from partial_cli.utils.shared import get_public_key, get_puzzle_hash, get_wallet
@@ -164,13 +168,14 @@ async def create_offer(
         maker_ph = await get_puzzle_hash(wallet_rpc_client, fingerprint)
         # print(coins[0].puzzle_hash.hex(), maker_ph.hex())
 
-        public_key = await get_public_key(wallet_rpc_client, fingerprint)
+        public_key: G1Element = await get_public_key(wallet_rpc_client, fingerprint)
+        clawback_mod = get_clawback_puzzle(maker_ph, public_key)
 
         partial_info = PartialInfo(
             fee_puzzle_hash=FEE_PH,
             fee_rate=FEE_RATE,
             maker_puzzle_hash=maker_ph,
-            public_key=public_key,
+            clawback_mod=clawback_mod,
             offer_asset_id=offer_asset_id,
             offer_mojos=offer_mojos,
             request_asset_id=request_asset_id,

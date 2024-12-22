@@ -54,6 +54,9 @@ def display_partial_info(
     )
     table.add_row("MOD_HASH:", f"0x{MOD_HASH.hex()}")
     table.add_row("Partial Offer Coin Name:", f"0x{partial_coin.name().hex()}")
+    table.add_row(
+        "Clawback Puzzle Hash:", f"0x{partial_info.clawback_mod.get_tree_hash().hex()}"
+    )
     table.add_section()
     table.add_row("Offer Asset Id:", get_asset_str(partial_info.offer_asset_id))
     table.add_row("Request Asset Id:", get_asset_str(partial_info.request_asset_id))

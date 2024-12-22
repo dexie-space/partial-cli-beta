@@ -16,6 +16,7 @@ from chia_rs import G1Element
 from clvm.casts import int_to_bytes
 
 from partial_cli.config import FEE_PH, FEE_RATE, genesis_challenge
+from partial_cli.puzzles import get_clawback_puzzle
 from partial_cli.types.partial_info import PartialInfo
 
 MAKER_PH = bytes32([17] * 32)
@@ -38,6 +39,7 @@ ZERO_32 = bytes32([0] * 32)
 ONE_32 = bytes32([1] * 32)
 
 coin_id = ONE_32
+clawback_mod = get_clawback_puzzle(MAKER_PH, MAKER_PK)
 
 
 def condition_exists(conditions: List[Condition], condition: Condition):
@@ -53,7 +55,7 @@ class TestClawback:
         fee_puzzle_hash=FEE_PH,
         fee_rate=FEE_RATE,
         maker_puzzle_hash=MAKER_PH,
-        public_key=MAKER_PK,
+        clawback_mod=clawback_mod,
         offer_asset_id=OFFER_TAIL_HASH,
         offer_mojos=uint64(1e12),
         request_asset_id=REQUEST_TAIL_HASH,
@@ -68,6 +70,7 @@ class TestClawback:
                 coin_id,  # coin id
                 ZERO_32,  # puzzle hash
                 0,  # taken_mojos_or_clawback
+                coin_amount,
             ]
         )
 
@@ -100,6 +103,7 @@ class TestClawback:
                 ZERO_32,  # coin id
                 ZERO_32,  # puzzle hash
                 0,  # taken_mojos_or_clawback
+                clawback_amount,
             ]
         )
 
@@ -120,6 +124,7 @@ class TestClawback:
                 coin_id,  # coin id
                 ZERO_32,  # puzzle hash
                 0,  # taken_mojos_or_clawback
+                clawback_amount,
             ]
         )
 
