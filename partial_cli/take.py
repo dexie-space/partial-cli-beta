@@ -479,11 +479,11 @@ async def confirm_take_offer(
         fingerprint,
         config,
     ):
-        offer_wallet_id, offer_wallet_name, offer_unit = await get_wallet(
-            wallet_rpc_client, partial_info.offer_asset_id
+        offer_wallet_id, offer_wallet_name, offer_asset_id, offer_unit = (
+            await get_wallet(wallet_rpc_client, partial_info.offer_asset_id)
         )
-        request_wallet_id, request_wallet_name, request_unit = await get_wallet(
-            wallet_rpc_client, partial_info.request_asset_id
+        request_wallet_id, request_wallet_name, request_asset_id, request_unit = (
+            await get_wallet(wallet_rpc_client, partial_info.request_asset_id)
         )
 
         print(
@@ -506,13 +506,13 @@ async def confirm_take_offer(
 # take
 @click.command(
     "take",
-    help="Take the dexie partial offer by providing the taker offer file or request information.",
+    help="Take the partial offer",
 )
 @click.option(
     "-f",
     "--fingerprint",
     required=True,
-    help="Set the fingerprint to specify which wallet to use",
+    help="Set the fingerprint to specify which wallet to use.",
     type=int,
 )
 @click.option(
@@ -528,14 +528,14 @@ async def confirm_take_offer(
     "--request-mojos",
     required=False,
     default=None,
-    help="Request XCH amount in mojos",
+    help="Request amount in mojos.",
     type=uint64,
 )
 @click.option(
     "-m",
     "--fee",
     "blockchain_fee_mojos",
-    help="The blockchain fee to use when taking the partial offer, in mojos",
+    help="The blockchain fee to use when taking a partial offer, in mojos",
     default="0",
     show_default=True,
 )

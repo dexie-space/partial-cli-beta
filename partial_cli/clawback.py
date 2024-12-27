@@ -246,7 +246,7 @@ async def clawback_xch_partial_offer(
         print(json.dumps(sb.to_json_dict(), indent=2))
 
 
-@click.command("clawback", help="clawback the partial offer coin.")
+@click.command("clawback", help="Clawback a partial offer")
 @click.option(
     "-f",
     "--fingerprint",
@@ -258,7 +258,7 @@ async def clawback_xch_partial_offer(
     "-m",
     "--fee",
     "clawback_fee_mojos",
-    help="The blockchain fee to use when clawing back the partial offer, in mojos",
+    help="The blockchain fee to use when clawing back a partial offer, in mojos",
     default="0",
     show_default=True,
     type=uint64,

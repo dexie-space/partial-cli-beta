@@ -55,7 +55,7 @@ FEE_PH = bytes32.from_hexstr(
 FEE_RATE = uint16(os.path.expanduser(os.environ.get("DEXIE_PARTIAL_FEE_RATE", "100")))
 
 
-@click.command("config", help="display the cli config")
+@click.command("config", help="Display the CLI configuration")
 def config_cmd():
     table = Table(
         Column(justify="left"),

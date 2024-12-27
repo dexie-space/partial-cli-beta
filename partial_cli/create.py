@@ -2,7 +2,7 @@ import asyncio
 from decimal import Decimal
 import pathlib
 import rich_click as click
-from typing import Optional
+from typing import Optional, Tuple
 
 from chia.cmds.cmds_util import get_wallet_client
 from chia.types.blockchain_format.coin import Coin
@@ -31,11 +31,16 @@ from partial_cli.puzzles import (
 )
 from partial_cli.types.partial_info import PartialInfo
 from partial_cli.utils.partial import display_partial_info
-from partial_cli.utils.shared import get_public_key, get_puzzle_hash, get_wallet
+from partial_cli.utils.shared import (
+    WalletAndAmountParamType,
+    get_public_key,
+    get_puzzle_hash,
+    get_wallet,
+)
 
 
 # create
-@click.command("create", help="create a partial offer requesting CAT token")
+@click.command("create", help="Create a partial offer")
 @click.option(
     "-f",
     "--fingerprint",
@@ -46,13 +51,15 @@ from partial_cli.utils.shared import get_public_key, get_puzzle_hash, get_wallet
 @click.option(
     "-o",
     "--offer",
-    help="A wallet id to offer and the amount to offer (formatted like wallet_id:amount)",
+    help="An asset to offer and the amount to offer",
+    type=WalletAndAmountParamType(),
     required=True,
 )
 @click.option(
     "-r",
     "--request",
-    help="A wallet id of an asset to receive and the amount you wish to receive (formatted like wallet_id:amount). Support CAT only",
+    help="An asset to receive and the amount you wish to receive",
+    type=WalletAndAmountParamType(),
     required=True,
 )
 @click.option(
@@ -94,11 +101,13 @@ def get_launcher_coin_spend_from_launcher_coin_spends(
 
 
 async def create_offer(
-    fingerprint: int, offer: str, request: str, filepath: Optional[pathlib.Path]
+    fingerprint: int,
+    offer: Tuple[str, bytes, uint64],
+    request: Tuple[str, bytes, uint64],
+    filepath: Optional[pathlib.Path],
 ):
-    offer_wallet, offer_amount = tuple(offer.split(":")[0:2])
-    request_wallet, request_amount = tuple(request.split(":")[0:2])
-    assert offer_wallet != request_wallet
+    offer_wallet_or_asset_id, offer_amount = offer
+    request_wallet_or_asset_id, request_amount = request
 
     driver_dict = {}
 
@@ -107,11 +116,19 @@ async def create_offer(
         fingerprint,
         config,
     ):
-        offer_asset_id = (
-            bytes(0)
-            if offer_wallet == "1"
-            else bytes(bytes32.from_hexstr(offer_wallet))
+
+        offer_wallet_id, offer_wallet_name, offer_asset_id, offer_unit = (
+            await get_wallet(wallet_rpc_client, offer_wallet_or_asset_id)
         )
+
+        request_wallet_id, request_wallet_name, request_asset_id, request_unit = (
+            await get_wallet(wallet_rpc_client, request_wallet_or_asset_id)
+        )
+
+        if offer_wallet_id == request_wallet_id:
+            raise Exception(
+                f"Cannot offer and request the same asset, {offer_wallet_name}"
+            )
 
         if offer_asset_id != bytes(0):
             driver_dict[bytes32(offer_asset_id)] = PuzzleInfo(
@@ -121,16 +138,8 @@ async def create_offer(
                 }
             )
 
-        offer_wallet_id, offer_wallet_name, offer_unit = await get_wallet(
-            wallet_rpc_client, offer_asset_id
-        )
         offer_mojos = uint64(abs(int(Decimal(offer_amount) * offer_unit)))
 
-        request_asset_id = (
-            bytes(0)
-            if request_wallet == "1"
-            else bytes(bytes32.from_hexstr(request_wallet))
-        )
         if request_asset_id != bytes(0):
             driver_dict[bytes32(request_asset_id)] = PuzzleInfo(
                 {
@@ -138,17 +147,12 @@ async def create_offer(
                     "tail": f"0x{request_asset_id.hex()}",
                 }
             )
-
-        request_wallet_id, request_wallet_name, request_unit = await get_wallet(
-            wallet_rpc_client, request_asset_id
-        )
-
         request_mojos = uint64(abs(int(Decimal(request_amount) * request_unit)))
 
         # create_offer_for_ids to lock coins
         offer_dict = {
-            offer_wallet: -1 * offer_mojos,
-            request_wallet: request_mojos,
+            offer_wallet_id: -1 * offer_mojos,
+            request_wallet_id: request_mojos,
         }
         create_offer_res = await wallet_rpc_client.create_offer_for_ids(
             offer_dict=offer_dict, tx_config=partial_tx_config, validate_only=False

@@ -7,7 +7,7 @@ from partial_cli.show import show_cmd
 from partial_cli.take import take_cmd
 
 
-@click.group("partial", help="Manage dexie partial offers")
+@click.group("partial", help="Manage partial offers")
 @click.pass_context
 def partial_cmd(ctx):
     pass
