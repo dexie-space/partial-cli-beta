@@ -138,7 +138,7 @@ async def create_offer(
                 }
             )
 
-        offer_mojos = uint64(abs(int(Decimal(offer_amount) * offer_unit)))
+        offer_mojos = uint64(abs(int(offer_amount * offer_unit)))
 
         if request_asset_id != bytes(0):
             driver_dict[bytes32(request_asset_id)] = PuzzleInfo(
@@ -147,7 +147,7 @@ async def create_offer(
                     "tail": f"0x{request_asset_id.hex()}",
                 }
             )
-        request_mojos = uint64(abs(int(Decimal(request_amount) * request_unit)))
+        request_mojos = uint64(abs(int(request_amount * request_unit)))
 
         # create_offer_for_ids to lock coins
         offer_dict = {

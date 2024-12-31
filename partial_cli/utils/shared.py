@@ -20,7 +20,7 @@ class WalletAndAmountParamType(click.ParamType):
         try:
             wallet_str, amount_str = tuple(value.split(":")[0:2])
 
-            amount = int(Decimal(amount_str))
+            amount = Decimal(amount_str)
             if amount < 0:
                 self.fail(f"Amount must be positive: {amount_str}", param, ctx)
 
