@@ -59,6 +59,7 @@ A dexie partial offer coin is a coin with a puzzle offering one asset (XCH or CA
 # Samples
 - [0.5 TXCH for 171 TDBX](./tests/testnet11/0.5TXCH-x-171TDBX/README.md)
 - [5 BYC04 for 1 TXCH](./tests/testnet11/5BYC04-x-1TXCH/README.md)
+- [10 TDBX for 1 BYC04](./tests/testnet11/10TDBX-x-1BYC04/README.md)
 
 
 ```mermaid

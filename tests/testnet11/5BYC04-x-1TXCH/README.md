@@ -38,7 +38,7 @@ BYC04:
 │ Fee Rate:                │ 1.0%                                                               │
 ╰──────────────────────────┴────────────────────────────────────────────────────────────────────╯
 
-The partial offer file is /Users/karlkim/dexie/partial-cli-private/launcher-86a108045b8844d017709c0660d84c7acc52ab4f5cd0ad7f5fecdaf79b4da31b.offer
+The partial offer file is /Users/karlkim/dexie/partial-cli-private/5BYC04-x-1XCH.offer
 ```
 - [5BYC04-x-1XCH.offer](5BYC04-x-1XCH.offer)
 
