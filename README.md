@@ -11,6 +11,23 @@ A dexie partial offer coin is a coin with a puzzle offering one asset (XCH or CA
 - The [standard settlement (offer) puzzle](https://chialisp.com/offers/) is utilized to ensure that the assets are exchanged.
 - The total amount on the partial offer can be clawed back to the maker by using `partial clawback` command.
 
+```mermaid
+---
+title: Partial Offer Coin Lifecycle
+---
+stateDiagram-v2
+  launcher: Launcher Coin
+  poc: Partial Offer Coin
+  state if_state <<choice>>
+  launcher --> poc: create
+  poc --> launcher: clawback
+  poc --> if_state: take
+  if_state --> poc: taken partially
+  if_state --> [*]: taken all
+```
+
+
+
 # Chialisp
 
 - [partial.clsp](./partial_cli/puzzles/partial.clsp) - The partial offer coin puzzle.
@@ -65,20 +82,5 @@ A dexie partial offer coin is a coin with a puzzle offering one asset (XCH or CA
 ## mainnet
 - [0.25 XCH for 4000 SBX](./tests/mainnet/0.25XCH-x-4000SBX/README.md)
 - [500 DBX for 2.5 XCH](./tests/mainnet/500DBX-x-2.5XCH/README.md)
-
-
-```mermaid
----
-title: Partial Offer Coin Lifecycle
----
-stateDiagram-v2
-  xch: XCH
-  poc: Partial Offer Coin
-  state if_state <<choice>>
-  xch --> poc: create
-  poc --> xch: clawback
-  poc --> if_state: take
-  if_state --> poc: taken partially
-  if_state --> [*]: taken all
-```
+- [100 DBX for 7400 SBX](./tests/mainnet/100DBX-x-7400SBX/README.md)
 
