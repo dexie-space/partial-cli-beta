@@ -26,8 +26,6 @@ stateDiagram-v2
   if_state --> [*]: taken all
 ```
 
-
-
 # Chialisp
 
 - [partial.clsp](./partial_cli/puzzles/partial.clsp) - The partial offer coin puzzle.
@@ -53,6 +51,34 @@ stateDiagram-v2
         . clawback_solution     ; optional clawback mod solution
     )
 ```
+
+## Rate
+- The `OFFER_MOJOS` and `REQUEST_MOJOS` values are curried into the puzzle when the partial offer is created and used to calculate the exchange rate when the partial offer is taken.
+
+```lisp
+(defun calculate-request-mojos (OFFER_MOJOS REQUEST_MOJOS taken_mojos)
+      (/ (* REQUEST_MOJOS taken_mojos) OFFER_MOJOS)
+)
+```
+
+## Fee
+- The fee is calculated based on the curried `FEE_RATE` and the `taken_mojos`.
+- `FEE_RATE` value is 0 to 100, e.g., 1% is represented as 100 in the `FEE_RATE`. 
+```lisp
+(defun calculate-fee-mojos (FEE_RATE taken_mojos)
+    (/ (* FEE_RATE taken_mojos) 10000)
+) 
+```
+
+## Clawback
+- `CLAWBACK_MOD` is curried into the puzzle when the partial offer is created.
+- `CLAWBACK_MOD` is executed with optional `clawback_solution` when the partial offer is clawed back, i.e., `taken_mojos_or_clawback` is 0.
+- The [standard clawback puzzle](./partial_cli/puzzles/standard_partial_clawback.clsp) is curried in when creating the partial offer with the cli, i.e., `partial create`.
+
+```lisp
+(a CLAWBACK_MOD clawback_solution) 
+```
+
 # Partial CLI commands
 ```bash
 ❯ partial --help
