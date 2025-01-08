@@ -17,7 +17,16 @@ def get_amount_str(
     amount_mojos: uint64, wallet_name: Optional[str] = None, unit: int = 1
 ):
     if wallet_name is not None:
-        return f"{amount_mojos / unit} {wallet_name}"
+        amount_str = (
+            (
+                f"{amount_mojos / unit:.3f}"
+                if wallet_name != "XCH"
+                else f"{amount_mojos / unit:.12f}"
+            )
+            .rstrip("0")
+            .rstrip(".")
+        )
+        return f"{amount_str} {wallet_name}"
 
     return f"{amount_mojos} mojos"
 

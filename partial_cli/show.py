@@ -15,12 +15,12 @@ from partial_cli.utils.partial import display_partial_info
 from partial_cli.utils.rpc import is_coin_spent, is_coin_valid
 
 
-@click.command("show", help="display the dexie partial offer information.")
+@click.command("show", help="Display a partial offer information")
 @click.option(
     "-j",
     "--json",
     "as_json",
-    help="Display as JSON",
+    help="Display as JSON.",
     is_flag=True,
     default=False,
     show_default=True,
