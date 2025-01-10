@@ -70,6 +70,17 @@ stateDiagram-v2
 ) 
 ```
 
+- For example, if the `FEE_RATE` is 100 (1%), and the taker requests 42000 mojos (XCH or CAT), the fee is 420 mojos which will be deducted from the the amount that taker will receive.
+
+  - [2nd take](./tests/mainnet/500DBX-x-2.5XCH/README.md#2nd-take)
+
+```bash
+ 0.21 XCH -> 42 DBX
+ Sending 0.21 XCH
+ Paying 0.42 DBX in fees
+ Receiving 41.58 DBX
+```
+
 ## Clawback
 - `CLAWBACK_MOD` is curried into the puzzle when the partial offer is created.
 - `CLAWBACK_MOD` is executed with optional `clawback_solution` when the partial offer is clawed back, i.e., `taken_mojos_or_clawback` is 0.
