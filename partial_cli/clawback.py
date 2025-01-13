@@ -23,7 +23,6 @@ from clvm.casts import int_to_bytes
 
 from partial_cli.config import genesis_challenge, partial_tx_config, wallet_rpc_port
 from partial_cli.puzzles import (
-    get_clawback_puzzle,
     get_create_offer_coin_sb,
     get_partial_coin_parent_coin_spend,
     get_partial_coin_spend,
@@ -32,18 +31,8 @@ from partial_cli.puzzles import (
 from chia.rpc.wallet_request_types import GetPrivateKey, GetPrivateKeyResponse
 from partial_cli.types.partial_info import PartialInfo
 from partial_cli.utils.rpc import is_coin_spent
-from partial_cli.utils.shared import get_public_key
 
-from chia_rs import AugSchemeMPL, G1Element, G2Element, PrivateKey
-
-
-async def get_clawback_mod(
-    wallet_rpc_client: WalletRpcClient,
-    fingerprint: int,
-    maker_ph: bytes32,
-) -> Program:
-    public_key: G1Element = await get_public_key(wallet_rpc_client, fingerprint)
-    return get_clawback_puzzle(maker_ph, public_key)
+from chia_rs import AugSchemeMPL, G2Element, PrivateKey
 
 
 async def get_clawback_signature(

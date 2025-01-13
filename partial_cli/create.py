@@ -25,7 +25,7 @@ from chia_rs import G1Element, G2Element
 
 from partial_cli.config import FEE_PH, FEE_RATE, partial_tx_config, wallet_rpc_port
 from partial_cli.puzzles import (
-    get_clawback_puzzle,
+    get_standard_clawback_puzzle,
     get_partial_coin_solution,
     get_partial_spendable_cat,
 )
@@ -173,7 +173,7 @@ async def create_offer(
         # print(coins[0].puzzle_hash.hex(), maker_ph.hex())
 
         public_key: G1Element = await get_public_key(wallet_rpc_client, fingerprint)
-        clawback_mod = get_clawback_puzzle(maker_ph, public_key)
+        clawback_mod = get_standard_clawback_puzzle(maker_ph, public_key)
 
         partial_info = PartialInfo(
             fee_puzzle_hash=FEE_PH,

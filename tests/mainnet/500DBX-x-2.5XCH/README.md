@@ -60,7 +60,7 @@ The partial offer file is 500DBX-x-2.5XCH.offer
 ╰──────────────────────────────┴────────────────────────────────────────────────────────────────────╯
 ```
 
-## Take
+## 1st Take
 ```bash
 ❯ chia wallet show -f $partial_taker_fp
 Wallet height: 6450229

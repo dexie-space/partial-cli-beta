@@ -32,7 +32,7 @@ STD_CLAWBACK_MOD = Program.fromhex(
 )
 
 
-def get_clawback_puzzle(maker_ph: bytes32, maker_pk: G1Element) -> Program:
+def get_standard_clawback_puzzle(maker_ph: bytes32, maker_pk: G1Element) -> Program:
     return STD_CLAWBACK_MOD.curry(maker_ph, maker_pk)
 
 

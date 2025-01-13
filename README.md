@@ -26,8 +26,6 @@ stateDiagram-v2
   if_state --> [*]: taken all
 ```
 
-
-
 # Chialisp
 
 - [partial.clsp](./partial_cli/puzzles/partial.clsp) - The partial offer coin puzzle.
@@ -53,6 +51,72 @@ stateDiagram-v2
         . clawback_solution     ; optional clawback mod solution
     )
 ```
+
+## Security and Settlements
+- The partial offer uses [the CNI's settlement puzzle](https://chialisp.com/offers/#code) to ensure that the assets are exchanged.
+- The partial offer puzzle asserts the taker settlement puzzle announcement using its own name as `nonce`.
+- The partial offer puzzle also asserts its own name (i.e., `coin id`), amount, and puzzle hash.
+
+Below is the conditions of [0.25XCH-x-4000SBX sample](https://github.com/dexie-space/partial-cli-beta/blob/main/tests/mainnet/0.25XCH-x-4000SBX/README.md#take) and its associated [xch.events](https://xch.events/transactions/eabb871ef4e11df9b47f9e7855294fcc2d4c4a0842c887d21590fa5a18d4ed86).
+
+- Partial Coin: [`0x71403e46cc37278e0548f6fdaf7365e63e938a0ee34ee9f250fda4f985aafd4c`](https://www.spacescan.io/coin/71403e46cc37278e0548f6fdaf7365e63e938a0ee34ee9f250fda4f985aafd4c)
+
+```lisp
+(ASSERT_MY_AMOUNT  0x3a35294400)                                                                                                                              
+(ASSERT_MY_COIN_ID  0x71403e46cc37278e0548f6fdaf7365e63e938a0ee34ee9f250fda4f985aafd4c)                            
+(ASSERT_MY_PUZZLEHASH  0x619b302523f0ec720fcf729257cf2927be07da2179176500ed2c26e92a63a06b)                         
+(ASSERT_PUZZLE_ANNOUNCEMENT  0xefbcfa33bec3cdb077a65fe8de62235c1a8ad55c5add2434f9578405dbe391f0)                   
+...
+```
+- CAT_OFFER_SETTLEMENT: [`0x5cbde2c3969783f4e32376c5225763dba4ed361bec0c42242db3bc96b2dd1aea`](https://www.spacescan.io/coin/5cbde2c3969783f4e32376c5225763dba4ed361bec0c42242db3bc96b2dd1aea)
+```lisp
+(CREATE_PUZZLE_ANNOUNCEMENT  0x3b2da3f0d012ec55238208737128875a552b985bf182c723c9cf3004975d7021)                   
+...
+```
+
+## Rate
+- The `OFFER_MOJOS` and `REQUEST_MOJOS` values are curried into the puzzle when the partial offer is created and used to calculate the exchange rate when the partial offer is taken.
+
+```lisp
+(defun calculate-request-mojos (OFFER_MOJOS REQUEST_MOJOS taken_mojos)
+      (/ (* REQUEST_MOJOS taken_mojos) OFFER_MOJOS)
+)
+```
+
+## Fee
+- The fee is calculated based on the curried `FEE_RATE` and the `taken_mojos`.
+- `FEE_RATE` value is 0 to 100, e.g., 1% is represented as 100 in the `FEE_RATE`. 
+```lisp
+(defun calculate-fee-mojos (FEE_RATE taken_mojos)
+    (/ (* FEE_RATE taken_mojos) 10000)
+) 
+```
+
+- For example, if the `FEE_RATE` is 100 (1%), and the taker requests 42000 mojos (XCH or CAT), the fee is 420 mojos which will be deducted from the the amount that taker will receive.
+
+  - [2nd take](./tests/mainnet/500DBX-x-2.5XCH/README.md#2nd-take)
+
+```bash
+ 0.21 XCH -> 42 DBX
+ Sending 0.21 XCH
+ Paying 0.42 DBX in fees
+ Receiving 41.58 DBX
+```
+
+## Clawback
+- `CLAWBACK_MOD` is curried into the puzzle when the partial offer is created.
+- `CLAWBACK_MOD` is executed with optional `clawback_solution` when the partial offer is clawed back, i.e., `taken_mojos_or_clawback` is 0.
+- The [standard clawback puzzle](./partial_cli/puzzles/standard_partial_clawback.clsp) is curried in when creating the partial offer with the cli, i.e., `partial create`.
+
+```lisp
+(a CLAWBACK_MOD clawback_solution) 
+```
+
+## Blockchain Fees
+- For taking the partial offer, the taker can pays the blockchain fees by providing the offer with attached blockchain fees.
+- For clawback, the maker pays the blockchain fees. The partial cli will calculate the blockchain fees and attach it to the clawback transaction and link with partial coin spend using `ASSERT_CONCURRENT_SPEND`.
+
+
 # Partial CLI commands
 ```bash
 ❯ partial --help
