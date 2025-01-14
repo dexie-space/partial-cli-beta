@@ -26,6 +26,11 @@ FEE_MOD = Program.fromhex(
     "0xff02ffff01ff02ff02ffff04ff02ffff04ff05ffff04ff0bff8080808080ffff04ffff01ff05ffff14ffff12ff05ff0b80ffff018227108080ff018080"
 )
 
+# request-mojos.clsp
+REQ_MOJOS_MOD = Program.fromhex(
+    "0xff02ffff01ff02ff02ffff04ff02ffff04ff05ffff04ff0bffff04ff17ff808080808080ffff04ffff01ff05ffff14ffff12ff0bff1780ff058080ff018080"
+)
+
 # standard_partial_clawback.clsp
 STD_CLAWBACK_MOD = Program.fromhex(
     "0xff02ffff01ff04ffff04ff0affff04ff17ff808080ffff04ffff04ff04ffff04ff0bffff04ffff0bff1780ff80808080ffff04ffff04ff0effff04ff05ffff04ff17ffff04ffff04ff05ff8080ff8080808080ff80808080ffff04ffff01ff32ff4933ff018080"

@@ -1,0 +1,6 @@
+(mod (OFFER_MOJOS REQUEST_MOJOS taken_mojos)
+    (include *standard-cl-23*)
+    (include "fns.clsp")
+    
+    (calculate-request-mojos OFFER_MOJOS REQUEST_MOJOS taken_mojos)
+)

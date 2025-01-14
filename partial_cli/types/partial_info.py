@@ -32,14 +32,16 @@ class PartialInfo:
     request_asset_id: bytes
     request_mojos: uint64  # initial request mojos
 
-    def to_partial_puzzle(self) -> Program:
-        request_settlement_hash = (
+    def get_request_settlement_hash(self) -> bytes32:
+        return (
             OFFER_MOD_HASH
             if self.request_asset_id == bytes(0)
             else construct_cat_puzzle(
                 CAT_MOD, self.request_asset_id, inner_puzzle_or_hash=OFFER_MOD_HASH
             ).get_tree_hash_precalc(OFFER_MOD_HASH)
         )
+
+    def to_partial_puzzle(self) -> Program:
         return MOD.curry(
             MOD_HASH,
             self.fee_puzzle_hash,
@@ -50,7 +52,7 @@ class PartialInfo:
             self.offer_mojos,
             self.request_asset_id,
             self.request_mojos,
-            request_settlement_hash,
+            self.get_request_settlement_hash(),
         )
 
     def get_output_mojos(self, input_mojos: uint64) -> uint64:

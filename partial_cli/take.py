@@ -257,9 +257,6 @@ async def take_partial_offer(
     p = partial_info.to_partial_puzzle()
     partial_ph = p.get_tree_hash()
 
-    # print(f"partial_ph: {partial_ph}")
-    # print(f"partial_coin: {partial_coin}")
-
     maker_request_payments = Program.to(
         [
             partial_coin_id,
@@ -430,9 +427,6 @@ async def take_cmd_async(
         if taker_offer is None:
             print("Failed to create taker offer")
             return
-
-        # print(taker_offer.to_bech32())
-        # raise Exception("DEBUG")
 
         sb, next_offer = await take_partial_offer(
             taker_offer=taker_offer,
